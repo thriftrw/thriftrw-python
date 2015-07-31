@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+.tox
+build/
+dist/
+*.egg
+*.egg-info
+env/
+_build
+*.swp
