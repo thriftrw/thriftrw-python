@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import six
 from ply import lex
 
-from .exc import ThriftLexerError
+from .exceptions import ThriftLexerError
 
 
 THRIFT_KEYWORDS = (
