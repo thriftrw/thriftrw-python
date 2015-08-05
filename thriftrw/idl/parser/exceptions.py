@@ -1,15 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals, print_function
 
 
 class ThriftParserError(Exception):
-    pass
-
-
-class ThriftLexerError(ThriftParserError):
-    pass
-
-
-class ThriftGrammerError(ThriftParserError):
-    pass
+    """Exception raised by the parser or lexer in case of errors."""

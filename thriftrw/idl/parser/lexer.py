@@ -3,7 +3,10 @@ from __future__ import absolute_import, unicode_literals, print_function
 import six
 from ply import lex
 
-from .exceptions import ThriftLexerError
+from .exceptions import ThriftParserError
+
+
+__all__ = ['Lexer']
 
 
 THRIFT_KEYWORDS = (
@@ -35,9 +38,10 @@ THRIFT_KEYWORDS = (
     'optional',
 )
 
-class Lexer(object):
-    """Lexer for Thrift IDL files.
-    
+
+class LexerSpec(object):
+    """Lexer specification for Thrift IDL files.
+
     Adapted from thriftpy.parser.lexer."""
 
     literals = ':;,=*{}()<>[]'
@@ -50,12 +54,11 @@ class Lexer(object):
         'IDENTIFIER',
     ) + tuple(map(six.text_type.upper, THRIFT_KEYWORDS))
 
-
-    t_ignore = ' \t\r'   # whitespace
+    t_ignore = ' \t\r'  # whitespace
 
     def t_error(self, t):
-        raise ThriftLexerError(
-            'Illegal characher %r at line %d' % (t.value[0], t.lineno)
+        raise ThriftParserError(
+            'Illegal characher %r at line %d' % (t.value[0], t.lexer.lineno)
         )
 
     def t_newline(self, t):
@@ -122,7 +125,7 @@ class Lexer(object):
                     val += maps[s[i]]
                 else:
                     msg = 'Cannot escape character: %s' % s[i]
-                    raise ThriftLexerError(msg)
+                    raise ThriftParserError(msg)
             else:
                 val += s[i]
             i += 1
@@ -139,9 +142,26 @@ class Lexer(object):
 
         return t
 
-    # END LEXER SPECIFICATION ##########################################
 
-    @classmethod
-    def build(cls, **kwargs):
-        # For now, we just return the Ply lexer. We can customize it later.
-        return lex.lex(module=cls(), **kwargs)
+class Lexer(LexerSpec):
+    """Lexer for Thrift IDL files."""
+
+    def __init__(self, **kwargs):
+        self._lexer = lex.lex(module=self, **kwargs)
+
+    def input(self, data):
+        """Reset the lexer and feed in new input.
+
+        :param data:
+            String of input data.
+        """
+        # input(..) doesn't reset the lineno. We have to do that manually.
+        self._lexer.lineno = 0
+        return self._lexer.input(data)
+
+    def token(self):
+        """Return the next token.
+
+        Returns None when the end of the input is reached.
+        """
+        return self._lexer.token()
