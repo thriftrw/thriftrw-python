@@ -3,6 +3,23 @@ from __future__ import absolute_import, unicode_literals, print_function
 from collections import namedtuple
 
 
+class Node(object):
+    PROGRAM = 'PROGRAM'
+    INCLUDE = 'INCLUDE'
+    NAMESPACE = 'NAMESPACE'
+    CONST = 'CONST'
+    TYPEDEF = 'TYPEDEF'
+    ENUM = 'ENUM'
+    STRUCT = 'STRUCT'
+    UNION = 'UNION'
+    EXCEPTION = 'EXCEPTION'
+    SERVICE = 'SERVICE'
+
+
+##############################################################################
+# Program
+
+
 class Program(namedtuple('Program', 'headers definitions')):
     """The top-level object representing the full Thrift IDL.
 
@@ -23,11 +40,13 @@ class Program(namedtuple('Program', 'headers definitions')):
         - :py:class:`Service`
     """
 
+    TYPE = Node.PROGRAM
+
 ##############################################################################
 # Headers
 
 
-class Include(namedtuple('Include', 'path')):
+class Include(namedtuple('Include', 'path lineno')):
     """A request to include the Thrift file at the given path.
 
     ::
@@ -38,8 +57,10 @@ class Include(namedtuple('Include', 'path')):
         Path to the file to be included.
     """
 
+    TYPE = Node.INCLUDE
 
-class Namespace(namedtuple('Namespace', 'scope name')):
+
+class Namespace(namedtuple('Namespace', 'scope name lineno')):
     """Used to specify an alternative namespace for the given scope.
 
     ::
@@ -53,8 +74,14 @@ class Namespace(namedtuple('Namespace', 'scope name')):
         Namespace for the specified scope.
     """
 
+    TYPE = Node.NAMESPACE
 
-class Const(namedtuple('Const', 'name value_type value')):
+
+##############################################################################
+# Definitions
+
+
+class Const(namedtuple('Const', 'name value_type value lineno')):
     """A constant defined in the Thrift IDL.
 
     ::
@@ -69,11 +96,10 @@ class Const(namedtuple('Const', 'name value_type value')):
         Value specified for the constant.
     """
 
-##############################################################################
-# Definitions
+    TYPE = Node.CONST
 
 
-class Typedef(namedtuple('Typedef', 'name target_type annotations')):
+class Typedef(namedtuple('Typedef', 'name target_type annotations lineno')):
     """Typedefs define a new type which is an alias for another type.
 
     ::
@@ -88,8 +114,10 @@ class Typedef(namedtuple('Typedef', 'name target_type annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.TYPEDEF
 
-class Enum(namedtuple('Enum', 'name items annotations')):
+
+class Enum(namedtuple('Enum', 'name items annotations lineno')):
     """Enums define a new type which is a set of named integer values.
 
     ::
@@ -107,8 +135,10 @@ class Enum(namedtuple('Enum', 'name items annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.ENUM
 
-class EnumItem(namedtuple('EnumItem', 'name value annotations')):
+
+class EnumItem(namedtuple('EnumItem', 'name value annotations lineno')):
     """An item defined in an :py:class:`Enum` definition.
 
     ``name``
@@ -120,7 +150,7 @@ class EnumItem(namedtuple('EnumItem', 'name value annotations')):
     """
 
 
-class Struct(namedtuple('Struct', 'name fields annotations')):
+class Struct(namedtuple('Struct', 'name fields annotations lineno')):
     """A struct is a collection of named fields.
 
     ``name``
@@ -131,8 +161,10 @@ class Struct(namedtuple('Struct', 'name fields annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.STRUCT
 
-class Union(namedtuple('Union', 'name fields annotations')):
+
+class Union(namedtuple('Union', 'name fields annotations lineno')):
     """A union is a sum of different types.
 
     ``name``
@@ -143,8 +175,10 @@ class Union(namedtuple('Union', 'name fields annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.UNION
 
-class Exc(namedtuple('Exc', 'name fields annotations')):
+
+class Exc(namedtuple('Exc', 'name fields annotations lineno')):
     """A Thrift exception definition.
 
     ``name``
@@ -155,11 +189,15 @@ class Exc(namedtuple('Exc', 'name fields annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.EXCEPTION
+
 # Can't use the name Exception because that will shadow the Exception class
 # defined by Python.
 
 
-class Service(namedtuple('Service', 'name functions parent annotations')):
+class Service(
+    namedtuple('Service', 'name functions parent annotations lineno')
+):
     """A service definition.
 
     ``name``
@@ -174,11 +212,13 @@ class Service(namedtuple('Service', 'name functions parent annotations')):
         Annotations for this service. See :py:class:`Annotation`.
     """
 
+    TYPE = Node.SERVICE
+
 
 class Function(
     namedtuple(
         'Function',
-        'name parameters return_type exceptions oneway annotations'
+        'name parameters return_type exceptions oneway annotations lineno'
     )
 ):
     """A function defined inside a service.
@@ -200,7 +240,10 @@ class Function(
 
 
 class Field(
-    namedtuple('Field', 'id name field_type requiredness default annotations')
+    namedtuple(
+        'Field',
+        'id name field_type requiredness default annotations lineno'
+    )
 ):
     """A field defined inside a struct, union, exception, or parameter list.
 
@@ -220,75 +263,17 @@ class Field(
     """
 
 ##############################################################################
-# Basic types
+# Types
 
 
-class BoolType(namedtuple('BoolType', 'annotations')):
-    """A ``bool`` type.
+class PrimitiveType(namedtuple('PrimitiveType', 'name annotations')):
+    """Reference to primitive types.
 
+    ``name``
+        Name of the primitive type.
     ``annotations``
         Annotations for this type. See :py:class:`Annotation`.
     """
-
-
-class ByteType(namedtuple('ByteType', 'annotations')):
-    """A ``byte`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class I16Type(namedtuple('I16Type', 'annotations')):
-    """A ``i16`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class I32Type(namedtuple('I32Type', 'annotations')):
-    """A ``i32`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class I64Type(namedtuple('I64Type', 'annotations')):
-    """A ``i64`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class DoubleType(namedtuple('DoubleType', 'annotations')):
-    """A ``double`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class StringType(namedtuple('StringType', 'annotations')):
-    """A ``string`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-class BinaryType(namedtuple('BinaryType', 'annotations')):
-    """A ``binary`` type.
-
-    ``annotations``
-        Annotations for this type. See :py:class:`Annotation`.
-    """
-
-
-##############################################################################
-# Container types
 
 
 class MapType(namedtuple('MapType', 'key_type value_type annotations')):
@@ -323,18 +308,19 @@ class ListType(namedtuple('ListType', 'value_type annotations')):
     """
 
 
-class DefinedType(namedtuple('DefinedType', 'name')):
+class DefinedType(namedtuple('DefinedType', 'name lineno')):
     """Reference to a type defined by the user.
 
     ``name``
         Name of the referenced type.
     """
 
+
 ##############################################################################
 # Constants
 
 
-class ConstValue(namedtuple('ConstValue', 'value')):
+class ConstValue(namedtuple('ConstValue', 'value lineno')):
     """A complete constant value.
 
     ``value``
@@ -342,7 +328,7 @@ class ConstValue(namedtuple('ConstValue', 'value')):
     """
 
 
-class ConstReference(namedtuple('ConstReference', 'name')):
+class ConstReference(namedtuple('ConstReference', 'name lineno')):
     """Reference to another constant value or enum item.
 
     ``name``
@@ -354,7 +340,7 @@ class ConstReference(namedtuple('ConstReference', 'name')):
 # Other
 
 
-class Annotation(namedtuple('Annotation', 'name value')):
+class Annotation(namedtuple('Annotation', 'name value lineno')):
     """Annotations for entities that can be annotated.
 
     They're usually in the form,::

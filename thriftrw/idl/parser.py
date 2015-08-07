@@ -23,7 +23,7 @@ class ParserSpec(object):
         if p is None:
             raise ThriftParserError('Grammer error at EOF')
         raise ThriftParserError(
-            'Grammer error %r at line %d' % (p.value, p.lineno)
+            'Grammar error %r at line %d' % (p.value, p.lineno)
         )
 
     def p_start(self, p):
@@ -47,11 +47,11 @@ class ParserSpec(object):
 
     def p_include(self, p):
         '''include : INCLUDE LITERAL'''
-        p[0] = ast.Include(path=p[2])
+        p[0] = ast.Include(path=p[2], lineno=p.lineno(1))
 
     def p_namespace(self, p):
         '''namespace : NAMESPACE namespace_scope IDENTIFIER'''
-        p[0] = ast.Namespace(scope=p[2], name=p[3])
+        p[0] = ast.Namespace(scope=p[2], name=p[3], lineno=p.lineno(1))
 
     def p_namespace_scope(self, p):
         '''namespace_scope : '*'
@@ -82,7 +82,12 @@ class ParserSpec(object):
     def p_const(self, p):
         '''const : CONST field_type IDENTIFIER '=' const_value
                  | CONST field_type IDENTIFIER '=' const_value sep'''
-        p[0] = ast.Const(name=p[3], value_type=p[2], value=p[5])
+        p[0] = ast.Const(
+            name=p[3],
+            value_type=p[2],
+            value=p[5],
+            lineno=p.lineno(3),
+        )
 
     def p_const_value(self, p):
         '''const_value : const_value_native
@@ -96,7 +101,7 @@ class ParserSpec(object):
                               | BOOLCONSTANT
                               | const_list
                               | const_map'''
-        p[0] = ast.ConstValue(p[1])
+        p[0] = ast.ConstValue(p[1], lineno=p.lineno(1))
 
     def p_const_list(self, p):
         '''const_list : '[' const_list_seq ']' '''
@@ -125,7 +130,7 @@ class ParserSpec(object):
 
     def p_const_ref(self, p):
         '''const_ref : IDENTIFIER'''
-        p[0] = ast.ConstReference(p[1])
+        p[0] = ast.ConstReference(p[1], lineno=p.lineno(1))
 
     def p_ttype(self, p):
         '''ttype : typedef
@@ -138,11 +143,15 @@ class ParserSpec(object):
 
     def p_typedef(self, p):
         '''typedef : TYPEDEF field_type IDENTIFIER annotations'''
-        p[0] = ast.Typedef(name=p[3], target_type=p[2], annotations=p[4])
+        p[0] = ast.Typedef(
+            name=p[3], target_type=p[2], annotations=p[4], lineno=p.lineno(3)
+        )
 
     def p_enum(self, p):  # noqa
         '''enum : ENUM IDENTIFIER '{' enum_seq '}' annotations'''
-        p[0] = ast.Enum(name=p[2], items=p[4], annotations=p[6])
+        p[0] = ast.Enum(
+            name=p[2], items=p[4], annotations=p[6], lineno=p.lineno(2)
+        )
 
     def p_enum_seq(self, p):
         '''enum_seq : enum_item sep enum_seq
@@ -154,34 +163,53 @@ class ParserSpec(object):
         '''enum_item : IDENTIFIER '=' INTCONSTANT annotations
                      | IDENTIFIER annotations'''
         if len(p) == 5:
-            p[0] = ast.EnumItem(name=p[1], value=p[3], annotations=p[4])
+            p[0] = ast.EnumItem(
+                name=p[1], value=p[3], annotations=p[4], lineno=p.lineno(1)
+            )
         else:
-            p[0] = ast.EnumItem(name=p[1], value=None, annotations=p[2])
+            p[0] = ast.EnumItem(
+                name=p[1], value=None, annotations=p[2], lineno=p.lineno(1)
+            )
 
     def p_struct(self, p):
         '''struct : STRUCT IDENTIFIER '{' field_seq '}' annotations'''
-        p[0] = ast.Struct(name=p[2], fields=p[4], annotations=p[6])
+        p[0] = ast.Struct(
+            name=p[2], fields=p[4], annotations=p[6], lineno=p.lineno(2)
+        )
 
     def p_union(self, p):
         '''union : UNION IDENTIFIER '{' field_seq '}' annotations'''
-        p[0] = ast.Union(name=p[2], fields=p[4], annotations=p[6])
+        p[0] = ast.Union(
+            name=p[2], fields=p[4], annotations=p[6], lineno=p.lineno(2)
+        )
 
     def p_exception(self, p):
         '''exception : EXCEPTION IDENTIFIER '{' field_seq '}' annotations'''
-        p[0] = ast.Exc(name=p[2], fields=p[4], annotations=p[6])
+        p[0] = ast.Exc(
+            name=p[2], fields=p[4], annotations=p[6], lineno=p.lineno(2)
+        )
 
     def p_service(self, p):
         '''service : SERVICE IDENTIFIER '{' function_seq '}' annotations
-                   | SERVICE IDENTIFIER EXTENDS IDENTIFIER '{' function_seq '}' annotations
+                   | SERVICE IDENTIFIER EXTENDS IDENTIFIER \
+                     '{' function_seq '}' annotations
         '''
 
         if len(p) == 7:
             p[0] = ast.Service(
-                name=p[2], functions=p[4], parent=None, annotations=p[6]
+                name=p[2],
+                functions=p[4],
+                parent=None,
+                annotations=p[6],
+                lineno=p.lineno(2),
             )
         else:
             p[0] = ast.Service(
-                name=p[2], functions=p[6], parent=p[4], annotations=p[8]
+                name=p[2],
+                functions=p[6],
+                parent=p[4],
+                annotations=p[8],
+                lineno=p.lineno(2),
             )
 
     def p_oneway(self, p):
@@ -190,7 +218,8 @@ class ParserSpec(object):
         p[0] = len(p) > 1
 
     def p_function(self, p):
-        '''function : oneway function_type IDENTIFIER '(' field_seq ')' throws annotations '''
+        '''function : oneway function_type IDENTIFIER '(' field_seq ')' \
+                      throws annotations '''
         p[0] = ast.Function(
             name=p[3],
             parameters=p[5],
@@ -198,6 +227,7 @@ class ParserSpec(object):
             exceptions=p[7],
             oneway=p[1],
             annotations=p[8],
+            lineno=p.lineno(3),
         )
 
     def p_function_seq(self, p):
@@ -230,7 +260,8 @@ class ParserSpec(object):
 
     def p_field(self, p):
         '''field : field_id field_req field_type IDENTIFIER annotations
-                 | field_id field_req field_type IDENTIFIER '=' const_value annotations'''
+                 | field_id field_req field_type IDENTIFIER '=' const_value \
+                   annotations'''
 
         if len(p) == 8:
             default = p[6]
@@ -246,6 +277,7 @@ class ParserSpec(object):
             requiredness=p[2],
             default=default,
             annotations=annotations,
+            lineno=p.lineno(4),
         )
 
     def p_field_id(self, p):
@@ -272,7 +304,7 @@ class ParserSpec(object):
 
     def p_ref_type(self, p):
         '''ref_type : IDENTIFIER'''
-        p[0] = ast.DefinedType(p[1])
+        p[0] = ast.DefinedType(p[1], lineno=p.lineno(1))
 
     def p_base_type(self, p):  # noqa
         '''base_type : BOOL annotations
@@ -284,22 +316,7 @@ class ParserSpec(object):
                      | STRING annotations
                      | BINARY annotations'''
 
-        if p[1] == 'bool':
-            p[0] = ast.BoolType(p[2])
-        if p[1] == 'byte':
-            p[0] = ast.ByteType(p[2])
-        if p[1] == 'i16':
-            p[0] = ast.I16Type(p[2])
-        if p[1] == 'i32':
-            p[0] = ast.I32Type(p[2])
-        if p[1] == 'i64':
-            p[0] = ast.I64Type(p[2])
-        if p[1] == 'double':
-            p[0] = ast.DoubleType(p[2])
-        if p[1] == 'string':
-            p[0] = ast.StringType(p[2])
-        if p[1] == 'binary':
-            p[0] = ast.BinaryType(p[2])
+        p[0] = ast.PrimitiveType(p[1], p[2])
 
     def p_container_type(self, p):
         '''container_type : map_type
@@ -340,7 +357,7 @@ class ParserSpec(object):
 
     def p_annotation(self, p):
         '''annotation : IDENTIFIER '=' LITERAL '''
-        p[0] = ast.Annotation(p[1], p[3])
+        p[0] = ast.Annotation(p[1], p[3], lineno=p.lineno(1))
 
     def _parse_seq(self, p):
         """Helper to parse sequence rules.
