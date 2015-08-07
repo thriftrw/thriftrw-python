@@ -37,12 +37,6 @@ class BoolValue(namedtuple('BoolValue', 'value'), Value):
     def apply(self, visitor):
         return visitor.visit_bool(self.value)
 
-    def __nonzero__(self):
-        # in case someone tests truthiness on this
-        return self.value
-
-    __bool__ = __nonzero__  # Python 3
-
 
 class ByteValue(namedtuple('ByteValue', 'value'), Value):
     """Wrapper for byte values."""
