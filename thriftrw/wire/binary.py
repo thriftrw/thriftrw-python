@@ -10,6 +10,15 @@ from .types import TType
 STRUCT_END = 0
 
 
+class ThriftProtocolError(Exception):
+    # TODO all exceptions raised by this library must havea common parent.
+    pass
+
+
+class EndOfInputError(ThriftProtocolError):
+    pass
+
+
 class BinaryProtocolReader(object):
     """Parser for the binary protocol."""
 
@@ -19,10 +28,19 @@ class BinaryProtocolReader(object):
         """Initialize the reader.
 
         :param reader:
-            File-like object with a ``read(num)`` method which returns the
-            requested number of bytes.
+            File-like object with a ``read(num)`` method which returns
+            *exactly* the requested number of bytes.
         """
         self.reader = reader
+
+    def _read(self, num_bytes):
+        chunk = self.reader.read(num_bytes)
+        if len(chunk) != num_bytes:
+            raise EndOfInputError(
+                'Expected %d bytes but got %d bytes.' %
+                (num_bytes, len(chunk))
+            )
+        return chunk
 
     def _unpack(self, num_bytes, spec):
         """Unpack a single value using the given format and return it.
@@ -32,7 +50,7 @@ class BinaryProtocolReader(object):
         :param spec:
             Spec for ``struct.unpack``
         """
-        (result,) = struct.unpack(spec, self.reader.read(num_bytes))
+        (result,) = struct.unpack(spec, self._read(num_bytes))
         return result
 
     def _byte(self):
@@ -71,7 +89,7 @@ class BinaryProtocolReader(object):
     def read_binary(self):
         """Reads a binary blob."""
         length = self._i32()
-        return V.BinaryValue(self.reader.read(length))
+        return V.BinaryValue(self._read(length))
 
     def read_struct(self):
         """Visits structs.
