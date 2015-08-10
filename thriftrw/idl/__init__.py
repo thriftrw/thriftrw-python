@@ -49,21 +49,7 @@ Definitions
 Types
 ~~~~~
 
-.. autoclass:: BoolType
-
-.. autoclass:: ByteType
-
-.. autoclass:: I16Type
-
-.. autoclass:: I32Type
-
-.. autoclass:: I64Type
-
-.. autoclass:: DoubleType
-
-.. autoclass:: StringType
-
-.. autoclass:: BinaryType
+.. autoclass:: PrimitiveType
 
 .. autoclass:: MapType
 
@@ -76,7 +62,7 @@ Types
 Constants
 ~~~~~~~~~
 
-.. autoclass:: ConstValue
+.. autoclass:: ConstPrimitiveValue
 
 .. autoclass:: ConstReference
 
@@ -84,6 +70,12 @@ Annotations
 ~~~~~~~~~~~
 
 .. autoclass:: Annotation
+
+Exceptions
+----------
+
+.. autoclass:: ThriftParserError
+    :members:
 
 """
 from __future__ import absolute_import, unicode_literals, print_function

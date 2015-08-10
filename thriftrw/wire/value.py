@@ -1,24 +1,29 @@
-"""
-This module defines classes that provide an intermediate representation for
-types going over-the-wire.
-
-A set of wrapper classes is defined that contain just enough information going
-to or from the wire. Custom types that can be sent over Thrift need to only
-define a mapping to/from these ``*Value`` classes.
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
 import abc
 
 from collections import namedtuple
 
-from .types import TType
+from .ttype import TType
 
 # TODO: This module should mostly be cython.
 
 
 class Value(object):
+    """Base class for Value classes.
+
+    Value classes define an intermediate representation of Thrift types as
+    they are sent and received over the wire.
+    """
     __metaclass__ = abc.ABCMeta
+
+    @abc.abstractproperty
+    def ttype_code(self):
+        """Get the TType for this type.
+        
+        :returns:
+            A value from :py:data:`thriftrw.wire.TType`.
+        """
 
     @abc.abstractmethod
     def apply(self, visitor):
@@ -26,13 +31,21 @@ class Value(object):
 
         The appropriate `visit_*` method will be called and its result
         returned.
+
+        :param ValueVisitor visitor:
+            Visitor on the value.
+        :returns:
+            Value returned by the corresponding ``visit_*`` method.
         """
         pass
 
 
 class BoolValue(namedtuple('BoolValue', 'value'), Value):
     """Wrapper for boolean values."""
-    TTYPE = TType.BOOL
+
+    @property
+    def ttype_code(self):
+        return TType.BOOL
 
     def apply(self, visitor):
         return visitor.visit_bool(self.value)
@@ -40,7 +53,10 @@ class BoolValue(namedtuple('BoolValue', 'value'), Value):
 
 class ByteValue(namedtuple('ByteValue', 'value'), Value):
     """Wrapper for byte values."""
-    TTYPE = TType.BYTE
+
+    @property
+    def ttype_code(self):
+        return TType.BYTE
 
     def apply(self, visitor):
         return visitor.visit_byte(self.value)
@@ -48,7 +64,10 @@ class ByteValue(namedtuple('ByteValue', 'value'), Value):
 
 class DoubleValue(namedtuple('DoubleValue', 'value'), Value):
     """Wrapper for double values."""
-    TTYPE = TType.DOUBLE
+
+    @property
+    def ttype_code(self):
+        return TType.DOUBLE
 
     def apply(self, visitor):
         return visitor.visit_double(self.value)
@@ -56,7 +75,10 @@ class DoubleValue(namedtuple('DoubleValue', 'value'), Value):
 
 class I16Value(namedtuple('I16Value', 'value'), Value):
     """Wrapper for 16-bit integer values."""
-    TTYPE = TType.I16
+
+    @property
+    def ttype_code(self):
+        return TType.I16
 
     def apply(self, visitor):
         return visitor.visit_i16(self.value)
@@ -64,7 +86,10 @@ class I16Value(namedtuple('I16Value', 'value'), Value):
 
 class I32Value(namedtuple('I32Value', 'value'), Value):
     """Wrapper for 32-bit integer values."""
-    TTYPE = TType.I32
+
+    @property
+    def ttype_code(self):
+        return TType.I32
 
     def apply(self, visitor):
         return visitor.visit_i32(self.value)
@@ -72,7 +97,10 @@ class I32Value(namedtuple('I32Value', 'value'), Value):
 
 class I64Value(namedtuple('I64Value', 'value'), Value):
     """Wrapper for 64-bit integer values."""
-    TTYPE = TType.I64
+
+    @property
+    def ttype_code(self):
+        return TType.I64
 
     def apply(self, visitor):
         return visitor.visit_i64(self.value)
@@ -84,21 +112,24 @@ class BinaryValue(namedtuple('BinaryValue', 'value'), Value):
     Note that Thrift does not differentiate between text and binary blobs over
     the wire. UTF-8 text should be encoded/decoded manually.
     """
-    TTYPE = TType.BINARY
+
+    @property
+    def ttype_code(self):
+        return TType.BINARY
 
     def apply(self, visitor):
         return visitor.visit_binary(self.value)
 
 
-class StructField(namedtuple('StructField', 'id ttype value'), Value):
+class FieldValue(namedtuple('FieldValue', 'id ttype value'), Value):
     """A single field in a struct.
 
     ``id``
-        Field identifier of the struct.
+        Field identifier.
     ``ttype``
-        Type of value held by the struct. This must be a value from TType.
+        :py:data:`~thriftrw.wire.TType` of the value held in this field.
     ``value``
-        Value held by the struct.
+        Value for this field.
     """
 
 
@@ -106,9 +137,12 @@ class StructValue(namedtuple('StructValue', 'fields'), Value):
     """A struct value is a collection of fields of different types.
 
     ``fields``
-        Collection of :py:class:`StructField` objects.
+        Collection of :py:class:`FieldValue` objects.
     """
-    TTYPE = TType.STRUCT
+
+    @property
+    def ttype_code(self):
+        return TType.STRUCT
 
     def __new__(cls, fields):
         if not isinstance(fields, dict):
@@ -130,7 +164,11 @@ class StructValue(namedtuple('StructValue', 'fields'), Value):
             Value stored for the given field ID and type, or None if a field
             with the given ID and type was not found.
         """
-        return self.fields.get((field_id, field_ttype))
+        value = self.fields.get((field_id, field_ttype))
+        if value is None:
+            return None
+        else:
+            return value.value
 
 
 class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
@@ -145,7 +183,10 @@ class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
     ``pairs``
         Collection of key-value tuples. Note that this is **not** a dict.
     """
-    TTYPE = TType.MAP
+
+    @property
+    def ttype_code(self):
+        return TType.MAP
 
     def apply(self, visitor):
         return visitor.visit_map(self.key_ttype, self.value_ttype, self.pairs)
@@ -159,7 +200,10 @@ class SetValue(namedtuple('SetValue', 'value_ttype values'), Value):
     ``values``
         Collection of the values.
     """
-    TTYPE = TType.SET
+
+    @property
+    def ttype_code(self):
+        return TType.SET
 
     def apply(self, visitor):
         return visitor.visit_set(self.value_ttype, self.values)
@@ -173,7 +217,10 @@ class ListValue(namedtuple('ListValue', 'value_ttype values'), Value):
     ``values``
         Collection of the values.
     """
-    TTYPE = TType.LIST
+
+    @property
+    def ttype_code(self):
+        return TType.LIST
 
     def apply(self, visitor):
         return visitor.visit_list(self.value_ttype, self.values)
@@ -197,39 +244,63 @@ class ValueVisitor(object):
     def visit_bool(self, value):
         """Visits boolean values.
 
-        :param value:
+        :param bool value:
             True or False
         """
         pass
 
     @abc.abstractmethod
     def visit_byte(self, value):
-        """Visits 8-bit integers."""
+        """Visits 8-bit integers.
+        
+        :param int value:
+            8-bit integer
+        """
         pass
 
     @abc.abstractmethod
     def visit_double(self, value):
-        """Visits double values."""
+        """Visits double values.
+        
+        :param float value:
+            Floating point number
+        """
         pass
 
     @abc.abstractmethod
     def visit_i16(self, value):
-        """Visits 16-bit integers."""
+        """Visits 16-bit integers.
+        
+        :param int value:
+            16-bit integer
+        """
         pass
 
     @abc.abstractmethod
     def visit_i32(self, value):
-        """Visits 32-bit integers."""
+        """Visits 32-bit integers.
+        
+        :param int value:
+            32-bit integer
+        """
         pass
 
     @abc.abstractmethod
     def visit_i64(self, value):
-        """Visits 64-bit integers."""
+        """Visits 64-bit integers.
+        
+        :param int value:
+            64-bit integer
+        """
         pass
 
     @abc.abstractmethod
     def visit_binary(self, value):
-        """Visits binary blobs."""
+        """Visits binary blobs.
+        
+        :param bytes value:
+            Binary blob
+        """
         pass
 
     @abc.abstractmethod
@@ -237,7 +308,7 @@ class ValueVisitor(object):
         """Visits structs.
 
         :param fields:
-            Collection of :py:class:`StructField` objects.
+            Collection of :py:class:`FieldValue` objects.
         """
         pass
 
@@ -245,10 +316,10 @@ class ValueVisitor(object):
     def visit_map(self, key_ttype, value_ttype, pairs):
         """Visits maps.
 
-        :param key_ttype:
-            Integer representing type of keys in the map.
-        :param value_ttype:
-            Integer representing type of values in the map.
+        :param thriftrw.wire.TType key_ttype:
+            TType of the keys in the map.
+        :param thriftrw.wire.TType value_ttype:
+            TType of the values in the map.
         :param pairs:
             Collection of key-value pairs.
         """
@@ -258,8 +329,8 @@ class ValueVisitor(object):
     def visit_set(self, value_ttype, values):
         """Visits sets.
 
-        :param value_ttype:
-            Integer representing type of values in the set.
+        :param thriftrw.wire.TType value_ttype:
+            TType of the items in the set.
         :param values:
             Collection of values in the set.
         """
@@ -269,8 +340,8 @@ class ValueVisitor(object):
     def visit_list(self, value_ttype, values):
         """Visits lists.
 
-        :param value_ttype:
-            Integer representing type of values in the list.
+        :param thriftrw.wire.TType value_ttype:
+            TType of the items in the set.
         :param values:
             Collection of values in the list.
         """

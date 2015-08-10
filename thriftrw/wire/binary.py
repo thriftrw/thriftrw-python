@@ -1,22 +1,16 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
+import six
 import struct
 from collections import deque
 
 from . import value as V
-from .types import TType
+from .protocol import Protocol
+from .ttype import TType
+from .exceptions import EndOfInputError
 
 
 STRUCT_END = 0
-
-
-class ThriftProtocolError(Exception):
-    # TODO all exceptions raised by this library must havea common parent.
-    pass
-
-
-class EndOfInputError(ThriftProtocolError):
-    pass
 
 
 class BinaryProtocolReader(object):
@@ -32,6 +26,9 @@ class BinaryProtocolReader(object):
             *exactly* the requested number of bytes.
         """
         self.reader = reader
+
+    def read(self, typ):
+        return self._readers[typ](self)
 
     def _read(self, num_bytes):
         chunk = self.reader.read(num_bytes)
@@ -92,22 +89,15 @@ class BinaryProtocolReader(object):
         return V.BinaryValue(self._read(length))
 
     def read_struct(self):
-        """Visits structs.
-
-        :param fields:
-            Collection of :py:class:`StructField` objects.
-        """
+        """Reads an arbitrary Thrift struct."""
         fields = deque()
 
         field_type = self._byte()
         while field_type != STRUCT_END:
             field_id = self._i16()
-            reader = self._readers[field_type]
-            # TODO: should we ignore unrecognized field types
-
-            field_value = reader(self)
+            field_value = self.read(field_type)
             fields.append(
-                V.StructField(
+                V.FieldValue(
                     id=field_id,
                     ttype=field_type,
                     value=field_value,
@@ -118,15 +108,7 @@ class BinaryProtocolReader(object):
         return V.StructValue(fields)
 
     def read_map(self):
-        """Visits maps.
-
-        :param key_ttype:
-            Integer representing type of keys in the map.
-        :param value_ttype:
-            Integer representing type of values in the map.
-        :param pairs:
-            Collection of key-value pairs.
-        """
+        """Reads a map."""
         key_ttype = self._byte()
         value_ttype = self._byte()
         length = self._i32()
@@ -147,13 +129,7 @@ class BinaryProtocolReader(object):
         )
 
     def read_set(self):
-        """Visits sets.
-
-        :param value_ttype:
-            Integer representing type of values in the set.
-        :param values:
-            Collection of values in the set.
-        """
+        """Reads a set."""
         value_ttype = self._byte()
         length = self._i32()
 
@@ -169,13 +145,7 @@ class BinaryProtocolReader(object):
         )
 
     def read_list(self):
-        """Visits lists.
-
-        :param value_ttype:
-            Integer representing type of values in the list.
-        :param values:
-            Collection of values in the list.
-        """
+        """Reads a list."""
         value_ttype = self._byte()
         length = self._i32()
 
@@ -292,3 +262,21 @@ class BinaryProtocolWriter(V.ValueVisitor):
 
         for v in values:
             self.write(v)
+
+
+class BinaryProtocol(Protocol):
+    """Implements the Thrift binary protocol."""
+
+    def dump(self, value):
+        buff = six.BytesIO()
+        writer = BinaryProtocolWriter(buff)
+        writer.write(value)
+        return buff.getvalue()
+
+    def load(self, typ, s):
+        buff = six.BytesIO(s)
+        reader = BinaryProtocolReader(buff)
+        return reader.read(typ)
+
+
+__all__ = ['BinaryProtocol']
