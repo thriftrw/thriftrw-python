@@ -32,25 +32,25 @@ _TType = namedtuple(
 #: .. autoattribute:: TType.BOOL
 #:
 #: .. autoattribute:: TType.BYTE
-#: 
+#:
 #: .. autoattribute:: TType.DOUBLE
-#: 
+#:
 #: .. autoattribute:: TType.I16
-#: 
+#:
 #: .. autoattribute:: TType.I32
-#: 
+#:
 #: .. autoattribute:: TType.I64
-#: 
+#:
 #: .. autoattribute:: TType.BINARY
-#: 
+#:
 #: .. autoattribute:: TType.STRUCT
-#: 
+#:
 #: .. autoattribute:: TType.MAP
-#: 
+#:
 #: .. autoattribute:: TType.SET
-#: 
+#:
 #: .. autoattribute:: TType.LIST
-#: 
+#:
 TType = _TType(
     BOOL=2,
     BYTE=3,

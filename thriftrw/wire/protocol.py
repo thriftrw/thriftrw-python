@@ -34,7 +34,7 @@ class Protocol(object):
     @abc.abstractmethod
     def dump(self, value):
         """Serialize the given ``Value``.
-        
+
         :param ~thriftrw.wire.Value value:
             Value to serialize.
         :returns:

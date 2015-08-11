@@ -40,7 +40,7 @@ class Value(object):
     @abc.abstractproperty
     def ttype_code(self):
         """Get the TType for this type.
-        
+
         :returns:
             A value from :py:data:`thriftrw.wire.TType`.
         """
@@ -272,7 +272,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_byte(self, value):
         """Visits 8-bit integers.
-        
+
         :param int value:
             8-bit integer
         """
@@ -281,7 +281,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_double(self, value):
         """Visits double values.
-        
+
         :param float value:
             Floating point number
         """
@@ -290,7 +290,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_i16(self, value):
         """Visits 16-bit integers.
-        
+
         :param int value:
             16-bit integer
         """
@@ -299,7 +299,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_i32(self, value):
         """Visits 32-bit integers.
-        
+
         :param int value:
             32-bit integer
         """
@@ -308,7 +308,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_i64(self, value):
         """Visits 64-bit integers.
-        
+
         :param int value:
             64-bit integer
         """
@@ -317,7 +317,7 @@ class ValueVisitor(object):
     @abc.abstractmethod
     def visit_binary(self, value):
         """Visits binary blobs.
-        
+
         :param bytes value:
             Binary blob
         """

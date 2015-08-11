@@ -349,8 +349,18 @@ class DefinedType(namedtuple('DefinedType', 'name lineno')):
 ##############################################################################
 # Constants
 
+# TODO Move these sections into separate modules.
 
-class ConstPrimitiveValue(namedtuple('ConstPrimitiveValue', 'value lineno')):
+class ConstValue(object):
+    """Base class for constant value types."""
+
+    def apply(self, visitor):
+        raise NotImplementedError
+
+
+class ConstPrimitiveValue(
+    namedtuple('ConstPrimitiveValue', 'value lineno'), ConstValue
+):
     """A complete constant value.
 
     ``value``
@@ -361,7 +371,7 @@ class ConstPrimitiveValue(namedtuple('ConstPrimitiveValue', 'value lineno')):
         return visitor.visit_primitive(self)
 
 
-class ConstReference(namedtuple('ConstReference', 'name lineno')):
+class ConstReference(namedtuple('ConstReference', 'name lineno'), ConstValue):
     """Reference to another constant value or enum item.
 
     ``name``

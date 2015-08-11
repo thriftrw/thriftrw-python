@@ -8,3 +8,4 @@ dist/
 env/
 _build
 *.swp
+node_modules

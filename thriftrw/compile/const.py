@@ -20,7 +20,41 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .loader import Loader, load
+from .exceptions import ThriftCompilerError
 
 
-__all__ = ['Loader', 'load']
+class ConstValueResolver(object):
+    """Resolves constant values."""
+
+    __slots__ = ('scope',)
+
+    def __init__(self, scope):
+        """
+        :param Scope scope:
+            Scope which will be queried for constants.
+        """
+        self.scope = scope
+
+    def resolve(self, const_value):
+        """Resolve the given constant value.
+
+        :param const_value:
+            A ``thriftrw.idl.ConstValue``
+        :returns:
+            The value that the ``ConstValue`` maps to.
+        """
+        return const_value.apply(self)
+
+    def visit_primitive(self, const):
+        return const.value
+
+    def visit_reference(self, const):
+        value = self.scope.constants.get(const.name)
+        if value is None:
+            raise ThriftCompilerError(
+                'Unknown constant "%s" referenced at line %d'
+                % (const.name, const.lineno)
+            )
+        return value
+
+    # NOTE We do not yet support forward references in constants.

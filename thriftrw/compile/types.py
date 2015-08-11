@@ -27,8 +27,6 @@ from collections import namedtuple
 import thriftrw.wire.value as V
 from thriftrw.wire import TType
 
-from .exceptions import ThriftCompilerError
-
 
 class Type(object):
     """Base class for classes representing Types.
@@ -55,12 +53,20 @@ class Type(object):
         """Get the numeric TType identifier for this type."""
         pass
 
-    def link(self, scope):
-        """Given the final scope object, links to types this type depends on.
+    def transform_types(self, function):
+        """Map the given function over subtypes.
 
-        Returns self.
+        Concrete types that depend on other types will execute this function
+        on those types and replace their values with the returned value. The
+        implementations will NOT recursively call the function on the subtypes
+        of their subtypes. That responsibility is with the caller.
+
+        The default implementation for this does not do anything.
+
+        :param function:
+            A function that accepts accepts the current type and returns a new
+            type.
         """
-        return self
 
     @property
     def is_reference(self):
@@ -78,34 +84,9 @@ class TypeReference(namedtuple('TypeReference', 'name lineno')):
     def is_reference(self):
         return True
 
-    def link(self, scope):
-        """Resolves and returns the referenced type."""
-
-        typ = self
-        visited = set([])
-        while typ.is_reference:
-
-            if typ.name in visited:
-                raise ThriftCompilerError(
-                    'Type "%s" at line %d is a reference to itself.'
-                    % (self.name, self.lineno)
-                )
-
-            if typ.name not in scope.types:
-                raise ThriftCompilerError(
-                    'Unknown type "%s" referenced at line %d'
-                    % (typ.name, typ.lineno)
-                )
-
-            visited.add(typ.name)
-            typ = scope.types[typ.name]
-
-        # Connect all visited references to this type.
-        result = typ
-        for t in visited:
-            scope.types[t] = result
-
-        return result
+    # It may be worth making this implement the Type interface and raise
+    # exceptions complaining about unresolved type references, since that's
+    # probably a bug.
 
 
 class PrimitiveType(Type, namedtuple('PrimitiveType', 'code value_cls')):
@@ -166,9 +147,8 @@ class Field(object):
         self.name = name
         self.ftype = ftype
 
-    def link(self, scope):
-        self.ftype = self.ftype.link(scope)
-        return self
+    def transform_types(self, function):
+        self.ftype = function(self.ftype)
 
     def __str__(self):
         return 'Field(id=%r, name=%r, ftype=%r)' % (
@@ -224,10 +204,9 @@ class StructType(Type, namedtuple('StructType', 'cls fields')):
         # invalid.
         return self.cls(**kwargs)
 
-    def link(self, scope):
+    def transform_types(self, function):
         for field in self.fields:
-            field.link(scope)
-        return self
+            field.transform_types(function)
 
 
 class MapType(Type):
@@ -264,10 +243,9 @@ class MapType(Type):
             for k, v in wire_value.pairs
         }
 
-    def link(self, scope):
-        self.ktype = self.ktype.link(scope)
-        self.vtype = self.vtype.link(scope)
-        return self
+    def transform_types(self, function):
+        self.ktype = function(self.ktype)
+        self.vtype = function(self.vtype)
 
     def __str__(self):
         return 'MapType(ktype=%r, vtype=%r)' % (self.ktype, self.vtype)
@@ -301,9 +279,8 @@ class SetType(Type):
             self.vtype.from_wire(v) for v in wire_value.values
         )
 
-    def link(self, scope):
-        self.vtype = self.vtype.link(scope)
-        return self
+    def transform_types(self, function):
+        self.vtype = function(self.vtype)
 
     def __str__(self):
         return 'SetType(vtype=%r)' % self.vtype
@@ -335,9 +312,8 @@ class ListType(Type):
     def from_wire(self, wire_value):
         return [self.vtype.from_wire(v) for v in wire_value.values]
 
-    def link(self, scope):
-        self.vtype = self.vtype.link(scope)
-        return self
+    def transform_types(self, function):
+        self.vtype = function(self.vtype)
 
     def __str__(self):
         return 'ListType(vtype=%r)' % self.vtype
