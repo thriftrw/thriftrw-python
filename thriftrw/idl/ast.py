@@ -3,19 +3,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 from collections import namedtuple
 
 
-class Node(object):
-    PROGRAM = 'PROGRAM'
-    INCLUDE = 'INCLUDE'
-    NAMESPACE = 'NAMESPACE'
-    CONST = 'CONST'
-    TYPEDEF = 'TYPEDEF'
-    ENUM = 'ENUM'
-    STRUCT = 'STRUCT'
-    UNION = 'UNION'
-    EXCEPTION = 'EXCEPTION'
-    SERVICE = 'SERVICE'
-
-
 ##############################################################################
 # Program
 
@@ -40,7 +27,6 @@ class Program(namedtuple('Program', 'headers definitions')):
         - :py:class:`Service`
     """
 
-    TYPE = Node.PROGRAM
 
 ##############################################################################
 # Headers
@@ -57,7 +43,8 @@ class Include(namedtuple('Include', 'path lineno')):
         Path to the file to be included.
     """
 
-    TYPE = Node.INCLUDE
+    def apply(self, visitor):
+        return visitor.visit_include(self)
 
 
 class Namespace(namedtuple('Namespace', 'scope name lineno')):
@@ -74,7 +61,8 @@ class Namespace(namedtuple('Namespace', 'scope name lineno')):
         Namespace for the specified scope.
     """
 
-    TYPE = Node.NAMESPACE
+    def apply(self, visitor):
+        return visitor.visit_namespace(self)
 
 
 ##############################################################################
@@ -96,7 +84,8 @@ class Const(namedtuple('Const', 'name value_type value lineno')):
         Value specified for the constant.
     """
 
-    TYPE = Node.CONST
+    def apply(self, visitor):
+        return visitor.visit_const(self)
 
 
 class Typedef(namedtuple('Typedef', 'name target_type annotations lineno')):
@@ -114,7 +103,8 @@ class Typedef(namedtuple('Typedef', 'name target_type annotations lineno')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.TYPEDEF
+    def apply(self, visitor):
+        return visitor.visit_typedef(self)
 
 
 class Enum(namedtuple('Enum', 'name items annotations lineno')):
@@ -135,7 +125,8 @@ class Enum(namedtuple('Enum', 'name items annotations lineno')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.ENUM
+    def apply(self, visitor):
+        return visitor.visit_enum(self)
 
 
 class EnumItem(namedtuple('EnumItem', 'name value annotations lineno')):
@@ -161,7 +152,8 @@ class Struct(namedtuple('Struct', 'name fields annotations lineno')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.STRUCT
+    def apply(self, visitor):
+        return visitor.visit_struct(self)
 
 
 class Union(namedtuple('Union', 'name fields annotations lineno')):
@@ -175,7 +167,8 @@ class Union(namedtuple('Union', 'name fields annotations lineno')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.UNION
+    def apply(self, visitor):
+        return visitor.visit_union(self)
 
 
 class Exc(namedtuple('Exc', 'name fields annotations lineno')):
@@ -189,7 +182,8 @@ class Exc(namedtuple('Exc', 'name fields annotations lineno')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.EXCEPTION
+    def apply(self, visitor):
+        return visitor.visit_exc(self)
 
 # Can't use the name Exception because that will shadow the Exception class
 # defined by Python.
@@ -212,7 +206,8 @@ class Service(
         Annotations for this service. See :py:class:`Annotation`.
     """
 
-    TYPE = Node.SERVICE
+    def apply(self, visitor):
+        return visitor.visit_service(self)
 
 
 class Function(
@@ -275,6 +270,9 @@ class PrimitiveType(namedtuple('PrimitiveType', 'name annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    def apply(self, visitor):
+        return visitor.visit_primitive(self)
+
 
 class MapType(namedtuple('MapType', 'key_type value_type annotations')):
     """A ``map<key, value>`` type.
@@ -287,6 +285,9 @@ class MapType(namedtuple('MapType', 'key_type value_type annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    def apply(self, visitor):
+        return visitor.visit_map(self)
+
 
 class SetType(namedtuple('SetType', 'value_type annotations')):
     """A ``set<item>`` type.
@@ -296,6 +297,9 @@ class SetType(namedtuple('SetType', 'value_type annotations')):
     ``annotations``
         Annotations for this type. See :py:class:`Annotation`.
     """
+
+    def apply(self, visitor):
+        return visitor.visit_set(self)
 
 
 class ListType(namedtuple('ListType', 'value_type annotations')):
@@ -307,6 +311,9 @@ class ListType(namedtuple('ListType', 'value_type annotations')):
         Annotations for this type. See :py:class:`Annotation`.
     """
 
+    def apply(self, visitor):
+        return visitor.visit_list(self)
+
 
 class DefinedType(namedtuple('DefinedType', 'name lineno')):
     """Reference to a type defined by the user.
@@ -315,17 +322,23 @@ class DefinedType(namedtuple('DefinedType', 'name lineno')):
         Name of the referenced type.
     """
 
+    def apply(self, visitor):
+        return visitor.visit_defined(self)
+
 
 ##############################################################################
 # Constants
 
 
-class ConstValue(namedtuple('ConstValue', 'value lineno')):
+class ConstPrimitiveValue(namedtuple('ConstPrimitiveValue', 'value lineno')):
     """A complete constant value.
 
     ``value``
         Value held in this constant.
     """
+
+    def apply(self, visitor):
+        return visitor.visit_primitive(self)
 
 
 class ConstReference(namedtuple('ConstReference', 'name lineno')):
@@ -334,6 +347,9 @@ class ConstReference(namedtuple('ConstReference', 'name lineno')):
     ``name``
         Name of the constant or enum item.
     """
+
+    def apply(self, visitor):
+        return visitor.visit_reference(self)
 
 
 ##############################################################################

@@ -101,7 +101,7 @@ class ParserSpec(object):
                               | BOOLCONSTANT
                               | const_list
                               | const_map'''
-        p[0] = ast.ConstValue(p[1], lineno=p.lineno(1))
+        p[0] = ast.ConstPrimitiveValue(p[1], lineno=p.lineno(1))
 
     def p_const_list(self, p):
         '''const_list : '[' const_list_seq ']' '''
@@ -283,7 +283,16 @@ class ParserSpec(object):
     def p_field_id(self, p):
         '''field_id : INTCONSTANT ':'
                     | '''
-        if len(p) == 2:
+        if len(p) == 3:
+
+            if p[1] == 0:
+                # Prevent users from ever using field ID 0. It's reserved for
+                # internal use only.
+                raise ThriftParserError(
+                    'Line %d: Field ID 0 is reserved for internal use.'
+                    % p.lineno(1)
+                )
+
             p[0] = p[1]
         else:
             p[0] = None

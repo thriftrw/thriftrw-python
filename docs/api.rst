@@ -1,4 +1,12 @@
 API Reference
 =============
 
-.. automodule:: thriftrw.idl.parser
+``thriftrw.idl``
+----------------
+
+.. automodule:: thriftrw.idl
+
+``thriftrw.wire``
+-----------------
+
+.. automodule:: thriftrw.wire
