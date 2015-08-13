@@ -22,12 +22,11 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import deque
 
-
 from .exceptions import ThriftCompilerError
 
 
-class Linker(object):
-    """Links together type references."""
+class TypeSpecLinker(object):
+    """Links together references in TypeSpecs."""
 
     __slots__ = ('scope',)
 
@@ -37,53 +36,53 @@ class Linker(object):
     def link(self):
         """Resolve and link all types in the scope."""
 
-        # collection of types whose subtypes need to be linked.
+        # collection of types whose dependencies need to be linked.
         to_link = deque()
 
         # Resolve top level type references.
-        for name in self.scope.types.keys():
-            typ = self.resolve_type(self.scope.types[name])
-            self.scope.types[name] = typ
-            to_link.append(typ)
+        for name in self.scope.type_specs.keys():
+            spec = self.resolve_spec(self.scope.type_specs[name])
+            self.scope.type_specs[name] = spec
+            to_link.append(spec)
 
         visited = set()
 
-        def typ_link(typ):
-            typ = self.resolve_type(typ)
-            if typ not in visited:
-                # Ask for this type's subtypes to be linked
-                to_link.append(typ)
-            return typ
+        def _link(spec):
+            spec = self.resolve_spec(spec)
+            if spec not in visited:
+                # Ask for this type's dependencies to be linked
+                to_link.append(spec)
+            return spec
 
         while to_link:
-            typ = to_link.popleft()
-            if typ in visited:
+            spec = to_link.popleft()
+            if spec in visited:
                 # Already linked.
                 continue
-            visited.append(typ)
-            typ.transform_types(typ_link)
+            visited.append(spec)
+            spec.transform_dependencies(_link)
 
-    def resolve_type(self, typ):
+    def resolve_spec(self, spec):
         """Resolves a TypeReference to a Type.
 
-        Does not resolve or link any subtypes."""
+        Does not resolve or link any dependencies."""
 
         visited = set()
-        while typ.is_reference:
+        while spec.is_reference:
 
-            if typ.name in visited:
+            if spec.name in visited:
                 raise ThriftCompilerError(
                     'Type "%s" at line %d is a reference to itself.'
                     % (self.name, self.lineno)
                 )
 
-            if typ.name not in self.scope.types:
+            if spec.name not in self.scope.type_specs:
                 raise ThriftCompilerError(
                     'Unknown type "%s" referenced at line %d'
-                    % (typ.name, typ.lineno)
+                    % (spec.name, spec.lineno)
                 )
 
-            visited.add(typ.name)
-            typ = self.scope.types[typ.name]
+            visited.add(spec.name)
+            spec = self.scope.type_specs[spec.name]
 
-        return typ
+        return spec

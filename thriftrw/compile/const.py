@@ -49,7 +49,7 @@ class ConstValueResolver(object):
         return const.value
 
     def visit_reference(self, const):
-        value = self.scope.constants.get(const.name)
+        value = self.scope.const_values.get(const.name)
         if value is None:
             raise ThriftCompilerError(
                 'Unknown constant "%s" referenced at line %d'

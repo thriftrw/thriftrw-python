@@ -30,19 +30,16 @@ class Scope(object):
     state of known types and values during the compilation process.
     """
 
-    __slots__ = ('constants', 'types', 'services')
+    __slots__ = ('const_values', 'type_specs', 'services')
 
     def __init__(self):
-        self.constants = {}
-        self.types = {}
+        self.const_values = {}
+        self.type_specs = {}
         self.services = {}
 
-        # TODO Compiler passes should not be directly manipulating these
-        # dicts.
-
     def __str__(self):
-        return "Scope(constants=%r, types=%r, services=%r)" % (
-            self.constants, self.types, self.services
+        return "Scope(const_values=%r, type_specs=%r, services=%r)" % (
+            self.const_values, self.type_specs, self.services
         )
 
     __repr__ = __str__
@@ -50,22 +47,22 @@ class Scope(object):
     def add_constant(self, name, value, lineno):
         assert value is not None
 
-        if name in self.constants:
+        if name in self.const_values:
             raise ThriftCompilerError(
                 'Cannot define constant "%s" at line %d. '
                 'That name is already taken.'
                 % (name, lineno)
             )
 
-        self.constants[name] = value
+        self.const_values[name] = value
 
-    def add_type(self, name, typ, lineno):
+    def add_type_spec(self, name, spec, lineno):
         """Adds the given type to the scope.
 
         :param str name:
             Name of the new type
-        :param typ:
-            ``Type`` object containing information on the type, or a
+        :param spec:
+            ``TypeSpec`` object containing information on the type, or a
             ``TypeReference`` if this is meant to be resolved during the
             ``link`` stage.
         :param lineno:
@@ -73,22 +70,14 @@ class Scope(object):
         """
         assert type is not None
 
-        if name in self.types:
+        if name in self.type_specs:
             raise ThriftCompilerError(
                 'Cannot define type "%s" at line %d. '
                 'Another type with that name already exists.'
                 % (name, lineno)
             )
 
-        self.types[name] = typ
-
-    def link(self):
-        """Link references between types and constants."""
-
-        for name in self.types.keys():
-            self.types[name] = self.types[name].link(self)
-
-        return self
+        self.type_specs[name] = spec
 
         # TODO link constant types and value references.
         # TODO it would be preferable if scope did not have any business

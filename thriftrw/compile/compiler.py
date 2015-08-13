@@ -21,7 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .gather import Gatherer
-from .link import Linker
+from .link import TypeSpecLinker
 from .scope import Scope
 from .const import ConstValueResolver
 from .exceptions import ThriftCompilerError
@@ -50,7 +50,7 @@ class Compiler(object):
             gatherer.gather(definition)
 
         # TODO Linker can probably just be a callable.
-        Linker(self.scope).link()
+        TypeSpecLinker(self.scope).link()
 
         # TODO return final module. for now, return scope to help debugging
         return self.scope

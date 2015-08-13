@@ -22,20 +22,21 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import deque
 
-from . import types
+from . import spec
 from .const import ConstValueResolver
 from .exceptions import ThriftCompilerError
 
 
+#: Mapping of Thrift primitive type names to corresponding type specs.
 PRIMITIVE_TYPES = {
-    'bool': types.BoolType,
-    'byte': types.ByteType,
-    'double': types.DoubleType,
-    'i16': types.I16Type,
-    'i32': types.I32Type,
-    'i64': types.I64Type,
-    'string': types.TextType,
-    'binary': types.BinaryType,
+    'bool': spec.BoolTypeSpec,
+    'byte': spec.ByteTypeSpec,
+    'double': spec.DoubleTypeSpec,
+    'i16': spec.I16TypeSpec,
+    'i32': spec.I32TypeSpec,
+    'i64': spec.I64TypeSpec,
+    'string': spec.TextTypeSpec,
+    'binary': spec.BinaryTypeSpec,
 }
 
 
@@ -45,7 +46,7 @@ class TypeMapper(object):
     __slots__ = ()
 
     def get(self, typ):
-        """Get the Type specification for the given AST type.
+        """Get the TypeSpec for the given AST type.
 
         If the type being referenced is a custom defined type, a TypeReference
         is returned instead.
@@ -53,24 +54,24 @@ class TypeMapper(object):
         return typ.apply(self)
 
     def visit_defined(self, typ):
-        return types.TypeReference(typ.name, typ.lineno)
+        return spec.TypeReference(typ.name, typ.lineno)
 
     def visit_primitive(self, typ):
         assert typ.name in PRIMITIVE_TYPES
         return PRIMITIVE_TYPES[typ.name]
 
     def visit_map(self, mtype):
-        ktype = self.get(mtype.key_type)
-        vtype = self.get(mtype.value_type)
-        return types.MapType(ktype, vtype)
+        kspec = self.get(mtype.key_type)
+        vspec = self.get(mtype.value_type)
+        return spec.MapTypeSpec(kspec, vspec)
 
     def visit_set(self, stype):
-        vtype = self.get(stype.value_type)
-        return types.SetType(vtype)
+        vspec = self.get(stype.value_type)
+        return spec.SetTypeSpec(vspec)
 
     def visit_list(self, ltype):
-        vtype = self.get(ltype.value_type)
-        return types.ListType(vtype)
+        vspec = self.get(ltype.value_type)
+        return spec.ListTypeSpec(vspec)
 
 
 class Gatherer(object):
@@ -108,7 +109,7 @@ class Gatherer(object):
 
     def visit_typedef(self, typedef):
         target = self.type_mapper.get(typedef.target_type)
-        self.scope.add_type(typedef.name, target, typedef.lineno)
+        self.scope.add_type_spec(typedef.name, target, typedef.lineno)
 
     def visit_enum(self, enum):
         items = deque()
@@ -123,11 +124,11 @@ class Gatherer(object):
             items.append(item)
 
         enum = enum._replace(items=items)
-        self.scope.add_type(enum.name, types.I32Type, enum.lineno)
+        self.scope.add_type_spec(enum.name, spec.I32TypeSpec, enum.lineno)
 
         # TODO Add type_spec to list of reserved words.
         # TODO Find better name for type_spec
-        # items['type_spec'] = types.I32Type
+        # items['type_spec'] = spec.I32Type
 
         raise NotImplementedError  # TODO generate class
 
@@ -148,8 +149,8 @@ class Gatherer(object):
         cls = None  # TODO generate class
         raise NotImplementedError
 
-        self.scope.add_type(
-            struct.name, types.StructType(cls, fields), struct.lineno
+        self.scope.add_type_spec(
+            struct.name, spec.StructTypeSpec(cls, fields), struct.lineno
         )
 
     def visit_union(self, union):
@@ -169,8 +170,8 @@ class Gatherer(object):
         cls = None  # TODO generate class
         raise NotImplementedError
 
-        self.scope.add_type(
-            union.name, types.StructType(cls, fields), union.lineno
+        self.scope.add_type_spec(
+            union.name, spec.StructTypeSpec(cls, fields), union.lineno
         )
 
     def visit_exc(self, exc):
@@ -190,8 +191,8 @@ class Gatherer(object):
         cls = None  # TODO generate class
         raise NotImplementedError
 
-        self.scope.add_type(
-            exc.name, types.StructType(cls, fields), exc.lineno
+        self.scope.add_type_spec(
+            exc.name, spec.StructTypeSpec(cls, fields), exc.lineno
         )
 
     def visit_service(self, svc):
@@ -205,5 +206,5 @@ class Gatherer(object):
                 % (field.name, struct.name)
             )
 
-        ftype = self.type_mapper.get(field.field_type)
-        return types.Field(id=field.id, name=field.name, ftype=ftype)
+        spec = self.type_mapper.get(field.field_type)
+        return spec.FieldSpec(id=field.id, name=field.name, spec=spec)
