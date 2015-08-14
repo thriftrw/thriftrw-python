@@ -49,17 +49,17 @@ class TypeSpecLinker(object):
 
         def _link(spec):
             spec = self.resolve_spec(spec)
-            if spec not in visited:
+            if spec.name not in visited:
                 # Ask for this type's dependencies to be linked
                 to_link.append(spec)
             return spec
 
         while to_link:
             spec = to_link.popleft()
-            if spec in visited:
+            if spec.name in visited:
                 # Already linked.
                 continue
-            visited.append(spec)
+            visited.add(spec.name)
             spec.transform_dependencies(_link)
 
     def resolve_spec(self, spec):
@@ -86,3 +86,33 @@ class TypeSpecLinker(object):
             spec = self.scope.type_specs[spec.name]
 
         return spec
+
+
+class ServiceSpecLinker(object):
+
+    __slots__ = ('scope',)
+
+    def __init__(self, scope):
+        self.scope = scope
+
+    def link(self):
+        for spec in self.scope.service_specs.values():
+            spec.transform_types(self._resolve_type)
+            if spec.parent is not None:
+                if spec.parent not in self.scope.service_specs:
+                    raise ThriftCompilerError(
+                        'Service "%s" inherits from unknown service "%s"'
+                        % (spec.name, spec.parent)
+                    )
+                spec.parent = self.scope.service_specs[spec.parent]
+
+    def _resolve_type(self, typ):
+        if typ.is_reference:
+            if typ.name not in self.scope.type_specs:
+                raise ThriftCompilerError(
+                    'Unknown type "%s" referenced at line %d'
+                    % (typ.name, typ.lineno)
+                )
+
+            return self.scope.type_specs[typ]
+        return typ

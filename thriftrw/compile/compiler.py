@@ -22,38 +22,37 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from .gather import Gatherer
 from .link import TypeSpecLinker
+from .link import ServiceSpecLinker
 from .scope import Scope
-from .const import ConstValueResolver
 from .exceptions import ThriftCompilerError
+from .service import ServiceCompiler
 
 
 class Compiler(object):
 
-    def __init__(self, protocol):
-        self.scope = Scope()
-        self.values = ConstValueResolver(self.scope)
+    LINKERS = [TypeSpecLinker, ServiceSpecLinker]
 
+    def __init__(self, protocol):
         self.protocol = protocol
 
     def compile(self, name, program):
-        # NOTE we're ignoring name for now but we can use it later to
-        # namespace definitions when we do support includes.
-
-        # TODO the class responsible for the code generation pass should know
-        # about the moodule and the name
+        scope = Scope(name)
 
         for header in program.headers:
             header.apply(self)
 
-        gatherer = Gatherer(self.scope)
+        gatherer = Gatherer(scope)
         for definition in program.definitions:
             gatherer.gather(definition)
 
         # TODO Linker can probably just be a callable.
-        TypeSpecLinker(self.scope).link()
+        for linker in self.LINKERS:
+            linker(scope).link()
 
-        # TODO return final module. for now, return scope to help debugging
-        return self.scope
+        ServiceCompiler(scope).compile()
+
+        # TODO return final module
+        return scope
 
     def visit_include(self, include):
         raise ThriftCompilerError(

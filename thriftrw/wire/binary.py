@@ -287,13 +287,15 @@ class BinaryProtocolWriter(V.ValueVisitor):
 class BinaryProtocol(Protocol):
     """Implements the Thrift binary protocol."""
 
-    def dump(self, value):
+    __slots__ = ()
+
+    def serialize_value(self, value):
         buff = six.BytesIO()
         writer = BinaryProtocolWriter(buff)
         writer.write(value)
         return buff.getvalue()
 
-    def load(self, typ, s):
+    def deserialize_value(self, typ, s):
         buff = six.BytesIO(s)
         reader = BinaryProtocolReader(buff)
         return reader.read(typ)

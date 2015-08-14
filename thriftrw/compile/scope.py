@@ -20,6 +20,8 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import types
+
 from .exceptions import ThriftCompilerError
 
 
@@ -30,24 +32,37 @@ class Scope(object):
     state of known types and values during the compilation process.
     """
 
-    __slots__ = ('const_values', 'type_specs', 'services')
+    __slots__ = ('const_values', 'type_specs', 'module', 'service_specs')
 
-    def __init__(self):
+    def __init__(self, name):
         self.const_values = {}
         self.type_specs = {}
-        self.services = {}
+        self.service_specs = {}
+
+        self.module = types.ModuleType(name)
 
     def __str__(self):
-        return "Scope(const_values=%r, type_specs=%r, services=%r)" % (
-            self.const_values, self.type_specs, self.services
-        )
+        return "Scope(%r)" % {
+            'const_values': self.const_values,
+            'type_specs': self.type_specs,
+            'service_specs': self.service_specs,
+            'module': self.module,
+        }
 
     __repr__ = __str__
+
+    def add_service_spec(self, service_spec):
+        if service_spec.name in self.service_specs:
+            raise ThriftCompilerError(
+                'Cannot define service "%s". That name is already taken.'
+                % service_spec.name
+            )
+        self.service_specs[service_spec.name] = service_spec
 
     def add_constant(self, name, value, lineno):
         assert value is not None
 
-        if name in self.const_values:
+        if name in self.const_values or hasattr(self.module, name):
             raise ThriftCompilerError(
                 'Cannot define constant "%s" at line %d. '
                 'That name is already taken.'
@@ -55,6 +70,18 @@ class Scope(object):
             )
 
         self.const_values[name] = value
+        setattr(self.module, name, value)
+
+    def add_class(self, cls):
+        assert cls is not None
+
+        name = cls.__name__
+        if hasattr(self.module, name):
+            raise ThriftCompilerError(
+                'Cannot define "%s". The name has already been used.' % name
+            )
+
+        setattr(self.module, name, cls)
 
     def add_type_spec(self, name, spec, lineno):
         """Adds the given type to the scope.
@@ -78,7 +105,3 @@ class Scope(object):
             )
 
         self.type_specs[name] = spec
-
-        # TODO link constant types and value references.
-        # TODO it would be preferable if scope did not have any business
-        # logic.

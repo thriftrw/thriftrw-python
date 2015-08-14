@@ -32,7 +32,7 @@ class Protocol(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def dump(self, value):
+    def serialize_value(self, value):
         """Serialize the given ``Value``.
 
         :param ~thriftrw.wire.Value value:
@@ -42,7 +42,7 @@ class Protocol(object):
         """
 
     @abc.abstractmethod
-    def load(self, typ, s):
+    def deserialize_value(self, typ, s):
         """Parse a ``Value`` of the given type.
 
         :param ~thriftrw.wire.TType typ:

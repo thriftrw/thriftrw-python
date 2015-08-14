@@ -20,8 +20,12 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import six
 from collections import deque
 
+from thriftrw.idl import ast
+
+from . import gen
 from . import spec
 from .const import ConstValueResolver
 from .exceptions import ThriftCompilerError
@@ -81,7 +85,7 @@ class Gatherer(object):
     collects all constants and definitions that will be defined.
     """
 
-    __slots__ = ('scope', 'type_mapper')
+    __slots__ = ('scope', 'type_mapper', 'const_resolver')
 
     def __init__(self, scope):
         self.scope = scope
@@ -100,7 +104,7 @@ class Gatherer(object):
         if False and not typ.matches(value):
             # TODO implement typ.matches -- assuming we want to do validation
             raise ThriftCompilerError(
-                'Value for constant %s on line %d does not match its type.'
+                'Value for constant "%s" on line %d does not match its type.'
                 % (const.name, const.lineno)
             )
             # TODO Support constants which use typedefs of primitve types.
@@ -112,46 +116,26 @@ class Gatherer(object):
         self.scope.add_type_spec(typedef.name, target, typedef.lineno)
 
     def visit_enum(self, enum):
-        items = deque()
-
-        prev = -1
-        for item in enum.items:
-            value = item.value
-            if value is None:
-                value = prev + 1
-            prev = value
-            item = item._replace(value=value)
-            items.append(item)
-
-        enum = enum._replace(items=items)
-        self.scope.add_type_spec(enum.name, spec.I32TypeSpec, enum.lineno)
+        enum_spec = spec.I32TypeSpec
+        self.scope.add_type_spec(enum.name, enum_spec, enum.lineno)
+        self.scope.add_class(gen.enum_cls(enum, enum_spec))
 
         # TODO Add type_spec to list of reserved words.
-        # TODO Find better name for type_spec
-        # items['type_spec'] = spec.I32Type
-
-        raise NotImplementedError  # TODO generate class
 
     def visit_struct(self, struct):
         fields = deque()
 
         for field in struct.fields:
+            fields.append(self._mk_field(struct.name, field))
 
-            if field.requiredness is None:
-                raise ThriftCompilerError(
-                    'Field %s of %s does not explicitly specify requiredness. '
-                    'Please specify whether the field is required or optional.'
-                    % (field.name, struct.name)
-                )
-
-            fields.append(self._mk_field(struct, field))
-
-        cls = None  # TODO generate class
-        raise NotImplementedError
-
-        self.scope.add_type_spec(
-            struct.name, spec.StructTypeSpec(cls, fields), struct.lineno
+        struct_cls = gen.struct_cls(
+            struct.name, struct.fields, None, self.const_resolver
         )
+        struct_spec = spec.StructTypeSpec(struct.name, struct_cls, fields)
+        struct_cls.type_spec = struct_spec
+
+        self.scope.add_type_spec(struct.name, struct_spec, struct.lineno)
+        self.scope.add_class(struct_cls)
 
     def visit_union(self, union):
         fields = deque()
@@ -160,51 +144,138 @@ class Gatherer(object):
 
             if field.default is not None:
                 raise ThriftCompilerError(
-                    'Field %s of union %s has a default value. '
+                    'Field "%s" of union "%s" has a default value. '
                     'Fields of unions cannot have default values. '
                     % (field.name, union.name)
                 )
 
-            fields.append(self._mk_field(union, field))
+            fields.append(self._mk_field(union.name, field))
 
-        cls = None  # TODO generate class
-        raise NotImplementedError
+        union_cls = gen.union_cls(union.name, union.fields, None)
+        union_spec = spec.StructTypeSpec(union.name, union_cls, fields)
+        union_cls.type_spec = union_spec
 
-        self.scope.add_type_spec(
-            union.name, spec.StructTypeSpec(cls, fields), union.lineno
-        )
+        self.scope.add_type_spec(union.name, union_spec, union.lineno)
+        self.scope.add_class(union_cls)
 
     def visit_exc(self, exc):
         fields = deque()
 
         for field in exc.fields:
+            fields.append(self._mk_field(exc.name, field))
 
-            if field.requiredness is None:
-                raise ThriftCompilerError(
-                    'Field %s of %s does not explicitly specify requiredness. '
-                    'Please specify whether the field is required or optional.'
-                    % (field.name, exc.name)
-                )
-
-            fields.append(self._mk_field(exc, field))
-
-        cls = None  # TODO generate class
-        raise NotImplementedError
-
-        self.scope.add_type_spec(
-            exc.name, spec.StructTypeSpec(cls, fields), exc.lineno
+        exc_cls = gen.exception_cls(
+            exc.name, exc.fields, None, self.const_resolver
         )
+        exc_spec = spec.StructTypeSpec(exc.name, exc_cls, fields)
+        exc_cls.type_spec = exc_spec
+
+        self.scope.add_type_spec(exc.name, exc_spec, exc.lineno)
+        self.scope.add_class(exc_cls)
 
     def visit_service(self, svc):
-        raise NotImplementedError
+        function_specs = deque()
 
-    def _mk_field(self, struct, field):
-        if field.id is None:
-            raise ThriftCompilerError(
-                'Field %s of %s does not have an explicit field ID. '
-                'Please specify the numeric ID for the field.'
-                % (field.name, struct.name)
+        for func in svc.functions:
+
+            if func.oneway:
+                raise ThriftCompilerError(
+                    'Function "%s.%s" is oneway. '
+                    'Oneway functions are not supported by thriftrw.'
+                    % (svc_ast.name, func.name)
+                )
+
+            args_name = str('%s_%s_request' % (svc.name, func.name))
+            param_specs = deque()
+            for param in func.parameters:
+                # TODO decide correct behavior for when requiredness is
+                # specified on parameters
+                param_specs.append(self._mk_field(args_name, param))
+
+            args_cls = gen.struct_cls(
+                args_name,
+                func.parameters,
+                None,
+                self.const_resolver,
+                require_requiredness=False,
+            )
+            args_spec = spec.StructTypeSpec(args_name, args_cls, param_specs)
+            args_cls.type_spec = args_spec
+
+            result_name = str('%s_%s_response' % (svc.name, func.name))
+            result_fields = deque()
+            result_specs = deque()
+
+            if func.return_type is not None:
+                # Generate a fake AST node
+                return_field = ast.Field(
+                    id=0,
+                    name='success',
+                    field_type=func.return_type,
+                    requiredness=None,
+                    default=None,
+                    annotations=None,
+                    lineno=func.lineno,
+                )
+
+                result_fields.append(return_field)
+                result_specs.append(
+                    self._mk_field(result_name, return_field)
+                )
+
+            for exc in func.exceptions:
+
+                if exc.requiredness is not None:
+                    raise ThriftCompilerError(
+                        'Exception "%s" of "%s" is "%s". '
+                        'Exceptions cannot be specified as required or optional.'
+                        % (exc.name, func.name,
+                           'required' if exc.requiredness else 'optional')
+                    )
+
+                if exc.default is not None:
+                    raise ThriftCompilerError(
+                        'Exception "%s" of "%s" has a default value. '
+                        'Exceptions cannot have default values.'
+                        % (exc.name, func.name,
+                           'required' if exc.requiredness else 'optional')
+                    )
+
+                result_fields.append(exc)
+                result_specs.append(self._mk_field(result_name, exc))
+
+            result_cls = gen.union_cls(
+                result_name,
+                result_fields,
+                None,
+            )
+            result_spec = spec.StructTypeSpec(
+                result_name, result_cls, result_specs
+            )
+            result_cls.type_spec = result_spec
+
+            self.scope.add_class(args_cls)
+            self.scope.add_class(result_cls)
+
+            function_specs.append(
+                spec.FunctionSpec(
+                    func.name,
+                    args_spec=args_spec,
+                    result_spec=result_spec,
+                )
             )
 
-        spec = self.type_mapper.get(field.field_type)
-        return spec.FieldSpec(id=field.id, name=field.name, spec=spec)
+        self.scope.add_service_spec(
+            spec.ServiceSpec(svc.name, function_specs, svc.parent)
+        )
+
+    def _mk_field(self, container_name, field):
+        if field.id is None:
+            raise ThriftCompilerError(
+                'Field "%s" of "%s" does not have an explicit field ID. '
+                'Please specify the numeric ID for the field.'
+                % (field.name, container_name)
+            )
+
+        field_spec = self.type_mapper.get(field.field_type)
+        return spec.FieldSpec(id=field.id, name=field.name, spec=field_spec)

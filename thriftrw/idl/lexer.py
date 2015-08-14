@@ -176,7 +176,7 @@ class Lexer(LexerSpec):
             String of input data.
         """
         # input(..) doesn't reset the lineno. We have to do that manually.
-        self._lexer.lineno = 0
+        self._lexer.lineno = 1
         return self._lexer.input(data)
 
     def token(self):

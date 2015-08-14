@@ -28,6 +28,48 @@ import thriftrw.wire.value as V
 from thriftrw.wire import TType
 
 
+class FunctionSpec(object):
+
+    __slots__ = ('name', 'args_spec', 'result_spec',)
+
+    def __init__(self, name, args_spec, result_spec):
+        self.name = name
+        self.args_spec = args_spec
+        self.result_spec = result_spec
+
+    def transform_types(self, function):
+        self.args_spec = function(self.args_spec)
+        self.result_spec = function(self.result_spec)
+
+    def __str__(self):
+        return 'FunctionSpec(name=%r, args_spec=%r, result_spec=%r)' % (
+            self.name, self.args_spec, self.result_spec
+        )
+
+    __repr__ = __str__
+
+
+class ServiceSpec(object):
+
+    __slots__ = ('name', 'functions', 'parent')
+
+    def __init__(self, name, functions, parent):
+        self.name = name
+        self.functions = functions
+        self.parent = parent
+    
+    def transform_types(self, function):
+        for func_spec in self.functions:
+            func_spec.transform_types(function)
+
+    def __str__(self):
+        return 'ServiceSpec(name=%r, functions=%r, parent=%r)' % (
+            self.name, self.functions, self.parent
+        )
+
+    __repr__ = __str__
+
+
 class TypeSpec(object):
     """Base class for classes representing TypeSpecs.
 
@@ -37,6 +79,12 @@ class TypeSpec(object):
     """
     __metaclass__ = abc.ABCMeta
 
+    # All TypeSpecs must also have a 'name' property.
+    #
+    # That's not being added as an abstractproperty because some of them may
+    # implement it as a field of the class. Adding an abstractproperty somehow
+    # overrides the field.
+
     @abc.abstractmethod
     def to_wire(self, value):
         """Converts the given value into a :py:class:`Value` object."""
@@ -45,7 +93,7 @@ class TypeSpec(object):
     @abc.abstractmethod
     def from_wire(self, wire_value):
         """Converts the given `Value` back into the original type.
-        
+
         :param thriftr.wire.Value wire_value:
             Value to convert."""
         pass  # TODO define some way of failing the conversion
@@ -53,7 +101,7 @@ class TypeSpec(object):
     @abc.abstractproperty
     def ttype_code(self):
         """Get the numeric TType identifier for this type.
-        
+
         :returns thriftrw.wire.TType:
             TType of the value represented by this spec.
         """
@@ -97,7 +145,7 @@ class TypeReference(namedtuple('TypeReference', 'name lineno')):
 
 
 class PrimitiveTypeSpec(
-    TypeSpec, namedtuple('PrimitiveTypeSpec', 'code value_cls')
+    TypeSpec, namedtuple('PrimitiveTypeSpec', 'name code value_cls')
 ):
     """TypeSpec for primitive types."""
 
@@ -119,6 +167,10 @@ class _TextTypeSpec(TypeSpec):
     __slots__ = ()
 
     @property
+    def name(self):
+        return 'string'
+
+    @property
     def ttype_code(self):
         return TType.BINARY
 
@@ -130,25 +182,25 @@ class _TextTypeSpec(TypeSpec):
 
 
 #: TypeSpec for boolean values.
-BoolTypeSpec = PrimitiveTypeSpec(TType.BOOL, V.BoolValue)
+BoolTypeSpec = PrimitiveTypeSpec('bool', TType.BOOL, V.BoolValue)
 
 #: TypeSpec for single-byte integers.
-ByteTypeSpec = PrimitiveTypeSpec(TType.BYTE, V.ByteValue)
+ByteTypeSpec = PrimitiveTypeSpec('byte', TType.BYTE, V.ByteValue)
 
 #: TypeSpec for floating point numbers with 64 bits of precision.
-DoubleTypeSpec = PrimitiveTypeSpec(TType.DOUBLE, V.DoubleValue)
+DoubleTypeSpec = PrimitiveTypeSpec('double', TType.DOUBLE, V.DoubleValue)
 
 #: TypeSpec for 16-bit integers.
-I16TypeSpec = PrimitiveTypeSpec(TType.I16, V.I16Value)
+I16TypeSpec = PrimitiveTypeSpec('i16', TType.I16, V.I16Value)
 
 #: TypeSpec for 32-bit integers.
-I32TypeSpec = PrimitiveTypeSpec(TType.I32, V.I32Value)
+I32TypeSpec = PrimitiveTypeSpec('i32', TType.I32, V.I32Value)
 
 #: TypeSpec for 64-bit integers.
-I64TypeSpec = PrimitiveTypeSpec(TType.I64, V.I64Value)
+I64TypeSpec = PrimitiveTypeSpec('i64', TType.I64, V.I64Value)
 
 #: TypeSpec for binary blobs.
-BinaryTypeSpec = PrimitiveTypeSpec(TType.BINARY, V.BinaryValue)
+BinaryTypeSpec = PrimitiveTypeSpec('binary', TType.BINARY, V.BinaryValue)
 
 #: TypeSpec for unicode data.
 TextTypeSpec = _TextTypeSpec()
@@ -174,8 +226,10 @@ class FieldSpec(object):
         self.spec = spec
 
     def __str__(self):
-        return 'FieldSpec(id=%r, name=%r, spec=%r)' % (
-            self.id, self.name, self.spec
+        # Field __str__ must reference spec names instead of the specs to
+        # avoid an infinite loop in case the field is self-referential.
+        return 'FieldSpec(id=%r, name=%r, spec_name=%r)' % (
+            self.id, self.name, self.spec.name
         )
 
     __repr__ = __str__
@@ -199,7 +253,9 @@ class FieldSpec(object):
         self.spec = function(self.spec)
 
 
-class StructTypeSpec(TypeSpec, namedtuple('StructTypeSpec', 'cls fields')):
+class StructTypeSpec(
+    TypeSpec, namedtuple('StructTypeSpec', 'name cls fields')
+):
     """A struct is a collection of named fields.
 
     :param cls:
@@ -257,6 +313,10 @@ class MapTypeSpec(TypeSpec):
         self.vspec = vspec
 
     @property
+    def name(self):
+        return 'map<%s, %s>' % (self.kspec.name, self.vspec.name)
+
+    @property
     def ttype_code(self):
         return TType.MAP
 
@@ -298,6 +358,10 @@ class SetTypeSpec(TypeSpec):
         self.vspec = vspec
 
     @property
+    def name(self):
+        return 'set<%s>' % self.vspec.name
+
+    @property
     def ttype_code(self):
         return TType.SET
 
@@ -331,6 +395,10 @@ class ListTypeSpec(TypeSpec):
 
     def __init__(self, vspec):
         self.vspec = vspec
+
+    @property
+    def name(self):
+        return 'list<%s>' % self.vspec.name
 
     @property
     def ttype_code(self):
