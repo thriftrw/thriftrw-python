@@ -27,6 +27,34 @@ from collections import namedtuple
 import thriftrw.wire.value as V
 from thriftrw.wire import TType
 
+__all__ = [
+    # Services
+    'FunctionSpec',
+    'ServiceSpec',
+
+    # Types
+    'TypeSpec',
+    'TypeReference',
+
+    # Primitive types
+    'BoolTypeSpec',
+    'ByteTypeSpec',
+    'DoubleTypeSpec',
+    'I16TypeSpec',
+    'I32TypeSpec',
+    'I64TypeSpec',
+    'BinaryTypeSpec',
+    'TextTypeSpec',
+
+    # Complex types
+    'StructTypeSpec',
+    'MapTypeSpec',
+    'SetTypeSpec',
+    'ListTypeSpec',
+
+    'FieldSpec',
+]
+
 
 class FunctionSpec(object):
 

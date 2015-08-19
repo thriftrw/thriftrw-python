@@ -25,6 +25,9 @@ from collections import deque
 from .exceptions import ThriftCompilerError
 
 
+__all__ = ['TypeSpecLinker', 'ServiceSpecLinker']
+
+
 class TypeSpecLinker(object):
     """Links together references in TypeSpecs."""
 
@@ -89,6 +92,7 @@ class TypeSpecLinker(object):
 
 
 class ServiceSpecLinker(object):
+    """Links references to type in service specs."""
 
     __slots__ = ('scope',)
 
@@ -96,8 +100,21 @@ class ServiceSpecLinker(object):
         self.scope = scope
 
     def link(self):
+        to_link = deque()
+
+        def _link(typ):
+            if typ.is_reference:
+                if typ.name not in self.scope.type_specs:
+                    raise ThriftCompilerError(
+                        'Unknown type "%s" referenced at line %d'
+                        % (typ.name, typ.lineno)
+                    )
+                typ = self.scope.type_specs[typ.name]
+            to_link.append(typ)
+            return typ
+
         for spec in self.scope.service_specs.values():
-            spec.transform_types(self._resolve_type)
+            spec.transform_types(_link)
             if spec.parent is not None:
                 if spec.parent not in self.scope.service_specs:
                     raise ThriftCompilerError(
@@ -106,13 +123,10 @@ class ServiceSpecLinker(object):
                     )
                 spec.parent = self.scope.service_specs[spec.parent]
 
-    def _resolve_type(self, typ):
-        if typ.is_reference:
-            if typ.name not in self.scope.type_specs:
-                raise ThriftCompilerError(
-                    'Unknown type "%s" referenced at line %d'
-                    % (typ.name, typ.lineno)
-                )
-
-            return self.scope.type_specs[typ]
-        return typ
+        visited = set()
+        while to_link:
+            spec = to_link.popleft()
+            if spec.name in visited:
+                continue
+            visited.add(spec.name)
+            spec.transform_dependencies(_link)

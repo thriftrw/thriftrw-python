@@ -22,6 +22,31 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
+__all__ = [
+    'Program',
+    'Include',
+    'Namespace',
+    'Const',
+    'Typedef',
+    'Enum',
+    'EnumItem',
+    'Struct',
+    'Union',
+    'Exc',
+    'Service',
+    'Function',
+    'Field',
+    'PrimitiveType',
+    'MapType',
+    'SetType',
+    'ListType',
+    'DefinedType',
+    'ConstValue',
+    'ConstPrimitiveValue',
+    'ConstReference',
+    'Annotation',
+]
+
 
 ##############################################################################
 # Program
@@ -349,7 +374,8 @@ class DefinedType(namedtuple('DefinedType', 'name lineno')):
 ##############################################################################
 # Constants
 
-# TODO Move these sections into separate modules.
+# TODO Move things that are sectioned like this into separate modules and
+# explicitly specify their visitor interfaces.
 
 class ConstValue(object):
     """Base class for constant value types."""

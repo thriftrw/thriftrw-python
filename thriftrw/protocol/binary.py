@@ -18,15 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+Binary Protocol
+---------------
+
+In addition to providing :py:class:`thriftrw.protocol.BinaryProtocol`, this
+module provides two utility functions to facilitate serializing and
+deserializing Thrift structs.
+
+.. autofunction:: dump
+
+.. autofunction:: load
+
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
 import six
 import struct
 from collections import deque
 
-from . import value as V
-from .protocol import Protocol
-from .ttype import TType
+from thriftrw.wire import value as V
+from thriftrw.wire import TType
+
+from .core import Protocol
 from .exceptions import EndOfInputError
 
 
@@ -301,4 +315,8 @@ class BinaryProtocol(Protocol):
         return reader.read(typ)
 
 
-__all__ = ['BinaryProtocol']
+_DEFAULT_BINARY_PROTOCOL = BinaryProtocol()
+dump = _DEFAULT_BINARY_PROTOCOL.dump
+load = _DEFAULT_BINARY_PROTOCOL.load
+
+__all__ = ['BinaryProtocol', 'dump', 'load']

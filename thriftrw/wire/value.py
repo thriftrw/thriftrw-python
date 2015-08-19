@@ -17,7 +17,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
 from __future__ import absolute_import, unicode_literals, print_function
 
 import abc
@@ -27,6 +26,23 @@ from collections import namedtuple
 from .ttype import TType
 
 # TODO: This module should mostly be cython.
+
+__all__ = [
+    'Value',
+    'BoolValue',
+    'ByteValue',
+    'DoubleValue',
+    'I16Value',
+    'I32Value',
+    'I64Value',
+    'BinaryValue',
+    'FieldValue',
+    'StructValue',
+    'MapValue',
+    'SetValue',
+    'ListValue',
+    'ValueVisitor',
+]
 
 
 class Value(object):

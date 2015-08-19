@@ -24,9 +24,13 @@ from collections import namedtuple
 
 from .exceptions import ThriftCompilerError
 
+__all__ = ['ServiceFunction', 'ServiceCompiler']
+
 
 class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
     """Represents a single function on a service.
+
+    May be treated as a callable to instantiate request objects.
 
     ``name``
         Name of the function.
@@ -41,18 +45,37 @@ class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
 
 
 class ServiceCompiler(object):
+    """Compiles service specs into classes."""
+
+    __slots__ = ('scope', '_compiled')
 
     def __init__(self, scope):
+        """Initialize a ``ServiceCompiler``
+
+        :param scope:
+            The compilation scope that knows about the services.
+        """
         self.scope = scope
-        self.compiled = {}
+        self._compiled = {}
 
     def compile(self):
+        """Compiles all known services in the scope.
+
+        Generated classes will be added to the output module."""
         for name in self.scope.service_specs.keys():
             self.compile_service(name)
 
     def compile_service(self, name, visited=None):
-        if name in self.compiled:
-            return self.compiled
+        """Compile the service with the given name.
+
+        :param name:
+            Name of the service.
+        :param visited:
+            Keeps track of services that have been seen so far during the
+            compliation chain. Used to detect cycles.
+        """
+        if name in self._compiled:
+            return self._compiled
 
         visited = set() if visited is None else visited
 
@@ -101,7 +124,7 @@ class ServiceCompiler(object):
         service_dct['__slots__'] = ()
 
         service_cls = type(service_spec.name, (base_cls,), service_dct)
-        self.compiled[service_spec.name] = service_cls
+        self._compiled[service_spec.name] = service_cls
         self.scope.add_class(service_cls)
 
         return service_cls

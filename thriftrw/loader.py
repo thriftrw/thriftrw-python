@@ -17,14 +17,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
 from __future__ import absolute_import, unicode_literals, print_function
 
 import os.path
 
 from .idl import Parser
 from .compile import Compiler
-from .wire import BinaryProtocol
+from .protocol import BinaryProtocol
 
 
 class Loader(object):
@@ -35,7 +34,7 @@ class Loader(object):
     def __init__(self, protocol=None):
         """Initialize a loader.
 
-        :param thriftrw.wire.Protocol protocol:
+        :param thriftrw.protocol.Protocol protocol:
             The protocol to use to serialize and deserialize types. Defaults
             to the binary protocol.
         """
@@ -55,14 +54,18 @@ class Loader(object):
         program = self.parser.parse(document)
         return self.compiler.compile(name, program)
 
-    def load(self, path):
+    def load(self, path, name=None):
         """Load and compile the given Thrift file.
 
-        :param path:
+        :param str path:
             Path to the ``.thrift`` file.
+        :param str name:
+            Name of the generated module. Defaults to the base name of the
+            ``.thrift`` file.
         """
         # TODO do we care if the file extension is .thrift?
-        name = os.path.splitext(os.path.basename(path))[0]
+        if name is None:
+            name = os.path.splitext(os.path.basename(path))[0]
         with open(path, 'r') as f:
             document = f.read()
         return self.loads(name, document)
@@ -70,6 +73,11 @@ class Loader(object):
 
 _DEFAULT_LOADER = Loader()
 
+#: Parses and compiles the given Thrift file.
+#:
+#: Uses the binary protocol to serialize and deserialize values.
+#:
+#: For more advanced use, see :py:class:`thriftrw.loader.Loader`.
 load = _DEFAULT_LOADER.load
 
 

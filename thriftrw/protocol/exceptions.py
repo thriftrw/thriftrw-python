@@ -17,40 +17,18 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
 from __future__ import absolute_import, unicode_literals, print_function
 
-import abc
+__all__ = ['ThriftProtocolError', 'EndOfInputError']
 
 
-__all__ = ['Protocol']
+class ThriftProtocolError(Exception):
+    """Exceptions raised by Protocol implementations for errors encountered
+    during serialization or deserialization.
+    """
+    # TODO all exceptions raised by this library must havea common parent.
+    pass
 
 
-class Protocol(object):
-    """Base class for all protocol implementations."""
-
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def serialize_value(self, value):
-        """Serialize the given ``Value``.
-
-        :param ~thriftrw.wire.Value value:
-            Value to serialize.
-        :returns:
-            Serialized value.
-        """
-
-    @abc.abstractmethod
-    def deserialize_value(self, typ, s):
-        """Parse a ``Value`` of the given type.
-
-        :param ~thriftrw.wire.TType typ:
-            Type code of the value to parse.
-        :param s:
-            Bytes to decode.
-        :returns:
-            Parsed :py:class:`~thriftrw.wire.Value`.
-        """
-
-    # TODO do we care about Message envelopes?
+class EndOfInputError(ThriftProtocolError):
+    """The input was shorter than expected."""

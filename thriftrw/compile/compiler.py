@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .gather import Gatherer
+from .generate import Generator
 from .link import TypeSpecLinker
 from .link import ServiceSpecLinker
 from .scope import Scope
@@ -28,31 +28,47 @@ from .exceptions import ThriftCompilerError
 from .service import ServiceCompiler
 
 
+__all__ = ['Compiler']
+
+
 class Compiler(object):
+    """Compiles IDLs into Python modules."""
 
     LINKERS = [TypeSpecLinker, ServiceSpecLinker]
 
     def __init__(self, protocol):
+        """Initialize the compiler.
+
+        :param thriftrw.protocol.Protocol protocol:
+           The protocol ot use to serialize and deserialize values.
+        """
         self.protocol = protocol
 
     def compile(self, name, program):
+        """Compile the given parsed Thrift document.
+
+        :param str name:
+            Name of the Thrift document. This will be the name of the
+            generated module.
+        :param thriftrw.idl.Program program:
+            AST of the parsted Thrift document.
+        """
         scope = Scope(name)
 
         for header in program.headers:
             header.apply(self)
 
-        gatherer = Gatherer(scope)
+        generator = Generator(scope)
         for definition in program.definitions:
-            gatherer.gather(definition)
+            generator.process(definition)
 
         # TODO Linker can probably just be a callable.
         for linker in self.LINKERS:
             linker(scope).link()
 
         ServiceCompiler(scope).compile()
-
-        # TODO return final module
-        return scope
+        # TODO add load and dump methods to module
+        return scope.module
 
     def visit_include(self, include):
         raise ThriftCompilerError(

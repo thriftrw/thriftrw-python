@@ -18,43 +18,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+Protocols
+---------
+
+.. autoclass:: thriftrw.protocol.Protocol
+    :members:
+
+.. autoclass:: thriftrw.protocol.BinaryProtocol
+    :members:
+
+.. automodule:: thriftrw.protocol.binary
+
+Exceptions
+----------
+
+.. autoclass:: thriftrw.protocol.ThriftProtocolError
+    :members:
+
+.. autoclass:: thriftrw.protocol.EndOfInputError
+    :members:
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .exceptions import ThriftCompilerError
+from .binary import BinaryProtocol
+from .core import Protocol
+from .exceptions import ThriftProtocolError, EndOfInputError
 
 
-class ConstValueResolver(object):
-    """Resolves constant values."""
+__all__ = [
+    # Protocol
+    'Protocol',
+    'BinaryProtocol',
 
-    __slots__ = ('scope',)
-
-    def __init__(self, scope):
-        """
-        :param Scope scope:
-            Scope which will be queried for constants.
-        """
-        self.scope = scope
-
-    def resolve(self, const_value):
-        """Resolve the given constant value.
-
-        :param const_value:
-            A ``thriftrw.idl.ConstValue``
-        :returns:
-            The value that the ``ConstValue`` maps to.
-        """
-        return const_value.apply(self)
-
-    def visit_primitive(self, const):
-        return const.value
-
-    def visit_reference(self, const):
-        value = self.scope.const_values.get(const.name)
-        if value is None:
-            raise ThriftCompilerError(
-                'Unknown constant "%s" referenced at line %d'
-                % (const.name, const.lineno)
-            )
-        return value
-
-    # NOTE We do not yet support forward references in constants.
+    # Exceptions
+    'ThriftProtocolError',
+    'EndOfInputError',
+]

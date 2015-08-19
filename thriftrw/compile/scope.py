@@ -24,17 +24,25 @@ import types
 
 from .exceptions import ThriftCompilerError
 
+__all__ = ['Scope']
+
 
 class Scope(object):
-    """Represents the compilation scope.
+    """Maintains the compilation state across steps.
 
     The scope is not exported to the user directly. It's only used to maintain
-    state of known types and values during the compilation process.
+    state of known types and values during the compilation process and holds a
+    reference to the final generated module.
     """
 
     __slots__ = ('const_values', 'type_specs', 'module', 'service_specs')
 
     def __init__(self, name):
+        """Initialize the scope.
+
+        :param name:
+            Name of the generated module.
+        """
         self.const_values = {}
         self.type_specs = {}
         self.service_specs = {}
@@ -52,6 +60,12 @@ class Scope(object):
     __repr__ = __str__
 
     def add_service_spec(self, service_spec):
+        """Registers the given ``ServiceSpec`` into the scope.
+
+        Raises ``ThriftCompilerError`` if the name has already been used.
+        """
+        assert service_spec is not None
+
         if service_spec.name in self.service_specs:
             raise ThriftCompilerError(
                 'Cannot define service "%s". That name is already taken.'
@@ -60,6 +74,17 @@ class Scope(object):
         self.service_specs[service_spec.name] = service_spec
 
     def add_constant(self, name, value, lineno):
+        """Registers the given constant into the scope.
+
+        :param name:
+            Name of the constant.
+        :param value:
+            Value of the contsant.
+        :param lineno:
+            The line number at which this constant was defined.
+        :raises ThriftCompilerError:
+            If the constant name has already been used.
+        """
         assert value is not None
 
         if name in self.const_values or hasattr(self.module, name):
@@ -73,6 +98,13 @@ class Scope(object):
         setattr(self.module, name, value)
 
     def add_class(self, cls):
+        """Adds a class to the generated module.
+
+        :param cls:
+            Class to add to the generatde module.
+        :raises ThriftCompilerError:
+            If the name of the class has already been used.
+        """
         assert cls is not None
 
         name = cls.__name__

@@ -100,6 +100,62 @@ Exceptions
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .ast import *  # noqa
-from .exceptions import *  # noqa
-from .parser import Parser  # noqa
+from .exceptions import ThriftParserError
+from .parser import Parser
+from .ast import (
+    Program,
+    Include,
+    Namespace,
+    Const,
+    Typedef,
+    Enum,
+    EnumItem,
+    Struct,
+    Union,
+    Exc,
+    Service,
+    Function,
+    Field,
+    PrimitiveType,
+    MapType,
+    SetType,
+    ListType,
+    DefinedType,
+    ConstValue,
+    ConstPrimitiveValue,
+    ConstReference,
+    Annotation,
+)
+
+
+__all__ = [
+    # Parser
+    'Parser',
+
+    # AST
+    'Program',
+    'Include',
+    'Namespace',
+    'Const',
+    'Typedef',
+    'Enum',
+    'EnumItem',
+    'Struct',
+    'Union',
+    'Exc',
+    'Service',
+    'Function',
+    'Field',
+    'PrimitiveType',
+    'MapType',
+    'SetType',
+    'ListType',
+    'DefinedType',
+    'ConstValue',
+    'ConstPrimitiveValue',
+    'ConstReference',
+    'Annotation',
+
+    # Exceptions
+    'ThriftParserError',
+]

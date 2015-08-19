@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+.. autofunction:: load
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .loader import Loader, load
+from .loader import load
 
-
-__all__ = ['Loader', 'load']
+__all__ = ['load']

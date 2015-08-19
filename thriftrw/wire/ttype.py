@@ -22,6 +22,8 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
+__all__ = ['TType']
+
 _TType = namedtuple(
     '_TType',
     'BOOL BYTE DOUBLE I16 I32 I64 BINARY STRUCT MAP SET LIST'

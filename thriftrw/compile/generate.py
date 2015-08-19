@@ -20,15 +20,16 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import six
 from collections import deque
 
 from thriftrw.idl import ast
 
 from . import gen
 from . import spec
-from .const import ConstValueResolver
 from .exceptions import ThriftCompilerError
+
+
+__all__ = ['Generator']
 
 
 #: Mapping of Thrift primitive type names to corresponding type specs.
@@ -45,7 +46,11 @@ PRIMITIVE_TYPES = {
 
 
 class TypeMapper(object):
-    """Maps AST types to type specifications."""
+    """Maps AST types to type specifications.
+
+    For references to defined types, return ``TypeReference`` objects instead.
+    These will be replaced during the linking stage.
+    """
 
     __slots__ = ()
 
@@ -78,21 +83,69 @@ class TypeMapper(object):
         return spec.ListTypeSpec(vspec)
 
 
-class Gatherer(object):
-    """Implements the Gather step of the compiler.
+class ConstValueResolver(object):
+    """Resolves constant values."""
 
-    During the Gather step, the system goes through the Thrift AST and
-    collects all constants and definitions that will be defined.
+    __slots__ = ('scope',)
+
+    def __init__(self, scope):
+        """
+        :param Scope scope:
+            Scope which will be queried for constants.
+        """
+        self.scope = scope
+
+    def resolve(self, const_value):
+        """Resolve the given constant value.
+
+        :param const_value:
+            A ``thriftrw.idl.ConstValue``
+        :returns:
+            The value that the ``ConstValue`` maps to.
+        """
+        return const_value.apply(self)
+
+    def visit_primitive(self, const):
+        return const.value
+
+    def visit_reference(self, const):
+        value = self.scope.const_values.get(const.name)
+        if value is None:
+            raise ThriftCompilerError(
+                'Unknown constant "%s" referenced at line %d'
+                % (const.name, const.lineno)
+            )
+        return value
+
+    # NOTE We do not yet support forward references in constants.
+
+
+class Generator(object):
+    """Implements the Generate step of the compiler.
+
+    During the Generate step, the system goes through the Thrift AST and
+    collects all constants, and builds up type specs and classes with
+    references to each other.
     """
 
     __slots__ = ('scope', 'type_mapper', 'const_resolver')
 
     def __init__(self, scope):
+        """Initialize the generator.
+
+        :param thriftrw.compile.scope.Scope scope:
+            Scope maintaining the current compilation state.
+        """
         self.scope = scope
         self.type_mapper = TypeMapper()
         self.const_resolver = ConstValueResolver(scope)
 
-    def gather(self, definition):
+    def process(self, definition):
+        """Process the given definition from the AST.
+
+        :param definition:
+            A definition from the AST.
+        """
         definition.apply(self)
 
     def visit_const(self, const):
@@ -182,7 +235,7 @@ class Gatherer(object):
                 raise ThriftCompilerError(
                     'Function "%s.%s" is oneway. '
                     'Oneway functions are not supported by thriftrw.'
-                    % (svc_ast.name, func.name)
+                    % (svc.name, func.name)
                 )
 
             args_name = str('%s_%s_request' % (svc.name, func.name))
@@ -227,8 +280,8 @@ class Gatherer(object):
 
                 if exc.requiredness is not None:
                     raise ThriftCompilerError(
-                        'Exception "%s" of "%s" is "%s". '
-                        'Exceptions cannot be specified as required or optional.'
+                        'Exception "%s" of "%s" is "%s". Exceptions cannot '
+                        'be specified as required or optional.'
                         % (exc.name, func.name,
                            'required' if exc.requiredness else 'optional')
                     )
