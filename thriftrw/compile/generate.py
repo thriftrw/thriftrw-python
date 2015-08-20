@@ -20,8 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from collections import deque
-
 from thriftrw.idl import ast
 
 from . import gen
@@ -109,6 +107,7 @@ class ConstValueResolver(object):
         return const.value
 
     def visit_reference(self, const):
+        # TODO constants referencing enum values
         value = self.scope.const_values.get(const.name)
         if value is None:
             raise ThriftCompilerError(
@@ -176,7 +175,7 @@ class Generator(object):
         # TODO Add type_spec to list of reserved words.
 
     def visit_struct(self, struct):
-        fields = deque()
+        fields = []
 
         for field in struct.fields:
             fields.append(self._mk_field(struct.name, field))
@@ -191,7 +190,7 @@ class Generator(object):
         self.scope.add_class(struct_cls)
 
     def visit_union(self, union):
-        fields = deque()
+        fields = []
 
         for field in union.fields:
 
@@ -212,7 +211,7 @@ class Generator(object):
         self.scope.add_class(union_cls)
 
     def visit_exc(self, exc):
-        fields = deque()
+        fields = []
 
         for field in exc.fields:
             fields.append(self._mk_field(exc.name, field))
@@ -227,7 +226,7 @@ class Generator(object):
         self.scope.add_class(exc_cls)
 
     def visit_service(self, svc):
-        function_specs = deque()
+        function_specs = []
 
         for func in svc.functions:
 
@@ -239,7 +238,7 @@ class Generator(object):
                 )
 
             args_name = str('%s_%s_request' % (svc.name, func.name))
-            param_specs = deque()
+            param_specs = []
             for param in func.parameters:
                 # TODO decide correct behavior for when requiredness is
                 # specified on parameters
@@ -256,8 +255,8 @@ class Generator(object):
             args_cls.type_spec = args_spec
 
             result_name = str('%s_%s_response' % (svc.name, func.name))
-            result_fields = deque()
-            result_specs = deque()
+            result_fields = []
+            result_specs = []
 
             if func.return_type is not None:
                 # Generate a fake AST node

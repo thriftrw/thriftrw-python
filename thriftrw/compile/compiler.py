@@ -36,6 +36,8 @@ class Compiler(object):
 
     LINKERS = [TypeSpecLinker, ServiceSpecLinker]
 
+    __slots__ = ('protocol',)
+
     def __init__(self, protocol):
         """Initialize the compiler.
 
@@ -45,14 +47,33 @@ class Compiler(object):
         self.protocol = protocol
 
     def compile(self, name, program):
-        """Compile the given parsed Thrift document.
+        """Compile the given parsed Thrift document into a Python module.
+
+        The generated module contains,
+
+        ``dumps(obj)``
+            Serializes the object ``obj`` into a binary blob.
+        ``loads(cls, s)``
+            Deserialize an object of class ``cls`` from the binary blob ``s``.
+
+        And one class each for every struct, union, exception, enum, and
+        service defined in the IDL.
+
+        Service classes have references to
+        :py:class:`thriftrw.compile.ServiceFunction` objects for each method
+        defined in the service.
 
         :param str name:
             Name of the Thrift document. This will be the name of the
             generated module.
         :param thriftrw.idl.Program program:
             AST of the parsted Thrift document.
+        :returns:
+            The generated module.
         """
+        # TODO it may be worth caching generated modules in sys.modules or
+        # Loader in case the user accidentally calls this twice on the same
+        # file.
         scope = Scope(name)
 
         for header in program.headers:
@@ -67,7 +88,10 @@ class Compiler(object):
             linker(scope).link()
 
         ServiceCompiler(scope).compile()
-        # TODO add load and dump methods to module
+
+        scope.add_function('loads', self.protocol.loads)
+        scope.add_function('dumps', self.protocol.dumps)
+
         return scope.module
 
     def visit_include(self, include):

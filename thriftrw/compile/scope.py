@@ -115,6 +115,23 @@ class Scope(object):
 
         setattr(self.module, name, cls)
 
+    def add_function(self, name, func):
+        """Adds a top-level function with the given name to the module.
+
+        :param name:
+            Name of the function.
+        :param func:
+            Function to add to the module.
+        """
+        assert func is not None
+
+        if hasattr(self.module, name):
+            raise ThriftCompilerError(
+                'Cannot define "%s". The name has already been used.' % name
+            )
+
+        setattr(self.module, name, func)
+
     def add_type_spec(self, name, spec, lineno):
         """Adds the given type to the scope.
 

@@ -20,8 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from collections import deque
-
 from .exceptions import ThriftCompilerError
 
 
@@ -60,7 +58,7 @@ def enum_cls(enum, spec):
     :returns:
         A class for the Enum item.
     """
-    item_names = deque()
+    item_names = []
     values_to_names = {}
     enum_dct = {}
 

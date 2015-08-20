@@ -21,7 +21,6 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import abc
-from collections import deque
 from collections import namedtuple
 
 import thriftrw.wire.value as V
@@ -85,7 +84,7 @@ class ServiceSpec(object):
         self.name = name
         self.functions = functions
         self.parent = parent
-    
+
     def transform_types(self, function):
         for func_spec in self.functions:
             func_spec.transform_types(function)
@@ -298,7 +297,7 @@ class StructTypeSpec(
         return TType.STRUCT
 
     def to_wire(self, value):
-        fields = deque()
+        fields = []
 
         for field in self.fields:
             value = getattr(value, field.name, None)

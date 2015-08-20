@@ -53,14 +53,6 @@ class Value(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractproperty
-    def ttype_code(self):
-        """Get the TType for this type.
-
-        :returns:
-            A value from :py:data:`thriftrw.wire.TType`.
-        """
-
     @abc.abstractmethod
     def apply(self, visitor):
         """Apply the value to the given visitor.
@@ -79,9 +71,7 @@ class Value(object):
 class BoolValue(namedtuple('BoolValue', 'value'), Value):
     """Wrapper for boolean values."""
 
-    @property
-    def ttype_code(self):
-        return TType.BOOL
+    ttype_code = TType.BOOL
 
     def apply(self, visitor):
         return visitor.visit_bool(self.value)
@@ -90,9 +80,7 @@ class BoolValue(namedtuple('BoolValue', 'value'), Value):
 class ByteValue(namedtuple('ByteValue', 'value'), Value):
     """Wrapper for byte values."""
 
-    @property
-    def ttype_code(self):
-        return TType.BYTE
+    ttype_code = TType.BYTE
 
     def apply(self, visitor):
         return visitor.visit_byte(self.value)
@@ -101,9 +89,7 @@ class ByteValue(namedtuple('ByteValue', 'value'), Value):
 class DoubleValue(namedtuple('DoubleValue', 'value'), Value):
     """Wrapper for double values."""
 
-    @property
-    def ttype_code(self):
-        return TType.DOUBLE
+    ttype_code = TType.DOUBLE
 
     def apply(self, visitor):
         return visitor.visit_double(self.value)
@@ -112,9 +98,7 @@ class DoubleValue(namedtuple('DoubleValue', 'value'), Value):
 class I16Value(namedtuple('I16Value', 'value'), Value):
     """Wrapper for 16-bit integer values."""
 
-    @property
-    def ttype_code(self):
-        return TType.I16
+    ttype_code = TType.I16
 
     def apply(self, visitor):
         return visitor.visit_i16(self.value)
@@ -123,9 +107,7 @@ class I16Value(namedtuple('I16Value', 'value'), Value):
 class I32Value(namedtuple('I32Value', 'value'), Value):
     """Wrapper for 32-bit integer values."""
 
-    @property
-    def ttype_code(self):
-        return TType.I32
+    ttype_code = TType.I32
 
     def apply(self, visitor):
         return visitor.visit_i32(self.value)
@@ -134,9 +116,7 @@ class I32Value(namedtuple('I32Value', 'value'), Value):
 class I64Value(namedtuple('I64Value', 'value'), Value):
     """Wrapper for 64-bit integer values."""
 
-    @property
-    def ttype_code(self):
-        return TType.I64
+    ttype_code = TType.I64
 
     def apply(self, visitor):
         return visitor.visit_i64(self.value)
@@ -149,9 +129,7 @@ class BinaryValue(namedtuple('BinaryValue', 'value'), Value):
     the wire. UTF-8 text should be encoded/decoded manually.
     """
 
-    @property
-    def ttype_code(self):
-        return TType.BINARY
+    ttype_code = TType.BINARY
 
     def apply(self, visitor):
         return visitor.visit_binary(self.value)
@@ -169,25 +147,26 @@ class FieldValue(namedtuple('FieldValue', 'id ttype value'), Value):
     """
 
 
-class StructValue(namedtuple('StructValue', 'fields'), Value):
+class StructValue(Value):
     """A struct value is a collection of fields of different types.
 
     ``fields``
         Collection of :py:class:`FieldValue` objects.
     """
 
-    @property
-    def ttype_code(self):
-        return TType.STRUCT
+    ttype_code = TType.STRUCT
 
-    def __new__(cls, fields):
-        if not isinstance(fields, dict):
-            fields = {(field.id, field.ttype): field for field in fields}
+    __slots__ = ('fields', '_index')
 
-        return super(StructValue, cls).__new__(cls, fields)
+    def __init__(self, fields):
+        self.fields = fields
+
+        self._index = {}
+        for field in fields:
+            self._index[(field.id, field.ttype)] = field
 
     def apply(self, visitor):
-        return visitor.visit_struct(self.fields.values())
+        return visitor.visit_struct(self.fields)
 
     def get(self, field_id, field_ttype):
         """Returns the value at the given field ID and type.
@@ -200,11 +179,19 @@ class StructValue(namedtuple('StructValue', 'fields'), Value):
             Value stored for the given field ID and type, or None if a field
             with the given ID and type was not found.
         """
-        value = self.fields.get((field_id, field_ttype))
-        if value is None:
+        field_value = self._index.get((field_id, field_ttype))
+        if field_value is None:
             return None
         else:
-            return value.value
+            return field_value.value
+
+    def __str__(self):
+        return 'StructValue(%r)' % self.fields
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        return self.fields == other.fields
 
 
 class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
@@ -220,9 +207,7 @@ class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
         Collection of key-value tuples. Note that this is **not** a dict.
     """
 
-    @property
-    def ttype_code(self):
-        return TType.MAP
+    ttype_code = TType.MAP
 
     def apply(self, visitor):
         return visitor.visit_map(self.key_ttype, self.value_ttype, self.pairs)
@@ -237,9 +222,7 @@ class SetValue(namedtuple('SetValue', 'value_ttype values'), Value):
         Collection of the values.
     """
 
-    @property
-    def ttype_code(self):
-        return TType.SET
+    ttype_code = TType.SET
 
     def apply(self, visitor):
         return visitor.visit_set(self.value_ttype, self.values)
@@ -254,9 +237,7 @@ class ListValue(namedtuple('ListValue', 'value_ttype values'), Value):
         Collection of the values.
     """
 
-    @property
-    def ttype_code(self):
-        return TType.LIST
+    ttype_code = TType.LIST
 
     def apply(self, visitor):
         return visitor.visit_list(self.value_ttype, self.values)

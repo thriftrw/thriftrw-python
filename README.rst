@@ -75,7 +75,6 @@ You can use the library to send and receive requests and responses like so,
         # send_to_server is implemented by the user.
         response_payload = send_to_server(payload)
         response = blog.loads(BlogService.newPost.response, response_payload)
-
         if response.unauthorized is not None:
             raise response.unauthorized
         else:
@@ -94,7 +93,6 @@ You can use the library to send and receive requests and responses like so,
     # The user's server handler calls handle_new_post with the payload.
     def handle_new_post(request_payload):
         request = blog.loads(BlogService.newPost.request, request_payload)
-
         if request.post.author != 'admin':
             response = BlogService.newPost.response(
                 unauthorized=blog.UnauthorizedRequestError()

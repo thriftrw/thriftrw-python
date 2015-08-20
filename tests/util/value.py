@@ -19,37 +19,44 @@
 # THE SOFTWARE.
 
 """
-Protocols
----------
-
-.. autoclass:: thriftrw.protocol.Protocol
-    :members:
-
-.. autoclass:: thriftrw.protocol.BinaryProtocol
-    :members:
-
-Exceptions
-----------
-
-.. autoclass:: thriftrw.protocol.ThriftProtocolError
-    :members:
-
-.. autoclass:: thriftrw.protocol.EndOfInputError
-    :members:
+This module provides helpers to construct Value objects for tests.
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .binary import BinaryProtocol
-from .core import Protocol
-from .exceptions import ThriftProtocolError, EndOfInputError
+import six
+
+from thriftrw.wire import value
+
+
+vbool = value.BoolValue
+vbyte = value.ByteValue
+vi16 = value.I16Value
+vi32 = value.I32Value
+vi64 = value.I64Value
+vdouble = value.DoubleValue
+
+
+def vbinary(s):
+    return value.BinaryValue(six.binary_type(s))
+
+
+def vstruct(*fields):
+    return value.StructValue([value.FieldValue(*args) for args in fields])
+
+
+def vlist(typ, *items):
+    return value.ListValue(typ, list(items))
+
+
+def vmap(ktype, vtype, *items):
+    return value.MapValue(ktype, vtype, list(items))
+
+
+def vset(vtype, *items):
+    return value.SetValue(vtype, list(items))
 
 
 __all__ = [
-    # Protocol
-    'Protocol',
-    'BinaryProtocol',
-
-    # Exceptions
-    'ThriftProtocolError',
-    'EndOfInputError',
+    'vbool', 'vbyte', 'vi16', 'vi32', 'vi64', 'vdouble', 'vbinary', 'vstruct',
+    'vlist', 'vmap', 'vset'
 ]

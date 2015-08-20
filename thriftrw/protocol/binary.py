@@ -18,30 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""
-Binary Protocol
----------------
-
-In addition to providing :py:class:`thriftrw.protocol.BinaryProtocol`, this
-module provides two utility functions to facilitate serializing and
-deserializing Thrift structs.
-
-.. autofunction:: dump
-
-.. autofunction:: load
-
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
 import six
 import struct
-from collections import deque
 
 from thriftrw.wire import value as V
 from thriftrw.wire import TType
 
 from .core import Protocol
 from .exceptions import EndOfInputError
+from .exceptions import ThriftProtocolError
 
 
 STRUCT_END = 0
@@ -62,7 +49,7 @@ class BinaryProtocolReader(object):
         self.reader = reader
 
     def read(self, typ):
-        return self._readers[typ](self)
+        return self._reader(typ)(self)
 
     def _read(self, num_bytes):
         chunk = self.reader.read(num_bytes)
@@ -124,7 +111,7 @@ class BinaryProtocolReader(object):
 
     def read_struct(self):
         """Reads an arbitrary Thrift struct."""
-        fields = deque()
+        fields = []
 
         field_type = self._byte()
         while field_type != STRUCT_END:
@@ -147,10 +134,10 @@ class BinaryProtocolReader(object):
         value_ttype = self._byte()
         length = self._i32()
 
-        key_reader = self._readers[key_ttype]
-        value_reader = self._readers[value_ttype]
+        key_reader = self._reader(key_ttype)
+        value_reader = self._reader(value_ttype)
 
-        pairs = deque()
+        pairs = []
         for i in xrange(length):
             k = key_reader(self)
             v = value_reader(self)
@@ -167,8 +154,8 @@ class BinaryProtocolReader(object):
         value_ttype = self._byte()
         length = self._i32()
 
-        value_reader = self._readers[value_ttype]
-        values = deque()
+        value_reader = self._reader(value_ttype)
+        values = []
 
         for i in xrange(length):
             values.append(value_reader(self))
@@ -183,8 +170,8 @@ class BinaryProtocolReader(object):
         value_ttype = self._byte()
         length = self._i32()
 
-        value_reader = self._readers[value_ttype]
-        values = deque()
+        value_reader = self._reader(value_ttype)
+        values = []
 
         for i in xrange(length):
             values.append(value_reader(self))
@@ -193,6 +180,12 @@ class BinaryProtocolReader(object):
             value_ttype=value_ttype,
             values=values
         )
+
+    def _reader(self, typ):
+        reader = self._readers.get(typ)
+        if reader is None:
+            raise ThriftProtocolError('Unknown TType "%r"' % typ)
+        return reader
 
     # Mapping of TType to function that can read it.
     _readers = {
@@ -314,9 +307,4 @@ class BinaryProtocol(Protocol):
         reader = BinaryProtocolReader(buff)
         return reader.read(typ)
 
-
-_DEFAULT_BINARY_PROTOCOL = BinaryProtocol()
-dump = _DEFAULT_BINARY_PROTOCOL.dump
-load = _DEFAULT_BINARY_PROTOCOL.load
-
-__all__ = ['BinaryProtocol', 'dump', 'load']
+__all__ = ['BinaryProtocol']

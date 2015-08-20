@@ -57,7 +57,7 @@ class Protocol(object):
             If the object failed to deserialize.
         """
 
-    def dump(self, obj):
+    def dumps(self, obj):
         """Serializes the given Thrift struct.
 
         :param obj:
@@ -69,7 +69,7 @@ class Protocol(object):
         value = obj.__class__.type_spec.to_wire(obj)
         return self.serialize_value(value)
 
-    def load(self, obj_cls, s):
+    def loads(self, obj_cls, s):
         """Deserializes an object from the given blob.
 
         :param obj_cls:
