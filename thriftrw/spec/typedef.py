@@ -17,19 +17,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+from .spec_mapper import type_spec_or_ref
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+class TypedefTypeSpec(object):
+
+    __slots__ = ('name', 'target_spec')
+
+    def __init__(self, name, target_spec):
+        self.name = name
+        self.target_spec = target_spec
+
+    @classmethod
+    def compile(cls, typedef):
+        target_spec = type_spec_or_ref(typedef.target_type)
+        return cls(typedef.name, target_spec)
+
+    def link(self, scope):
+        return self.target_spec.link(scope)

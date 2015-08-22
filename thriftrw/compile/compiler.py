@@ -25,7 +25,6 @@ from .link import TypeSpecLinker
 from .link import ServiceSpecLinker
 from .scope import Scope
 from .exceptions import ThriftCompilerError
-from .service import ServiceCompiler
 
 
 __all__ = ['Compiler']
@@ -87,8 +86,6 @@ class Compiler(object):
         for linker in self.LINKERS:
             linker(scope).link()
 
-        ServiceCompiler(scope).compile()
-
         scope.add_function('loads', self.protocol.loads)
         scope.add_function('dumps', self.protocol.dumps)
 
@@ -103,114 +100,3 @@ class Compiler(object):
 
     def visit_namespace(self, namespace):
         pass  # nothing to do
-
-
-# Reserved identifiers
-# TODO forbid declared items from using these names
-RESERVED = frozenset((
-    'BEGIN',
-    'END',
-    '__CLASS__',
-    '__DIR__',
-    '__FILE__',
-    '__FUNCTION__',
-    '__LINE__',
-    '__METHOD__',
-    '__NAMESPACE__',
-    'abstract',
-    'alias',
-    'and',
-    'args',
-    'as',
-    'async',
-    'assert',
-    'await',
-    'begin',
-    'break',
-    'case',
-    'catch',
-    'class',
-    'clone',
-    'continue',
-    'declare',
-    'def',
-    'default',
-    'del',
-    'delete',
-    'do',
-    'dynamic',
-    'elif',
-    'else',
-    'elseif',
-    'elsif',
-    'end',
-    'enddeclare',
-    'endfor',
-    'endforeach',
-    'endif',
-    'endswitch',
-    'endwhile',
-    'ensure',
-    'except',
-    'exec',
-    'finally',
-    'float',
-    'for',
-    'foreach',
-    'function',
-    'global',
-    'goto',
-    'if',
-    'implements',
-    'import',
-    'in',
-    'inline',
-    'instanceof',
-    'interface',
-    'is',
-    'lambda',
-    'module',
-    'native',
-    'new',
-    'next',
-    'nil',
-    'not',
-    'or',
-    'pass',
-    'public',
-    'print',
-    'private',
-    'protected',
-    'public',
-    'raise',
-    'redo',
-    'rescue',
-    'retry',
-    'register',
-    'return',
-    'self',
-    'sizeof',
-    'static',
-    'super',
-    'switch',
-    'synchronized',
-    'then',
-    'this',
-    'throw',
-    'transient',
-    'try',
-    'undef',
-    'union',
-    'unless',
-    'unsigned',
-    'until',
-    'use',
-    'var',
-    'virtual',
-    'volatile',
-    'when',
-    'while',
-    'with',
-    'xor',
-    'yield'
-))

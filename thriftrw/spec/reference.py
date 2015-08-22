@@ -17,19 +17,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+__all__ = ['TypeReference']
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+class TypeReference(object):
+    """A reference to another type."""
+
+    __slots__ = ('name', 'lineno')
+
+    def __init__(self, name, lineno):
+        self.name = name
+        self.lineno = lineno
+
+    def link(self, scope):
+        return scope.resolve_type_spec(self.name, self.lineno)
+
+    # It may be worth making this implement the TypeSpec interface and raise
+    # exceptions complaining about unresolved type references, since that's
+    # probably a bug.
+
+    def __str__(self):
+        return 'TypeReference(%s, lineno=%d)' % (
+            self.name, self.lineno
+        )
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        return self.name == other.name and self.lineno == other.lineno

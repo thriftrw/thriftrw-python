@@ -17,19 +17,62 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+from .base import TypeSpec
+from .enum import EnumTypeSpec
+from .list import ListTypeSpec
+from .map import MapTypeSpec
+from .set import SetTypeSpec
+from .struct import StructTypeSpec, FieldSpec
+from .exc import ExceptionTypeSpec
+from .union import UnionTypeSpec
+from .service import ServiceSpec, FunctionSpec
+from .typedef import TypedefTypeSpec
+from .reference import TypeReference
+from .primitive import (
+    BoolTypeSpec,
+    ByteTypeSpec,
+    DoubleTypeSpec,
+    I16TypeSpec,
+    I32TypeSpec,
+    I64TypeSpec,
+    BinaryTypeSpec,
+    TextTypeSpec,
+)
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+__all__ = [
+    'TypeSpec',
+
+    # Primitives
+    'BoolTypeSpec',
+    'ByteTypeSpec',
+    'DoubleTypeSpec',
+    'I16TypeSpec',
+    'I32TypeSpec',
+    'I64TypeSpec',
+    'BinaryTypeSpec',
+    'TextTypeSpec',
+
+    # Containers
+    'ListTypeSpec',
+    'MapTypeSpec',
+    'SetTypeSpec',
+
+    # Custom types
+
+    'EnumTypeSpec',
+
+    'ExceptionTypeSpec',
+    'StructTypeSpec',
+    'UnionTypeSpec',
+    'FieldSpec',
+
+    'ServiceSpec',
+    'FunctionSpec',
+
+    'TypeReference',
+    'TypedefTypeSpec',
+]

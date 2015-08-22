@@ -17,19 +17,53 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+from thriftrw.wire import TType
+from thriftrw.wire.value import SetValue
+
+from .base import TypeSpec
+
+__all__ = ['SetTypeSpec']
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+class SetTypeSpec(TypeSpec):
+    """
+    :param TypeSpec vspec:
+        TypeSpec of values stored in the set.
+    """
+
+    __slots__ = ('vspec', 'linked')
+
+    ttype_code = TType.SET
+
+    def __init__(self, vspec):
+        self.vspec = vspec
+        self.linked = False
+
+    def link(self, scope):
+        if not self.linked:
+            self.linked = True
+            self.vspec = self.vspec.link(scope)
+        return self
+
+    @property
+    def name(self):
+        return 'set<%s>' % self.vspec.name
+
+    def to_wire(self, value):
+        return SetValue(
+            value_ttype=self.vspec.ttype_code,
+            values=[self.vspec.to_wire(v) for v in value],
+        )
+
+    def from_wire(self, wire_value):
+        return set(
+            self.vspec.from_wire(v) for v in wire_value.values
+        )
+
+    def __str__(self):
+        return 'SetTypeSpec(vspec=%r)' % self.vspec
+
+    __repr__ = __str__

@@ -27,6 +27,44 @@ from .exceptions import ThriftCompilerError
 __all__ = ['Scope']
 
 
+class ConstValueResolver(object):
+    """Resolves constant values."""
+
+    __slots__ = ('scope',)
+
+    def __init__(self, scope):
+        """
+        :param Scope scope:
+            Scope which will be queried for constants.
+        """
+        self.scope = scope
+
+    def resolve(self, const_value):
+        """Resolve the given constant value.
+
+        :param const_value:
+            A ``thriftrw.idl.ConstValue``
+        :returns:
+            The value that the ``ConstValue`` maps to.
+        """
+        return const_value.apply(self)
+
+    def visit_primitive(self, const):
+        return const.value
+
+    def visit_reference(self, const):
+        # TODO constants referencing enum values
+        value = self.scope.const_values.get(const.name)
+        if value is None:
+            raise ThriftCompilerError(
+                'Unknown constant "%s" referenced at line %d'
+                % (const.name, const.lineno)
+            )
+        return value
+
+    # NOTE We do not yet support forward references in constants.
+
+
 class Scope(object):
     """Maintains the compilation state across steps.
 
@@ -35,7 +73,10 @@ class Scope(object):
     reference to the final generated module.
     """
 
-    __slots__ = ('const_values', 'type_specs', 'module', 'service_specs')
+    __slots__ = (
+        'const_values', 'type_specs', 'module', 'service_specs',
+        'const_resolver',
+    )
 
     def __init__(self, name):
         """Initialize the scope.
@@ -47,6 +88,7 @@ class Scope(object):
         self.type_specs = {}
         self.service_specs = {}
 
+        self.const_resolver = ConstValueResolver(self)
         self.module = types.ModuleType(name)
 
     def __str__(self):
@@ -58,6 +100,16 @@ class Scope(object):
         }
 
     __repr__ = __str__
+
+    def resolve_const_value(self, const_value):
+        return self.const_resolver.resolve(const_value)
+
+    def resolve_type_spec(self, name, lineno):
+        if name not in self.type_specs:
+            raise ThriftCompilerError(
+                'Unknown type "%s" referenced at line %d' % (name, lineno)
+            )
+        return self.type_specs[name].link(self)
 
     def add_service_spec(self, service_spec):
         """Registers the given ``ServiceSpec`` into the scope.
@@ -97,23 +149,15 @@ class Scope(object):
         self.const_values[name] = value
         setattr(self.module, name, value)
 
-    def add_class(self, cls):
-        """Adds a class to the generated module.
+    def add_surface(self, name, surface):
+        assert surface is not None
 
-        :param cls:
-            Class to add to the generatde module.
-        :raises ThriftCompilerError:
-            If the name of the class has already been used.
-        """
-        assert cls is not None
-
-        name = cls.__name__
         if hasattr(self.module, name):
             raise ThriftCompilerError(
                 'Cannot define "%s". The name has already been used.' % name
             )
 
-        setattr(self.module, name, cls)
+        setattr(self.module, name, surface)
 
     def add_function(self, name, func):
         """Adds a top-level function with the given name to the module.

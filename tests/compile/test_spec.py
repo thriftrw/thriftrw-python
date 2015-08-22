@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
 
-from thriftrw.compile import spec
+from thriftrw import spec
 from thriftrw.wire import TType
 
 from tests.util.value import *  # noqa
@@ -50,7 +50,6 @@ from tests.util.value import *  # noqa
      [1, 2, 3]),
 ])
 def test_primitive_wire_conversion(t_spec, value, obj):
-    assert not t_spec.is_reference
     assert value == t_spec.to_wire(obj)
     assert obj == t_spec.from_wire(value)
 
@@ -75,7 +74,6 @@ def test_primitive_wire_conversion(t_spec, value, obj):
 
 ])
 def test_map_wire_conversion(t_spec, pairs, obj):
-    assert not t_spec.is_reference
     ktype = t_spec.kspec.ttype_code
     vtype = t_spec.vspec.ttype_code
 
@@ -98,49 +96,3 @@ def test_map_from_wire_duplicate_keys():
     ))
 
     assert {0: 6, 2: 3, 4: 5} == result
-
-
-def test_function_spec_transform():
-    fspec = spec.FunctionSpec(
-        'doSomething', spec.I16TypeSpec, spec.ByteTypeSpec
-    )
-    fspec.transform_types(spec.SetTypeSpec)
-
-    assert fspec.args_spec.__class__ == spec.SetTypeSpec
-    assert fspec.result_spec.__class__ == spec.SetTypeSpec
-    assert fspec.args_spec.vspec == spec.I16TypeSpec
-    assert fspec.result_spec.vspec == spec.ByteTypeSpec
-
-
-def test_service_spec_transform():
-    refs = {
-        'getFooArgs': spec.BinaryTypeSpec,
-        'getFooResult': spec.I16TypeSpec,
-        'setBarArgs': spec.DoubleTypeSpec,
-        'setBarResult': spec.TextTypeSpec,
-    }
-
-    sspec = spec.ServiceSpec(
-        'MyService',
-        [
-            spec.FunctionSpec(
-                'getFoo',
-                spec.TypeReference('getFooArgs', 0),
-                spec.TypeReference('getFooResult', 0),
-            ),
-            spec.FunctionSpec(
-                'setBar',
-                spec.TypeReference('setBarArgs', 0),
-                spec.TypeReference('setBarResult', 0),
-            )
-        ],
-        None
-    )
-
-    sspec.transform_types(lambda ref: refs[ref.name])
-
-    assert sspec.functions[0].args_spec == spec.BinaryTypeSpec
-    assert sspec.functions[0].result_spec == spec.I16TypeSpec
-
-    assert sspec.functions[1].args_spec == spec.DoubleTypeSpec
-    assert sspec.functions[1].result_spec == spec.TextTypeSpec

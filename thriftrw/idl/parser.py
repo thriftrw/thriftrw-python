@@ -427,6 +427,9 @@ class Parser(ParserSpec):
     """Parser for Thrift IDL files."""
 
     def __init__(self, **kwargs):
+        if kwargs.pop('silent', False):
+            kwargs['errorlog'] = yacc.NullLogger()
+
         kwargs.setdefault('debug', False)
         kwargs.setdefault('write_tables', False)
         self._parser = yacc.yacc(module=self, **kwargs)
