@@ -20,32 +20,42 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .spec_mapper import type_spec_or_ref
+import pytest
+
+from thriftrw.idl import Parser
+from thriftrw.spec import primitive as prim_spec
+from thriftrw.spec.set import SetTypeSpec
+from thriftrw.spec.typedef import TypedefTypeSpec
+from thriftrw.spec.spec_mapper import type_spec_or_ref
+from thriftrw.wire.ttype import TType
+
+from ..util.value import vbinary, vset
 
 
-class TypedefTypeSpec(object):
+@pytest.fixture
+def parse():
+    return Parser(start='set_type', silent=True).parse
 
-    __slots__ = ('name', 'target_spec')
 
-    def __init__(self, name, target_spec):
-        self.name = name
-        self.target_spec = target_spec
+def test_mapper(parse):
+    ast = parse('set<binary>')
+    spec = type_spec_or_ref(ast)
+    assert spec == SetTypeSpec(prim_spec.BinaryTypeSpec)
 
-    @classmethod
-    def compile(cls, typedef):
-        target_spec = type_spec_or_ref(typedef.target_type)
-        return cls(typedef.name, target_spec)
 
-    def link(self, scope):
-        return self.target_spec.link(scope)
+def test_link(parse, scope):
+    ast = parse('set<Foo>')
+    spec = type_spec_or_ref(ast)
 
-    def __str__(self):
-        return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
+    scope.add_type_spec(
+        'Foo', TypedefTypeSpec('Foo', prim_spec.TextTypeSpec), 1
+    )
 
-    __repr__ = __str__
+    spec = spec.link(scope)
+    assert spec.vspec == prim_spec.TextTypeSpec
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    value = set([u'foo', u'bar'])
+    assert spec.to_wire(value) == vset(
+        TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
+    )
+    assert value == spec.from_wire(spec.to_wire(value))

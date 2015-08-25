@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from thriftrw.wire import TType
 from thriftrw.wire.value import StructValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
@@ -32,6 +33,8 @@ __all__ = ['UnionTypeSpec', 'FieldSpec']
 class UnionTypeSpec(TypeSpec):
 
     __slots__ = ('name', 'fields', 'linked', 'surface')
+
+    ttype_code = TType.STRUCT
 
     def __init__(self, name, fields):
         self.name = name
@@ -49,6 +52,7 @@ class UnionTypeSpec(TypeSpec):
     @classmethod
     def compile(cls, union):
         fields = []
+        ids = set()
         names = set()
         for field in union.fields:
             if field.name in names:
@@ -57,6 +61,35 @@ class UnionTypeSpec(TypeSpec):
                     (field.name, union.name, field.lineno)
                 )
             names.add(field.name)
+
+            if field.id in ids:
+                raise ThriftCompilerError(
+                    'Field ID "%d" of union "%s" on line %d '
+                    'has already been used.' % (
+                        field.id, union.name, field.lineno
+                    )
+                )
+            ids.add(field.id)
+
+            if field.requiredness is not None:
+                raise ThriftCompilerError(
+                    'Field "%s" of union "%s" on line %d is "%s". '
+                    'Unions cannot specify requiredness. '
+                    % (
+                        field.name,
+                        union.name,
+                        field.lineno,
+                        'required' if field.requiredness else 'optional',
+                    )
+                )
+
+            if field.default is not None:
+                raise ThriftCompilerError(
+                    'Field "%s" of union "%s" on line %d has a default value.'
+                    ' Fields of unions cannot have default values. '
+                    % (field.name, union.name, field.lineno)
+                )
+
             fields.append(FieldSpec.compile(
                 field=field,
                 struct_name=union.name,
@@ -64,11 +97,11 @@ class UnionTypeSpec(TypeSpec):
             ))
         return cls(union.name, fields)
 
-    def to_wire(self, value):
+    def to_wire(self, union):
         fields = []
 
         for field in self.fields:
-            value = getattr(value, field.name, None)
+            value = getattr(union, field.name)
             if value is None:
                 continue
             fields.append(field.to_wire(value))
@@ -78,10 +111,10 @@ class UnionTypeSpec(TypeSpec):
     def from_wire(self, wire_value):
         kwargs = {}
         for field in self.fields:
-            value = wire_value.get(field.id, field.spec.ttype_code)
-            if value is None:
+            field_value = wire_value.get(field.id, field.spec.ttype_code)
+            if field_value is None:
                 continue
-            kwargs[field.name] = field.spec.from_wire(value)
+            kwargs[field.name] = field.from_wire(field_value)
 
         # TODO For the case where cls fails to instantiate because a required
         # positional argument is missing, we know that the request was
@@ -92,6 +125,13 @@ class UnionTypeSpec(TypeSpec):
         return 'UnionTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name and
+            self.fields == other.fields and
+            self.linked == other.linked
+        )
 
 
 def union_init(cls_name, fields):
@@ -106,7 +146,7 @@ def union_init(cls_name, fields):
     def __init__(self, *args, **kwargs):
         if args:
             raise TypeError(
-                '%s() does not accept any position arguments (%d given)'
+                '%s() does not accept any positional arguments (%d given)'
                 % (cls_name, len(args))
             )
 
@@ -162,7 +202,7 @@ def union_str(cls_name, fields):
         field_value = None
 
         for name in fields:
-            value = getattr(self, name, None)
+            value = getattr(self, name)
             if value is not None:
                 field_name = name
                 field_value = value
@@ -187,6 +227,14 @@ def union_docstring(cls_name, fields):
     return header + '\n\n' + fields_section
 
 
+def union_eq(fields):
+    def __eq__(self, other):
+        return all(
+            getattr(self, name) == getattr(other, name) for name in fields
+        )
+    return __eq__
+
+
 def union_cls(union_spec, scope):
     """Generates a class for a union.
 
@@ -206,39 +254,7 @@ def union_cls(union_spec, scope):
     :param thriftrw.compile.Scope scope:
         Compilation scope
     """
-    field_names = set()
-
-    for field in union_spec.fields:
-        field_names.add(field.name)
-
-        if field.required:
-            raise ThriftCompilerError(
-                'Field "%s" of union "%s" on line %d is required. '
-                'Unions cannot specify requiredness. '
-                'Please remove requiredness for %s.%s from the IDL.'
-                % (
-                    field.name,
-                    union_spec.name,
-                    field.lineno,
-                    'required' if field.requiredness else 'optional',
-                    union_spec.name,
-                    field.name
-                )
-            )
-
-        if field.default_value is not None:
-            raise ThriftCompilerError(
-                'Field "%s" of union "%s" on line %d has a default value. '
-                'Fields of unions cannot have default values. '
-                'Please remove the default value for %s.%s from the IDL.'
-                % (
-                    field.name,
-                    union_spec.name,
-                    field.lineno,
-                    union_spec.name,
-                    field.name
-                )
-            )
+    field_names = set(field.name for field in union_spec.fields)
 
     union_dct = {}
     union_dct['type_spec'] = union_spec
@@ -246,6 +262,7 @@ def union_cls(union_spec, scope):
     union_dct['__init__'] = union_init(union_spec.name, field_names)
     union_dct['__str__'] = union_str(union_spec.name, field_names)
     union_dct['__repr__'] = union_dct['__str__']
+    union_dct['__eq__'] = union_eq(field_names)
     union_dct['__doc__'] = union_docstring(
         union_spec.name, field_names
     )

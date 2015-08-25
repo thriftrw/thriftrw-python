@@ -20,32 +20,39 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .spec_mapper import type_spec_or_ref
+import pytest
+
+from thriftrw.idl import Parser
+from thriftrw.spec.exc import ExceptionTypeSpec
+from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec import primitive as prim_spec
 
 
-class TypedefTypeSpec(object):
+@pytest.fixture
+def parse():
+    return Parser(start='exception', silent=True).parse
 
-    __slots__ = ('name', 'target_spec')
 
-    def __init__(self, name, target_spec):
-        self.name = name
-        self.target_spec = target_spec
+def test_compile(parse):
+    spec = ExceptionTypeSpec.compile(parse('''exception MyException {
+        1: required string message
+    }'''))
 
-    @classmethod
-    def compile(cls, typedef):
-        target_spec = type_spec_or_ref(typedef.target_type)
-        return cls(typedef.name, target_spec)
+    assert spec.name == 'MyException'
+    assert spec.fields == [
+        FieldSpec(1, 'message', prim_spec.TextTypeSpec, True)
+    ]
 
-    def link(self, scope):
-        return self.target_spec.link(scope)
 
-    def __str__(self):
-        return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
+def test_load(loads):
+    MyException = loads('''
+        exception MyException {
+            1: required string message
+        }
+    ''').MyException
 
-    __repr__ = __str__
+    assert issubclass(MyException, Exception)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    with pytest.raises(MyException):
+        # Must be raise-able
+        raise MyException('hello world')

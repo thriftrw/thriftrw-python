@@ -76,3 +76,10 @@ class MapTypeSpec(TypeSpec):
         return 'MapTypeSpec(kspec=%r, vspec=%r)' % (self.kspec, self.vspec)
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return (
+            self.kspec == other.kspec and
+            self.vspec == other.vspec and
+            self.linked == other.linked
+        )

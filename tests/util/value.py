@@ -23,8 +23,6 @@ This module provides helpers to construct Value objects for tests.
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-import six
-
 from thriftrw.wire import value
 
 
@@ -37,7 +35,7 @@ vdouble = value.DoubleValue
 
 
 def vbinary(s):
-    return value.BinaryValue(six.binary_type(s))
+    return value.BinaryValue(s)
 
 
 def vstruct(*fields):

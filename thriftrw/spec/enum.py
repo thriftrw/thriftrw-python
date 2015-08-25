@@ -114,6 +114,13 @@ class EnumTypeSpec(TypeSpec):
 
         return cls(enum.name, items)
 
+    def __eq__(self, other):
+        return (
+            self.name == other.name and
+            self.items == other.items and
+            self.linked == other.linked
+        )
+
     def __str__(self):
         return 'EnumTypeSpec(name=%r, items=%r)' % (self.name, self.items)
 

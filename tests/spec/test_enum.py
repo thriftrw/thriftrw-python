@@ -26,6 +26,8 @@ from thriftrw.compile.exceptions import ThriftCompilerError
 from thriftrw.spec.enum import EnumTypeSpec
 from thriftrw.idl import Parser
 
+from ..util.value import vi32
+
 
 @pytest.fixture
 def parse():
@@ -50,11 +52,11 @@ def test_compile_explicit_values(parse):
 
 
 def test_compile_implicit_and_explicit_values(parse):
-    enum_ast = parse('enum ExplicitEnum { A = 1, B = 5, C = 3 }')
+    enum_ast = parse('enum CombinationEnum { A = 1, B, C = 5, D, E }')
 
     spec = EnumTypeSpec.compile(enum_ast)
-    assert spec.name == 'ExplicitEnum'
-    assert spec.items == {'A': 1, 'B': 5, 'C': 3}
+    assert spec.name == 'CombinationEnum'
+    assert spec.items == {'A': 1, 'B': 2, 'C': 5, 'D': 6, 'E': 7}
 
 
 def test_compile_duplicate_names(parse):
@@ -67,7 +69,7 @@ def test_compile_duplicate_names(parse):
     assert 'has duplicates' in str(exc_info)
 
 
-def test_link_value_collide():
+def test_compile_values_collide():
     with pytest.raises(ThriftCompilerError) as exc_info:
         EnumTypeSpec(
             'TestEnum',
@@ -77,26 +79,55 @@ def test_link_value_collide():
     assert 'Enums items cannot share values' in str(exc_info)
 
 
-def test_link(scope):
-    spec = EnumTypeSpec('TestEnum', {'A': 1, 'B': 2, 'C': 4})
-    spec = spec.link(scope)
+def test_link(loads):
+    TestEnum = loads('''
+        enum TestEnum {
+            A = 1, B, C
+        }
+    ''').TestEnum
 
-    assert spec.surface.A == 1
-    assert spec.surface.B == 2
-    assert spec.surface.C == 4
+    assert TestEnum.A == 1
+    assert TestEnum.B == 2
+    assert TestEnum.C == 3
 
-    assert spec.surface.name_of(1) == 'A'
-    assert spec.surface.name_of(2) == 'B'
-    assert spec.surface.name_of(4) == 'C'
-    assert not spec.surface.name_of(3)
+    assert TestEnum.name_of(1) == 'A'
+    assert TestEnum.name_of(2) == 'B'
+    assert TestEnum.name_of(3) == 'C'
+    assert not TestEnum.name_of(4)
+
+    assert set(TestEnum.items) == set(('A', 'B', 'C'))
 
 
-def test_round_trip(scope):
-    spec = EnumTypeSpec('RoundTripeEnum', {'A': 2, 'B': 3, 'C': -42})
-    spec = spec.link(scope)
+def test_to_wire(loads):
+    Enum = loads('enum ToWireEnum { A = 2, B = 3, C = -42 }').ToWireEnum
+    spec = Enum.type_spec
 
-    Enum = spec.surface
+    assert spec.to_wire(Enum.A) == vi32(2)
+    assert spec.to_wire(Enum.B) == vi32(3)
+    assert spec.to_wire(Enum.C) == vi32(-42)
+
+
+def test_round_trip(loads):
+    Enum = loads('enum RoundTripEnum { A = 2, B = 3, C = -42 }').RoundTripEnum
+    spec = Enum.type_spec
 
     assert spec.from_wire(spec.to_wire(Enum.A)) == Enum.A
     assert spec.from_wire(spec.to_wire(Enum.B)) == Enum.B
     assert spec.from_wire(spec.to_wire(Enum.C)) == Enum.C
+
+
+def test_enums_are_constants(loads):
+    mod = loads('''
+        enum Foo {
+            A, B, C
+        }
+
+        struct Bar {
+            1: required Foo foo = Foo.A
+        }
+    ''')
+
+    Foo = mod.Foo
+    Bar = mod.Bar
+
+    assert Bar().foo == Foo.A

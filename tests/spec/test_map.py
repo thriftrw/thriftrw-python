@@ -20,32 +20,44 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .spec_mapper import type_spec_or_ref
+import pytest
+
+from thriftrw.idl import Parser
+from thriftrw.spec import primitive as prim_spec
+from thriftrw.spec.map import MapTypeSpec
+from thriftrw.spec.typedef import TypedefTypeSpec
+from thriftrw.spec.spec_mapper import type_spec_or_ref
+from thriftrw.wire.ttype import TType
+
+from ..util.value import vi32, vmap, vbinary
 
 
-class TypedefTypeSpec(object):
+@pytest.fixture
+def parse():
+    return Parser(start='map_type', silent=True).parse
 
-    __slots__ = ('name', 'target_spec')
 
-    def __init__(self, name, target_spec):
-        self.name = name
-        self.target_spec = target_spec
+def test_mapper(parse):
+    ast = parse('map<string, i32>')
+    spec = type_spec_or_ref(ast)
+    assert spec == MapTypeSpec(prim_spec.TextTypeSpec, prim_spec.I32TypeSpec)
 
-    @classmethod
-    def compile(cls, typedef):
-        target_spec = type_spec_or_ref(typedef.target_type)
-        return cls(typedef.name, target_spec)
 
-    def link(self, scope):
-        return self.target_spec.link(scope)
+def test_link(parse, scope):
+    ast = parse('map<string, Foo>')
+    spec = type_spec_or_ref(ast)
 
-    def __str__(self):
-        return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
+    scope.add_type_spec(
+        'Foo', TypedefTypeSpec('Foo', prim_spec.I32TypeSpec), 1
+    )
 
-    __repr__ = __str__
+    spec = spec.link(scope)
+    assert spec.vspec == prim_spec.I32TypeSpec
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    value = {u'foo': 1, u'bar': 2}
+    assert spec.to_wire(value) == vmap(
+        TType.BINARY, TType.I32,
+        (vbinary(b'foo'), vi32(1)),
+        (vbinary(b'bar'), vi32(2)),
+    )
+    assert value == spec.from_wire(spec.to_wire(value))

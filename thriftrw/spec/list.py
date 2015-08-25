@@ -65,3 +65,9 @@ class ListTypeSpec(TypeSpec):
         return 'ListTypeSpec(vspec=%r)' % self.vspec
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return (
+            self.vspec == other.vspec and
+            self.linked == other.linked
+        )

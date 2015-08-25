@@ -52,6 +52,15 @@ class ConstValueResolver(object):
     def visit_primitive(self, const):
         return const.value
 
+    def visit_list(self, const):
+        return [self.resolve(x) for x in const.values]
+
+    def visit_map(self, const):
+        return {
+            self.resolve(k): self.resolve(v)
+            for k, v in const.pairs
+        }
+
     def visit_reference(self, const):
         # TODO constants referencing enum values
         value = self.scope.const_values.get(const.name)
@@ -125,7 +134,7 @@ class Scope(object):
             )
         self.service_specs[service_spec.name] = service_spec
 
-    def add_constant(self, name, value, lineno):
+    def add_constant(self, name, value, lineno, add_to_module=True):
         """Registers the given constant into the scope.
 
         :param name:
@@ -134,6 +143,9 @@ class Scope(object):
             Value of the contsant.
         :param lineno:
             The line number at which this constant was defined.
+        :param add_to_module:
+            Whether this constant should be added to the module at the top
+            level. Defaults to True.
         :raises ThriftCompilerError:
             If the constant name has already been used.
         """
@@ -147,7 +159,8 @@ class Scope(object):
             )
 
         self.const_values[name] = value
-        setattr(self.module, name, value)
+        if add_to_module:
+            setattr(self.module, name, value)
 
     def add_surface(self, name, surface):
         assert surface is not None

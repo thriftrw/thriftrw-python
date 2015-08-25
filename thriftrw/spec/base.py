@@ -34,17 +34,27 @@ class TypeSpec(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    #: Name of the type referenced by the type spec.
-    name = None
+    @property
+    def name(self):
+        """Name of the type referenced by this type spec."""
+        raise NotImplementedError
 
-    #: Numeric TType used for the type spec.
-    #:
-    #: The value must be from ``thriftrw.wire.TType``.
-    ttype_code = None
+    @property
+    def ttype_code(self):
+        """Numeric TType used for the type spec.
 
-    #: The surface of a type spec, if non-None is the value associated with
-    #: its name at the top-level in the generated module.
-    surface = None
+        The value must be from ``thriftrw.wire.TType``.
+        """
+        raise NotImplementedError
+
+    @property
+    def surface(self):
+        """The surface of a type spec.
+
+        The surface of a type spec, if non-None is the value associated with
+        its name at the top-level in the generated module.
+        """
+        return None
 
     @abc.abstractmethod
     def to_wire(self, value):

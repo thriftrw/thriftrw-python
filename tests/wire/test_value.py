@@ -98,10 +98,10 @@ def test_struct_get():
     ])
 
     assert struct.get(1, TType.BOOL).value
-    assert 42 == struct.get(2, TType.BYTE).value
+    assert value.ByteValue(42) == struct.get(2, TType.BYTE).value
     assert value.ListValue(TType.BINARY, [
         value.BinaryValue('Hello'),
         value.BinaryValue('World'),
-    ]) == struct.get(3, TType.LIST)
+    ]) == struct.get(3, TType.LIST).value
 
     assert not struct.get(1, TType.BINARY)

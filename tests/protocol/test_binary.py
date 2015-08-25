@@ -21,7 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
-from io import BytesIO
+from six import BytesIO
 
 from thriftrw.protocol.exceptions import ThriftProtocolError
 from thriftrw.protocol.exceptions import EndOfInputError
@@ -30,7 +30,7 @@ from thriftrw.protocol.binary import BinaryProtocol
 from thriftrw.wire import TType
 from thriftrw.wire import value
 
-from tests.util.value import *  # noqa
+from ..util.value import *  # noqa
 
 
 def reader_writer_ids(x):
@@ -188,7 +188,8 @@ def reader_writer_ids(x):
         0x00,           # stop
     ], vstruct(
         (1, TType.I16, vi16(42)),
-        (2, TType.LIST, vlist(TType.BINARY, vbinary('foo'), vbinary('bar'))),
+        (2, TType.LIST, vlist(
+            TType.BINARY, vbinary(b'foo'), vbinary(b'bar'))),
     )),
 
     # map = ktype:1 vtype:1 count:4 (key value){count}
@@ -225,8 +226,8 @@ def reader_writer_ids(x):
         # </item>
     ], vmap(
         TType.BINARY, TType.LIST,
-        (vbinary('a'), vlist(TType.BYTE, vbyte(1))),
-        (vbinary('b'), vlist(TType.I16, vi16(2), vi16(3))),
+        (vbinary(b'a'), vlist(TType.BYTE, vbyte(1))),
+        (vbinary(b'b'), vlist(TType.I16, vi16(2), vi16(3))),
     )),
 
     # set = vtype:1 count:4 (value){count)

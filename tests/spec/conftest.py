@@ -21,10 +21,17 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+from functools import partial
 
+from thriftrw.loader import Loader
 from thriftrw.compile.scope import Scope
 
 
 @pytest.fixture
 def scope(request):
     return Scope(request.node.name)
+
+
+@pytest.fixture
+def loads(request):
+    return partial(Loader().loads, request.node.name)

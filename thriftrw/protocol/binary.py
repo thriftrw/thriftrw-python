@@ -22,6 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import six
 import struct
+from six.moves import range
 
 from thriftrw.wire import value as V
 from thriftrw.wire import TType
@@ -138,7 +139,7 @@ class BinaryProtocolReader(object):
         value_reader = self._reader(value_ttype)
 
         pairs = []
-        for i in xrange(length):
+        for i in range(length):
             k = key_reader(self)
             v = value_reader(self)
             pairs.append((k, v))
@@ -157,7 +158,7 @@ class BinaryProtocolReader(object):
         value_reader = self._reader(value_ttype)
         values = []
 
-        for i in xrange(length):
+        for i in range(length):
             values.append(value_reader(self))
 
         return V.SetValue(
@@ -173,7 +174,7 @@ class BinaryProtocolReader(object):
         value_reader = self._reader(value_ttype)
         values = []
 
-        for i in xrange(length):
+        for i in range(length):
             values.append(value_reader(self))
 
         return V.ListValue(

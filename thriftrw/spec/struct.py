@@ -78,6 +78,7 @@ class StructTypeSpec(TypeSpec):
             AST of the Thrift struct
         """
         fields = []
+        ids = set()
         names = set()
         for field in struct.fields:
             if field.name in names:
@@ -86,6 +87,15 @@ class StructTypeSpec(TypeSpec):
                     (field.name, struct.name, field.lineno)
                 )
             names.add(field.name)
+
+            if field.id in ids:
+                raise ThriftCompilerError(
+                    'Field ID "%d" of struct "%s" on line %d '
+                    'has already been used.' % (
+                        field.id, struct.name, field.lineno
+                    )
+                )
+            ids.add(field.id)
             fields.append(FieldSpec.compile(
                 field=field,
                 struct_name=struct.name,
@@ -93,11 +103,11 @@ class StructTypeSpec(TypeSpec):
             ))
         return cls(struct.name, fields)
 
-    def to_wire(self, value):
+    def to_wire(self, struct):
         fields = []
 
         for field in self.fields:
-            value = getattr(value, field.name, None)
+            value = getattr(struct, field.name)
             if value is None:
                 continue
             fields.append(field.to_wire(value))
@@ -107,10 +117,10 @@ class StructTypeSpec(TypeSpec):
     def from_wire(self, wire_value):
         kwargs = {}
         for field in self.fields:
-            value = wire_value.get(field.id, field.spec.ttype_code)
-            if value is None:
+            field_value = wire_value.get(field.id, field.ttype_code)
+            if field_value is None:
                 continue
-            kwargs[field.name] = field.spec.from_wire(value)
+            kwargs[field.name] = field.from_wire(field_value)
 
         # TODO For the case where cls fails to instantiate because a required
         # positional argument is missing, we know that the request was
@@ -121,6 +131,14 @@ class StructTypeSpec(TypeSpec):
         return 'StructTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name and
+            self.fields == other.fields and
+            self.base_cls == other.base_cls and
+            self.linked == other.linked
+        )
 
 
 class FieldSpec(object):
@@ -156,6 +174,10 @@ class FieldSpec(object):
             self.spec = self.spec.link(scope)
         return self
 
+    @property
+    def ttype_code(self):
+        return self.spec.ttype_code
+
     @classmethod
     def compile(cls, field, struct_name, require_requiredness=True):
         if field.id is None:
@@ -166,15 +188,16 @@ class FieldSpec(object):
             )
 
         required = field.requiredness
-        if required is None and require_requiredness:
-            raise ThriftCompilerError(
-                'Field "%s" of "%s" on line %d does not explicitly specify '
-                'requiredness. Please specify whether the field is optional '
-                'or required in the IDL.'
-                % (field.name, struct_name, field.lineno)
-            )
-        else:
-            required = False
+        if required is None:
+            if require_requiredness:
+                raise ThriftCompilerError(
+                    'Field "%s" of "%s" on line %d does not explicitly '
+                    'specify requiredness. Please specify whether the field '
+                    'is optional or required in the IDL.'
+                    % (field.name, struct_name, field.lineno)
+                )
+            else:
+                required = False
 
         # TODO check field ids are valid signed 16-bit integers
 
@@ -183,7 +206,7 @@ class FieldSpec(object):
             id=field.id,
             name=field.name,
             spec=field_type_spec,
-            required=field.requiredness,
+            required=required,
             default_value=field.default,
         )
 
@@ -217,7 +240,8 @@ class FieldSpec(object):
             self.name == other.name and
             self.spec == other.spec and
             self.required == other.required and
-            self.default_value == other.default_value
+            self.default_value == other.default_value and
+            self.linked == other.linked
         )
 
 
@@ -306,8 +330,8 @@ def struct_init(cls_name, field_names, field_defaults, base_cls):
                 continue
             if name not in unassigned:
                 raise TypeError(
-                    '%s() got multiple values for keyword argument '
-                    '"%s"' % (cls_name, name)
+                    '%s() got multiple values for argument "%s"'
+                    % (cls_name, name)
                 )
             value = kwargs.pop(name)
             if value is not None:
@@ -322,12 +346,6 @@ def struct_init(cls_name, field_names, field_defaults, base_cls):
                     setattr(self, name, value)
                     unassigned.remove(name)
 
-        # If anything was left unassigned, blow up.
-        if unassigned:
-            raise ValueError(
-                'Field(s) %r require non-None values.' % list(unassigned)
-            )
-
         if kwargs:
             # Too many kwargs given.
             for name in kwargs:
@@ -335,6 +353,12 @@ def struct_init(cls_name, field_names, field_defaults, base_cls):
                     '%s() got an unexpected keyword argument "%s"'
                     % (cls_name, name)
                 )
+
+        # If anything was left unassigned, blow up.
+        if unassigned:
+            raise ValueError(
+                'Field(s) %r require non-None values.' % list(unassigned)
+            )
 
     # TODO reasonable docstring
     return __init__
@@ -373,12 +397,20 @@ def struct_str(cls_name, field_names):
     """Generate a ``__str__`` method for a struct."""
 
     def __str__(self):
-        fields = {
-            name: getattr(self, name, None) for name in field_names
-        }
+        fields = {name: getattr(self, name) for name in field_names}
         return "%s(%r)" % (cls_name, fields)
 
     return __str__
+
+
+def struct_eq(fields):
+
+    def __eq__(self, other):
+        return all(
+            getattr(self, name) == getattr(other, name) for name in fields
+        )
+
+    return __eq__
 
 
 def struct_cls(struct_spec, scope):
@@ -438,6 +470,7 @@ def struct_cls(struct_spec, scope):
     )
     struct_dct['__str__'] = struct_str(struct_spec.name, field_names)
     struct_dct['__repr__'] = struct_dct['__str__']
+    struct_dct['__eq__'] = struct_eq(set(field_names))
     struct_dct['__doc__'] = struct_docstring(
         struct_spec.name,
         required_fields,

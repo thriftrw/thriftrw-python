@@ -26,7 +26,7 @@ import pytest
 from thriftrw import spec
 from thriftrw.wire import TType
 
-from tests.util.value import *  # noqa
+from ..util.value import *  # noqa
 
 
 @pytest.mark.parametrize('t_spec, value, obj', [
@@ -39,8 +39,8 @@ from tests.util.value import *  # noqa
     (spec.I32TypeSpec, vi32(198314), 198314),
     (spec.I64TypeSpec, vi64(13814081), 13814081),
 
-    (spec.BinaryTypeSpec, vbinary(''), b''),
-    (spec.BinaryTypeSpec, vbinary('hello'), b'hello'),
+    (spec.BinaryTypeSpec, vbinary(b''), b''),
+    (spec.BinaryTypeSpec, vbinary(b'hello'), b'hello'),
 
     (spec.TextTypeSpec, vbinary(b'\xe2\x98\x83'), u'☃'),
 

@@ -176,14 +176,13 @@ class StructValue(Value):
         :param field_ttype:
             Type of the value.
         :returns:
-            Value stored for the given field ID and type, or None if a field
-            with the given ID and type was not found.
+            Corresponding ``FieldValue`` or None.
         """
         field_value = self._index.get((field_id, field_ttype))
         if field_value is None:
             return None
         else:
-            return field_value.value
+            return field_value
 
     def __str__(self):
         return 'StructValue(%r)' % self.fields

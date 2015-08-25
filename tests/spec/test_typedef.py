@@ -20,32 +20,41 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .spec_mapper import type_spec_or_ref
+import pytest
+
+from thriftrw.spec.reference import TypeReference
+from thriftrw.spec.typedef import TypedefTypeSpec
+from thriftrw.spec import primitive as prim_spec
+from thriftrw.idl import Parser
 
 
-class TypedefTypeSpec(object):
+@pytest.fixture
+def parse():
+    """Parser for enum definitions."""
+    return Parser(start='typedef', silent=True).parse
 
-    __slots__ = ('name', 'target_spec')
 
-    def __init__(self, name, target_spec):
-        self.name = name
-        self.target_spec = target_spec
+def test_compile(parse):
+    assert TypedefTypeSpec.compile(parse('typedef i32 ID')) == (
+        TypedefTypeSpec('ID', prim_spec.I32TypeSpec)
+    )
 
-    @classmethod
-    def compile(cls, typedef):
-        target_spec = type_spec_or_ref(typedef.target_type)
-        return cls(typedef.name, target_spec)
+    assert TypedefTypeSpec.compile(parse('typedef Custom Foo')) == (
+        TypedefTypeSpec('Foo', TypeReference('Custom', 1))
+    )
 
-    def link(self, scope):
-        return self.target_spec.link(scope)
 
-    def __str__(self):
-        return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
+def test_link(loads):
+    mod = loads('''
+        typedef Bar Foo
+        typedef Baz Bar
+        typedef Qux Baz
 
-    __repr__ = __str__
+        struct Qux {
+            1: required i32 x
+        }
+    ''')
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    assert mod.Foo is mod.Bar
+    assert mod.Bar is mod.Baz
+    assert mod.Baz is mod.Qux

@@ -216,4 +216,4 @@ def service_cls(service_spec, scope):
     service_dct['service_spec'] = service_spec
     service_dct['__slots__'] = ()
 
-    return type(service_spec.name, (parent_cls,), service_dct)
+    return type(str(service_spec.name), (parent_cls,), service_dct)

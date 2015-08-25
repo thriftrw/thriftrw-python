@@ -44,6 +44,8 @@ __all__ = [
     'ConstValue',
     'ConstPrimitiveValue',
     'ConstReference',
+    'ConstList',
+    'ConstMap',
     'Annotation',
 ]
 
@@ -406,6 +408,28 @@ class ConstReference(namedtuple('ConstReference', 'name lineno'), ConstValue):
 
     def apply(self, visitor):
         return visitor.visit_reference(self)
+
+
+class ConstList(namedtuple('ConstList', 'values lineno'), ConstValue):
+    """A list of constant values.
+
+    ``values``
+        Collection of ``ConstValue`` objects.
+    """
+
+    def apply(self, visitor):
+        return visitor.visit_list(self)
+
+
+class ConstMap(namedtuple('ConstList', 'pairs lineno'), ConstValue):
+    """A map of constant values.
+
+    ``pairs``
+        Collection of pairs of ``ConstValue`` objects.
+    """
+
+    def apply(self, visitor):
+        return visitor.visit_map(self)
 
 
 ##############################################################################

@@ -29,44 +29,6 @@ from .exceptions import ThriftCompilerError
 __all__ = ['Generator']
 
 
-class ConstValueResolver(object):
-    """Resolves constant values."""
-
-    __slots__ = ('scope',)
-
-    def __init__(self, scope):
-        """
-        :param Scope scope:
-            Scope which will be queried for constants.
-        """
-        self.scope = scope
-
-    def resolve(self, const_value):
-        """Resolve the given constant value.
-
-        :param const_value:
-            A ``thriftrw.idl.ConstValue``
-        :returns:
-            The value that the ``ConstValue`` maps to.
-        """
-        return const_value.apply(self)
-
-    def visit_primitive(self, const):
-        return const.value
-
-    def visit_reference(self, const):
-        # TODO constants referencing enum values
-        value = self.scope.const_values.get(const.name)
-        if value is None:
-            raise ThriftCompilerError(
-                'Unknown constant "%s" referenced at line %d'
-                % (const.name, const.lineno)
-            )
-        return value
-
-    # NOTE We do not yet support forward references in constants.
-
-
 class Generator(object):
     """Implements the Generate step of the compiler.
 
@@ -75,7 +37,7 @@ class Generator(object):
     references to each other.
     """
 
-    __slots__ = ('scope', 'type_mapper', 'const_resolver')
+    __slots__ = ('scope', 'type_mapper')
 
     def __init__(self, scope):
         """Initialize the generator.
@@ -84,7 +46,6 @@ class Generator(object):
             Scope maintaining the current compilation state.
         """
         self.scope = scope
-        self.const_resolver = ConstValueResolver(scope)
 
     def process(self, definition):
         """Process the given definition from the AST.
@@ -98,7 +59,7 @@ class Generator(object):
         # TODO validate that const.name is a valid python identifier.
 
         typ = type_spec_or_ref(const.value_type)
-        value = self.const_resolver.resolve(const.value)
+        value = self.scope.resolve_const_value(const.value)
 
         if False and not typ.matches(value):
             # TODO implement typ.matches -- assuming we want to do validation
@@ -119,6 +80,13 @@ class Generator(object):
 
     def visit_enum(self, enum):
         enum_spec = spec.EnumTypeSpec.compile(enum)
+        for key, value in enum_spec.items.items():
+            self.scope.add_constant(
+                name=enum_spec.name + '.' + key,
+                value=value,
+                lineno=enum.lineno,
+                add_to_module=False
+            )
         self.scope.add_type_spec(enum.name, enum_spec, enum.lineno)
         # TODO Add type_spec to list of reserved words.
 
