@@ -55,7 +55,13 @@ def test_link(parse, scope):
     assert spec.vspec == prim_spec.TextTypeSpec
 
     value = set([u'foo', u'bar'])
-    assert spec.to_wire(value) == vset(
-        TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
+    assert (
+        spec.to_wire(value) == vset(
+            TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
+        )
+    ) or (
+        spec.to_wire(value) == vset(
+            TType.BINARY, vbinary(b'bar'), vbinary(b'foo')
+        )
     )
     assert value == spec.from_wire(spec.to_wire(value))

@@ -55,9 +55,17 @@ def test_link(parse, scope):
     assert spec.vspec == prim_spec.I32TypeSpec
 
     value = {u'foo': 1, u'bar': 2}
-    assert spec.to_wire(value) == vmap(
-        TType.BINARY, TType.I32,
-        (vbinary(b'foo'), vi32(1)),
-        (vbinary(b'bar'), vi32(2)),
+    assert (
+        spec.to_wire(value) == vmap(
+            TType.BINARY, TType.I32,
+            (vbinary(b'foo'), vi32(1)),
+            (vbinary(b'bar'), vi32(2)),
+        )
+    ) or (
+        spec.to_wire(value) == vmap(
+            TType.BINARY, TType.I32,
+            (vbinary(b'bar'), vi32(2)),
+            (vbinary(b'foo'), vi32(1)),
+        )
     )
     assert value == spec.from_wire(spec.to_wire(value))
