@@ -1,10 +1,21 @@
-``thriftrw`` is a Python library to serialize and deserialize Thrift types at
-runtime. It does not concern itself with client/server logic or exception
-handling.
+``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
-It supports only the Thrift Binary protocol at this time.
+`Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
+Read The Docs.
 
-For example, given::
+Features
+--------
+
+* No code generation. The ``.thrift`` files are parsed and compiled in-memory
+  at runtime.
+* No assumptions about how bytes are sent or received. The library only
+  concerns itself with serialization and deserialization only.
+* Supports Python 2 and 3.
+
+Example
+-------
+
+Given the ``.thrift`` file,::
 
     // blog.thrift
 
@@ -31,52 +42,94 @@ For example, given::
             throws (1: UnauthorizedRequestError unauthorized);
     }
 
-You can use the library to send and receive requests and responses
+
+You can use the library to send and receive requests and responses like so,
 
 .. code-block:: python
+
+    # client.py
 
     import thriftrw
 
     blog = thriftrw.load('blog.thrift')
     BlogService = blog.BlogService
 
-    # client-side:
-
     def new_post():
         post = blog.PostDetails(
             author='...',
             subject='...',
-            body=blog.Body(plain_text='Hello, world!')
+            body=blog.Body(plainText='Hello, world!')
         )
 
-        request = BlogService.new_post.request(post)
-        payload = request.dump()
+        request = BlogService.newPost.request(post)
+        payload = blog.dumps(request)
 
+        # send_to_server is implemented by the user.
         response_payload = send_to_server(payload)
+        response = blog.loads(BlogService.newPost.response, response_payload)
 
-        response = BlogService.new_post.response.load(
-            response_payload
-        )
         if response.unauthorized is not None:
             raise response.unauthorized
         else:
             return response.success
 
-    # server-side:
 
+.. code-block:: python
+
+    # server.py
+
+    import thriftrw
+
+    blog = thriftrw.load('blog.thrift')
+    BlogService = blog.BlogService
+
+    # The user's server handler calls handle_new_post with the payload.
     def handle_new_post(request_payload):
-        request = BlogService.new_post.request.load(request_payload)
+        request = blog.loads(BlogService.newPost.request, request_payload)
 
         if request.post.author != 'admin':
-            response = BlogService.new_post.response(
+            response = BlogService.newPost.response(
                 unauthorized=blog.UnauthorizedRequestError()
             )
         else:
+            # create_post is implemented by the user.
             post_uuid = create_post(request.post)
-            response = BlogService.new_post.response(success=post_uuid)
+            response = BlogService.newPost.response(success=post_uuid)
 
-        response_payload = response.dump()
-        return response_payload
+        return blog.dumps(response)
 
-Note that attribute and method names are converted from ``camelCase`` to
-``snake_case`` on the Python side.
+Caveats
+-------
+
+* Only the Thrift Binary protocol is supported at this time.
+* Message wrappers for Thrift calls and responses are not supported at this
+  time.
+
+Related
+-------
+
+`thriftrw <https://github.com/uber/thriftrw>`_ provides the same functionality
+for Node.js.
+
+License
+-------
+
+::
+
+    Copyright (c) 2015 Uber Technologies, Inc.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
