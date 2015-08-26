@@ -1,7 +1,15 @@
+``thriftrw``
+============
+
+|docs|
+
 ``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
 `Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
 Read The Docs.
+
+.. |docs| image:: https://readthedocs.org/projects/thriftrw/badge/?version=latest
+    :target: https://readthedocs.org/projects/thriftrw/?badge=latest
 
 Features
 --------

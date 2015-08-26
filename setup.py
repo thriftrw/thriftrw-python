@@ -17,7 +17,7 @@ setup(
     url='https://github.com/uber/thriftrw-python',
     packages=find_packages(exclude=('tests', 'test.*')),
     license='MIT',
-    install_requires=['six'],
+    install_requires=['six', 'ply'],
     tests_require=['pytest', 'mock'],
     classifiers=[
         'Development Status :: 4 - Beta',
