@@ -1,5 +1,8 @@
 ``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
+`Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
+Read The Docs.
+
 Features
 --------
 
@@ -101,6 +104,12 @@ Caveats
 * Only the Thrift Binary protocol is supported at this time.
 * Message wrappers for Thrift calls and responses are not supported at this
   time.
+
+Related
+-------
+
+`thriftrw <https://github.com/uber/thriftrw>`_ provides the same functionality
+for Node.js.
 
 License
 -------
