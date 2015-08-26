@@ -190,8 +190,6 @@ class ServiceSpec(object):
 class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
     """Represents a single function on a service.
 
-    May be treated as a callable to instantiate request objects.
-
     ``name``
         Name of the function.
     ``request``
@@ -199,9 +197,6 @@ class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
     ``response``
         Class representing responses for this function.
     """
-
-    def __call__(self, *args, **kwargs):
-        return self.request(*args, **kwargs)
 
 
 def service_cls(service_spec, scope):
