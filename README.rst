@@ -1,12 +1,19 @@
 ``thriftrw``
 ============
 
-|docs|
+|build| |coverage| |docs|
 
 ``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
 `Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
 Read The Docs.
+
+.. |build| image:: https://travis-ci.org/uber/thriftrw-python.svg?branch=master
+    :target: https://travis-ci.org/uber/thriftrw-python
+
+.. |coverage| image:: https://coveralls.io/repos/uber/thriftrw-python/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/uber/thriftrw-python?branch=master
+
 
 .. |docs| image:: https://readthedocs.org/projects/thriftrw/badge/?version=latest
     :target: https://readthedocs.org/projects/thriftrw/?badge=latest
