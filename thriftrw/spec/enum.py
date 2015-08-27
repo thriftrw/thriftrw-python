@@ -24,6 +24,7 @@ from thriftrw.wire import TType
 from thriftrw.wire.value import I32Value
 from thriftrw.compile.exceptions import ThriftCompilerError
 
+from . import check
 from .base import TypeSpec
 
 __all__ = ['EnumTypeSpec']
@@ -81,9 +82,14 @@ class EnumTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
+        if value not in self.values_to_names:
+            raise ValueError(
+                '%r is not a valid value for enum "%s"' % (value, self.name)
+            )
         return I32Value(value)
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         return wire_value.value
 
     @classmethod
@@ -149,10 +155,11 @@ def enum_cls(enum_spec):
     for name, item in enum_spec.items.items():
         enum_dct[name] = item
 
-    # TODO __contains__ to check if an int is a valid value for this enum.
+    keys, values = zip(*enum_spec.items.items())
 
     enum_dct['_VALUES_TO_NAMES'] = enum_spec.values_to_names
-    enum_dct['items'] = tuple(enum_spec.items.keys())
+    enum_dct['items'] = tuple(keys)
+    enum_dct['values'] = tuple(values)
     enum_dct['name_of'] = name_of
     enum_dct['type_spec'] = enum_spec
     enum_dct['__slots__'] = ()

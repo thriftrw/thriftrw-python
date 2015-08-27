@@ -20,9 +20,12 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import collections
+
 from thriftrw.wire import TType
 from thriftrw.wire.value import SetValue
 
+from . import check
 from .base import TypeSpec
 
 __all__ = ['SetTypeSpec']
@@ -53,12 +56,14 @@ class SetTypeSpec(TypeSpec):
         return 'set<%s>' % self.vspec.name
 
     def to_wire(self, value):
+        check.instanceof_class(self, collections.Set, value)
         return SetValue(
             value_ttype=self.vspec.ttype_code,
             values=[self.vspec.to_wire(v) for v in value],
         )
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         return set(
             self.vspec.from_wire(v) for v in wire_value.values
         )

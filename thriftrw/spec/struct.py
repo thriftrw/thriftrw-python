@@ -24,6 +24,7 @@ from thriftrw.wire import TType
 from thriftrw.wire.value import StructValue, FieldValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
+from . import check
 from .base import TypeSpec
 from .const import const_value_or_ref
 from .spec_mapper import type_spec_or_ref
@@ -105,17 +106,25 @@ class StructTypeSpec(TypeSpec):
         return cls(struct.name, fields)
 
     def to_wire(self, struct):
+        check.instanceof_surface(self, struct)
         fields = []
 
         for field in self.fields:
             value = getattr(struct, field.name)
             if value is None:
-                continue
+                if field.required:
+                    raise TypeError(
+                        'Field "%s" of "%s" is required. It cannot be None.'
+                        % (field.name, self.name)
+                    )
+                else:
+                    continue
             fields.append(field.to_wire(value))
 
         return StructValue(fields)
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         kwargs = {}
         for field in self.fields:
             field_value = wire_value.get(field.id, field.ttype_code)

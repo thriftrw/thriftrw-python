@@ -24,6 +24,7 @@ from thriftrw.wire import TType
 from thriftrw.wire.value import StructValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
+from . import check
 from .base import TypeSpec
 from .struct import FieldSpec
 
@@ -99,6 +100,7 @@ class UnionTypeSpec(TypeSpec):
         return cls(union.name, fields)
 
     def to_wire(self, union):
+        check.instanceof_surface(self, union)
         fields = []
 
         for field in self.fields:
@@ -110,6 +112,7 @@ class UnionTypeSpec(TypeSpec):
         return StructValue(fields)
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         kwargs = {}
         for field in self.fields:
             field_value = wire_value.get(field.id, field.spec.ttype_code)

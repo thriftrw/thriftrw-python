@@ -56,44 +56,6 @@ def test_include_disallowed(loads):
     assert 'thriftrw does not support including' in str(exc_info)
 
 
-def test_constants(loads):
-    mod = loads('''
-        const list<string> lst = [bar, baz, qux];
-
-        const map<i32, string> mp = {
-            1: bar,
-            2: baz,
-            3: qux
-        };
-
-        const i32 foo = 42;
-        const i32 foo2 = 0x2a;
-        const string bar = "hello";
-        const string baz = bar;
-        const string qux = "world";
-    ''')
-
-    assert mod.foo == 42
-    assert mod.foo2 == 42
-    assert mod.bar == 'hello'
-    assert mod.baz == 'hello'
-    assert mod.qux == 'world'
-
-    assert mod.lst == ['hello', 'hello', 'world']
-    assert mod.mp == {
-        1: 'hello',
-        2: 'hello',
-        3: 'world',
-    }
-
-
-def test_undefined_constant(loads):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads('const string baz = bar')
-
-    assert 'Unknown constant "bar"' in str(exc_info)
-
-
 def test_unknown_type(loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
         loads('''
@@ -102,17 +64,6 @@ def test_unknown_type(loads):
         ''')
 
     assert 'Unknown type "Baz"' in str(exc_info)
-
-
-def test_duplicate_constant(loads):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads('''
-            const i32 foo = 42;
-            const string foo = "bar"
-        ''')
-
-    assert 'Cannot define constant "foo"' in str(exc_info)
-    assert 'name is already taken' in str(exc_info)
 
 
 def test_duplicate_type_names(loads):
