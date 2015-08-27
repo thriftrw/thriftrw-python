@@ -27,53 +27,6 @@ from .exceptions import ThriftCompilerError
 __all__ = ['Scope']
 
 
-class ConstValueResolver(object):
-    """Resolves constant values."""
-
-    __slots__ = ('scope',)
-
-    def __init__(self, scope):
-        """
-        :param Scope scope:
-            Scope which will be queried for constants.
-        """
-        self.scope = scope
-
-    def resolve(self, const_value):
-        """Resolve the given constant value.
-
-        :param const_value:
-            A ``thriftrw.idl.ConstValue``
-        :returns:
-            The value that the ``ConstValue`` maps to.
-        """
-        return const_value.apply(self)
-
-    def visit_primitive(self, const):
-        return const.value
-
-    def visit_list(self, const):
-        return [self.resolve(x) for x in const.values]
-
-    def visit_map(self, const):
-        return {
-            self.resolve(k): self.resolve(v)
-            for k, v in const.pairs
-        }
-
-    def visit_reference(self, const):
-        # TODO constants referencing enum values
-        value = self.scope.const_values.get(const.name)
-        if value is None:
-            raise ThriftCompilerError(
-                'Unknown constant "%s" referenced at line %d'
-                % (const.name, const.lineno)
-            )
-        return value
-
-    # NOTE We do not yet support forward references in constants.
-
-
 class Scope(object):
     """Maintains the compilation state across steps.
 
@@ -82,10 +35,7 @@ class Scope(object):
     reference to the final generated module.
     """
 
-    __slots__ = (
-        'const_values', 'type_specs', 'module', 'service_specs',
-        'const_resolver',
-    )
+    __slots__ = ('const_specs', 'type_specs', 'module', 'service_specs')
 
     def __init__(self, name):
         """Initialize the scope.
@@ -93,11 +43,10 @@ class Scope(object):
         :param name:
             Name of the generated module.
         """
-        self.const_values = {}
         self.type_specs = {}
+        self.const_specs = {}
         self.service_specs = {}
 
-        self.const_resolver = ConstValueResolver(self)
         self.module = types.ModuleType(name)
 
     def __str__(self):
@@ -110,10 +59,16 @@ class Scope(object):
 
     __repr__ = __str__
 
-    def resolve_const_value(self, const_value):
-        return self.const_resolver.resolve(const_value)
+    def resolve_const_spec(self, name, lineno):
+        """Finds and links the ConstSpec with the given name."""
+        if name not in self.const_specs:
+            raise ThriftCompilerError(
+                'Unknown constant "%s" referenced at line %d' % (name, lineno)
+            )
+        return self.const_specs[name].link(self)
 
     def resolve_type_spec(self, name, lineno):
+        """Finds and links the TypeSpec with the given name."""
         if name not in self.type_specs:
             raise ThriftCompilerError(
                 'Unknown type "%s" referenced at line %d' % (name, lineno)
@@ -134,33 +89,18 @@ class Scope(object):
             )
         self.service_specs[service_spec.name] = service_spec
 
-    def add_constant(self, name, value, lineno, add_to_module=True):
-        """Registers the given constant into the scope.
+    def add_const_spec(self, const_spec):
+        """Adds a ConstSpec to the compliation scope.
 
-        :param name:
-            Name of the constant.
-        :param value:
-            Value of the contsant.
-        :param lineno:
-            The line number at which this constant was defined.
-        :param add_to_module:
-            Whether this constant should be added to the module at the top
-            level. Defaults to True.
-        :raises ThriftCompilerError:
-            If the constant name has already been used.
+        If the ConstSpec's ``save`` attribute is True, the constant will be
+        added to the module at the top-level.
         """
-        assert value is not None
-
-        if name in self.const_values or hasattr(self.module, name):
+        if const_spec.name in self.const_specs:
             raise ThriftCompilerError(
-                'Cannot define constant "%s" at line %d. '
-                'That name is already taken.'
-                % (name, lineno)
+                'Cannot define constant "%s". That name is already taken.'
+                % const_spec.name
             )
-
-        self.const_values[name] = value
-        if add_to_module:
-            setattr(self.module, name, value)
+        self.const_specs[const_spec.name] = const_spec
 
     def add_surface(self, name, surface):
         assert surface is not None

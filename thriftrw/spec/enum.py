@@ -149,6 +149,8 @@ def enum_cls(enum_spec):
     for name, item in enum_spec.items.items():
         enum_dct[name] = item
 
+    # TODO __contains__ to check if an int is a valid value for this enum.
+
     enum_dct['_VALUES_TO_NAMES'] = enum_spec.values_to_names
     enum_dct['items'] = tuple(enum_spec.items.keys())
     enum_dct['name_of'] = name_of

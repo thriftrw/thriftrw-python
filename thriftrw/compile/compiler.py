@@ -22,6 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from .generate import Generator
 from .link import TypeSpecLinker
+from .link import ConstSpecLinker
 from .link import ServiceSpecLinker
 from .scope import Scope
 from .exceptions import ThriftCompilerError
@@ -33,7 +34,7 @@ __all__ = ['Compiler']
 class Compiler(object):
     """Compiles IDLs into Python modules."""
 
-    LINKERS = [TypeSpecLinker, ServiceSpecLinker]
+    LINKERS = [ConstSpecLinker, TypeSpecLinker, ServiceSpecLinker]
 
     __slots__ = ('protocol',)
 

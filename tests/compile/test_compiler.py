@@ -58,18 +58,19 @@ def test_include_disallowed(loads):
 
 def test_constants(loads):
     mod = loads('''
-        const i32 foo = 42;
-        const i32 foo2 = 0x2a;
-        const string bar = "hello";
-        const string baz = bar;
-        const string qux = "world";
-
         const list<string> lst = [bar, baz, qux];
+
         const map<i32, string> mp = {
             1: bar,
             2: baz,
             3: qux
         };
+
+        const i32 foo = 42;
+        const i32 foo2 = 0x2a;
+        const string bar = "hello";
+        const string baz = bar;
+        const string qux = "world";
     ''')
 
     assert mod.foo == 42
@@ -84,8 +85,6 @@ def test_constants(loads):
         2: 'hello',
         3: 'world',
     }
-
-    # TODO forward/self referential constants
 
 
 def test_undefined_constant(loads):

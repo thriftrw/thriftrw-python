@@ -129,7 +129,7 @@ class ParserSpec(object):
 
     def p_const_list(self, p):
         '''const_list : '[' const_list_seq ']' '''
-        p[0] = ast.ConstList(p[2], p.lineno(2))
+        p[0] = ast.ConstList(list(p[2]), p.lineno(2))
 
     def p_const_list_seq(self, p):
         '''const_list_seq : const_value sep const_list_seq
@@ -139,7 +139,7 @@ class ParserSpec(object):
 
     def p_const_map(self, p):
         '''const_map : '{' const_map_seq '}' '''
-        p[0] = ast.ConstMap(p[2], p.lineno(2))
+        p[0] = ast.ConstMap(dict(p[2]), p.lineno(2))
 
     def p_const_map_seq(self, p):
         '''const_map_seq : const_map_item sep const_map_seq

@@ -68,3 +68,26 @@ class ServiceSpecLinker(object):
                 )
 
         self.scope.service_specs = service_specs
+
+
+class ConstSpecLinker(object):
+    """Links references to top-level constants."""
+
+    __slots__ = ('scope',)
+
+    def __init__(self, scope):
+        self.scope = scope
+
+    def link(self):
+        const_specs = {}
+
+        for name, const_spec in self.scope.const_specs.items():
+            const_spec = const_spec.link(self.scope)
+            const_specs[name] = const_spec
+
+            if const_spec.surface is not None and const_spec.save:
+                self.scope.add_surface(
+                    const_spec.name, const_spec.surface
+                )
+
+        self.scope.const_specs = const_specs

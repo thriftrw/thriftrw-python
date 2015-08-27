@@ -118,16 +118,16 @@ def test_round_trip(loads):
 
 def test_enums_are_constants(loads):
     mod = loads('''
-        enum Foo {
-            A, B, C
-        }
-
         struct Bar {
             1: required Foo foo = Foo.A
+        }
+
+        enum Foo {
+            A, B, C
         }
     ''')
 
     Foo = mod.Foo
     Bar = mod.Bar
 
-    assert Bar().foo == Foo.A
+    assert Bar().foo == Foo.A == 0

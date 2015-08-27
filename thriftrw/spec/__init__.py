@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .base import TypeSpec
+from .const import ConstSpec
 from .enum import EnumTypeSpec
 from .list import ListTypeSpec
 from .map import MapTypeSpec
@@ -44,6 +45,7 @@ from .primitive import (
 
 
 __all__ = [
+    # Types
     'TypeSpec',
 
     # Primitives
@@ -62,7 +64,6 @@ __all__ = [
     'SetTypeSpec',
 
     # Custom types
-
     'EnumTypeSpec',
 
     'ExceptionTypeSpec',
@@ -70,9 +71,13 @@ __all__ = [
     'UnionTypeSpec',
     'FieldSpec',
 
+    'TypeReference',
+    'TypedefTypeSpec',
+
+    # Services
     'ServiceSpec',
     'FunctionSpec',
 
-    'TypeReference',
-    'TypedefTypeSpec',
+    # Constants
+    'ConstSpec',
 ]

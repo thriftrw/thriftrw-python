@@ -25,6 +25,7 @@ from thriftrw.wire.value import StructValue, FieldValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
 from .base import TypeSpec
+from .const import const_value_or_ref
 from .spec_mapper import type_spec_or_ref
 
 __all__ = ['StructTypeSpec', 'FieldSpec']
@@ -168,9 +169,7 @@ class FieldSpec(object):
         if not self.linked:
             self.linked = True
             if self.default_value is not None:
-                self.default_value = scope.resolve_const_value(
-                    self.default_value
-                )
+                self.default_value = self.default_value.link(scope).surface
             self.spec = self.spec.link(scope)
         return self
 
@@ -201,13 +200,17 @@ class FieldSpec(object):
 
         # TODO check field ids are valid signed 16-bit integers
 
+        default_value = None
+        if field.default is not None:
+            default_value = const_value_or_ref(field.default)
+
         field_type_spec = type_spec_or_ref(field.field_type)
         return cls(
             id=field.id,
             name=field.name,
             spec=field_type_spec,
             required=required,
-            default_value=field.default,
+            default_value=default_value,
         )
 
     # While FieldSpec has an interface similar to TypeSpec, it's not an actual

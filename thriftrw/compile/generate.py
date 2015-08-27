@@ -21,10 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw import spec
-from thriftrw.spec.spec_mapper import type_spec_or_ref
-
-from .exceptions import ThriftCompilerError
-
+from thriftrw.spec.const import ConstValuePrimitive
 
 __all__ = ['Generator']
 
@@ -56,20 +53,8 @@ class Generator(object):
         definition.apply(self)
 
     def visit_const(self, const):
-        # TODO validate that const.name is a valid python identifier.
-
-        typ = type_spec_or_ref(const.value_type)
-        value = self.scope.resolve_const_value(const.value)
-
-        if False and not typ.matches(value):
-            # TODO implement typ.matches -- assuming we want to do validation
-            raise ThriftCompilerError(
-                'Value for constant "%s" on line %d does not match its type.'
-                % (const.name, const.lineno)
-            )
-            # TODO Support constants which use typedefs of primitve types.
-
-        self.scope.add_constant(const.name, value, const.lineno)
+        const_spec = spec.ConstSpec.compile(const)
+        self.scope.add_const_spec(const_spec)
 
     def visit_typedef(self, typedef):
         self.scope.add_type_spec(
@@ -81,14 +66,15 @@ class Generator(object):
     def visit_enum(self, enum):
         enum_spec = spec.EnumTypeSpec.compile(enum)
         for key, value in enum_spec.items.items():
-            self.scope.add_constant(
-                name=enum_spec.name + '.' + key,
-                value=value,
-                lineno=enum.lineno,
-                add_to_module=False
+            self.scope.add_const_spec(
+                spec.ConstSpec(
+                    name=enum_spec.name + '.' + key,
+                    value_spec=ConstValuePrimitive(value),
+                    type_spec=spec.I32TypeSpec,
+                    save=False,
+                )
             )
         self.scope.add_type_spec(enum.name, enum_spec, enum.lineno)
-        # TODO Add type_spec to list of reserved words.
 
     def visit_struct(self, struct):
         struct_spec = spec.StructTypeSpec.compile(struct)
