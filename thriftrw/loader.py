@@ -29,7 +29,7 @@ from .protocol import BinaryProtocol
 class Loader(object):
     """Loads and compiles Thrift files."""
 
-    __slots__ = ('parser', 'compiler')
+    __slots__ = ('parser', 'compiler', 'compiled_modules')
 
     def __init__(self, protocol=None):
         """Initialize a loader.
@@ -43,6 +43,10 @@ class Loader(object):
         self.parser = Parser()
         self.compiler = Compiler(protocol)
 
+        # Mapping of absolute file path to compiled module. This is used to
+        # cache the result of calling load() multiple times on the same file.
+        self.compiled_modules = {}
+
     def loads(self, name, document):
         """Parse and compile the given Thrift document.
 
@@ -54,21 +58,35 @@ class Loader(object):
         program = self.parser.parse(document)
         return self.compiler.compile(name, program)
 
-    def load(self, path, name=None):
+    def load(self, path, name=None, force=False):
         """Load and compile the given Thrift file.
+
+        If the file was already compiled before, a cached copy of the compiled
+        module is returned.
 
         :param str path:
             Path to the ``.thrift`` file.
         :param str name:
             Name of the generated module. Defaults to the base name of the
             ``.thrift`` file.
+        :path bool force:
+            Force loading the thrift file at the given path instead of reading
+            from cache.
+        :returns:
+            A module representing the result of compiling the .thrift file.
         """
-        # TODO do we care if the file extension is .thrift?
+        path = os.path.abspath(path)
+        if path in self.compiled_modules and not force:
+            return self.compiled_modules[path]
+
         if name is None:
+            # TODO do we care if the file extension is .thrift?
             name = os.path.splitext(os.path.basename(path))[0]
         with open(path, 'r') as f:
             document = f.read()
-        return self.loads(name, document)
+        module = self.loads(name, document)
+        self.compiled_modules[path] = module
+        return module
 
 
 _DEFAULT_LOADER = Loader()
