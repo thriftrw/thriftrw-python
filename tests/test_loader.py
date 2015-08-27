@@ -33,3 +33,24 @@ def test_load_from_file(tmpdir):
 
     my_service = Loader().load(str(tmpdir.join('my_service.thrift')))
     my_service.Foo(b='b', a='a')
+
+
+def test_caching(tmpdir, monkeypatch):
+    tmpdir.join('my_service.thrift').write('''
+        struct Foo {
+            1: required string a
+            2: optional string b
+        }
+    ''')
+
+    path = str(tmpdir.join('my_service.thrift'))
+    loader = Loader()
+
+    mod1 = loader.load(path)
+    assert path in loader.compiled_modules
+
+    mod2 = loader.load(path)
+    assert mod1 is mod2
+
+    mod3 = loader.load(path, force=True)
+    assert mod3 is not mod2
