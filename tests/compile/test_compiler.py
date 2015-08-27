@@ -59,6 +59,7 @@ def test_include_disallowed(loads):
 def test_constants(loads):
     mod = loads('''
         const i32 foo = 42;
+        const i32 foo2 = 0x2a;
         const string bar = "hello";
         const string baz = bar;
         const string qux = "world";
@@ -72,6 +73,7 @@ def test_constants(loads):
     ''')
 
     assert mod.foo == 42
+    assert mod.foo2 == 42
     assert mod.bar == 'hello'
     assert mod.baz == 'hello'
     assert mod.qux == 'world'

@@ -32,15 +32,16 @@ __all__ = ['UnionTypeSpec', 'FieldSpec']
 
 class UnionTypeSpec(TypeSpec):
 
-    __slots__ = ('name', 'fields', 'linked', 'surface')
+    __slots__ = ('name', 'fields', 'linked', 'surface', 'allow_empty')
 
     ttype_code = TType.STRUCT
 
-    def __init__(self, name, fields):
+    def __init__(self, name, fields, allow_empty=None):
         self.name = name
         self.fields = fields
         self.linked = False
         self.surface = None
+        self.allow_empty = allow_empty
 
     def link(self, scope):
         if not self.linked:
@@ -134,13 +135,15 @@ class UnionTypeSpec(TypeSpec):
         )
 
 
-def union_init(cls_name, fields):
+def union_init(cls_name, fields, allow_empty):
     """Generates the ``__init__`` method for unions.
 
     :param cls_name:
         Name of the class.
     :param fields:
         Collection of fields on the union.
+    :param allow_empty:
+        Whether a union with no values assigned is allowed.
     """
 
     def __init__(self, *args, **kwargs):
@@ -178,7 +181,7 @@ def union_init(cls_name, fields):
                     % (cls_name, name)
                 )
 
-        if assigned is None:
+        if assigned is None and fields and not allow_empty:
             raise TypeError(
                 '%s() did not receive any values. '
                 'Exactly one non-None value is required.'
@@ -259,7 +262,9 @@ def union_cls(union_spec, scope):
     union_dct = {}
     union_dct['type_spec'] = union_spec
     union_dct['__slots__'] = tuple(field_names)
-    union_dct['__init__'] = union_init(union_spec.name, field_names)
+    union_dct['__init__'] = union_init(
+        union_spec.name, field_names, union_spec.allow_empty
+    )
     union_dct['__str__'] = union_str(union_spec.name, field_names)
     union_dct['__repr__'] = union_dct['__str__']
     union_dct['__eq__'] = union_eq(field_names)

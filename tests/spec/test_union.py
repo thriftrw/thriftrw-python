@@ -110,6 +110,13 @@ def test_compile(parse):
     ]
 
 
+def test_load_empty(loads):
+    Foo = loads('union Foo {}').Foo
+    spec = Foo.type_spec
+
+    assert spec.to_wire(Foo()) == vstruct()
+
+
 def test_load(loads):
     Foo = loads('''union Foo {
         1: binary b

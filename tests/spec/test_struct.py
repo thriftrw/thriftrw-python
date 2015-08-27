@@ -180,6 +180,12 @@ def test_simple_to_wire(loads):
     )
 
 
+def test_empty(loads):
+    S = loads('struct S {}').S
+    spec = S.type_spec
+    assert spec.to_wire(S()) == vstruct()
+
+
 def test_simple_round_trip(loads):
     RoundTripStruct = loads('''struct RoundTripStruct {
         1: required string a;

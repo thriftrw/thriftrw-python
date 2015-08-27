@@ -33,9 +33,24 @@ __all__ = ['ServiceSpec', 'FunctionSpec']
 
 
 class FunctionArgsSpec(StructTypeSpec):
+    """Represents the parameters of a service function.
+
+    The parameters of a function implicitly form a struct which contains the
+    parameters as its fields, which are optional by default.
+    """
 
     @classmethod
     def compile(cls, parameters, service_name, function_name):
+        """Compiles a parameter list into a FunctionArgsSpec.
+
+        :param parameters:
+            Collection of ``thriftrw.idl.Field`` objects.
+        :param str service_name:
+            Name of the service under which the function was defined.
+        :param str function_name:
+            Name of the function whose parameter list is represented by this
+            object.
+        """
         args_name = str('%s_%s_request' % (service_name, function_name))
         param_specs = [
             FieldSpec.compile(
@@ -49,9 +64,28 @@ class FunctionArgsSpec(StructTypeSpec):
 
 
 class FunctionResultSpec(UnionTypeSpec):
+    """Represents the result of a service function.
+
+    The return value of a function and the exceptions raised by it implicitly
+    form a union which contains the return value at field ID ``0`` and the
+    exceptions on the remaining field IDs.
+    """
 
     @classmethod
     def compile(cls, return_type, exceptions, service_name, function_name):
+        """Compiles information from the AST into a FunctionResultSpec.
+
+        :param return_type:
+            A ``thriftrw.idl.Type`` representing the return type or None if
+            the function doesn't return anything.
+        :param exceptions:
+            Collection of ``thriftrw.idl.Field`` objects representing raised
+            by the function.
+        :param str service_name:
+            Name of the service under which the function was defined.
+        :param str function_name:
+            Name of the function whose result this object represents.
+        """
         result_name = str('%s_%s_response' % (service_name, function_name))
 
         result_specs = []
@@ -66,6 +100,7 @@ class FunctionResultSpec(UnionTypeSpec):
                 )
             )
 
+        exceptions = exceptions or []
         for exc in exceptions:
             result_specs.append(
                 FieldSpec.compile(
@@ -75,10 +110,22 @@ class FunctionResultSpec(UnionTypeSpec):
                 )
             )
 
-        return cls(result_name, result_specs)
+        return cls(result_name, result_specs, allow_empty=True)
 
 
 class FunctionSpec(object):
+    """Specification of a single function on a service.
+
+    :ivar name:
+        Name of the function.
+    :ivar FunctionArgsSpec args_spec:
+        Arguments accepted by this function.
+    :ivar FunctionResultSpec result_spec:
+        Response of this function.
+
+    The ``surface`` for a FunctionSpec is a :py:class:`ServiceFunction`
+    object.
+    """
 
     __slots__ = ('name', 'args_spec', 'result_spec', 'linked', 'surface')
 
@@ -134,6 +181,25 @@ class FunctionSpec(object):
 
 
 class ServiceSpec(object):
+    """Spec for a single service.
+
+    :ivar name:
+        Name of the service.
+    :ivar functions:
+        Collection of ``FunctionSpec`` objects.
+    :ivar parent:
+        Name of the parent service or None if this service does not inherit
+        any service.
+
+    The ``surface`` for a ``ServiceSpec`` is a class that has the following
+    attributes:
+
+    ``service_spec``
+        Reference back to the service spec.
+
+    And a reference to one ``ServiceFunction`` object for each function
+    defined in the service.
+    """
 
     __slots__ = ('name', 'functions', 'parent', 'linked', 'surface')
 
@@ -146,6 +212,11 @@ class ServiceSpec(object):
 
     @classmethod
     def compile(cls, service):
+        """Compile a service AST into a ServiceSpec.
+
+        :param thriftrw.idl.Service service:
+            AST defining the service.
+        """
         functions = []
         names = set()
 
@@ -156,6 +227,7 @@ class ServiceSpec(object):
                     'That name is already taken.'
                     % (service.name, func.name)
                 )
+            names.add(func.name)
             functions.append(
                 FunctionSpec.compile(func, service.name)
             )
@@ -200,6 +272,13 @@ class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
 
 
 def service_cls(service_spec, scope):
+    """Generates a class from the given service spec.
+
+    :param ServiceSpec service_spec:
+        Specification of the service.
+    :param scope:
+        Compilation scope.
+    """
     parent_cls = object
     if service_spec.parent is not None:
         parent_cls = service_spec.parent.surface

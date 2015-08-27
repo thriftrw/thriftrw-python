@@ -377,9 +377,9 @@ class ParserSpec(object):
         '''annotations : '(' annotation_seq ')'
                        |'''
         if len(p) == 1:
-            p[0] = deque()
+            p[0] = []
         else:
-            p[0] = p[2]
+            p[0] = list(p[2])
 
     def p_annotation_seq(self, p):
         '''annotation_seq : annotation sep annotation_seq
