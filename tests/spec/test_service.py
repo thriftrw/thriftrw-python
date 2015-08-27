@@ -214,7 +214,7 @@ def test_load(loads):
 
     assert_round_trip(
         KeyValue.getItem.request('somekey'),
-        vstruct((1, TType.BINARY, vbinary('somekey')))
+        vstruct((1, TType.BINARY, vbinary(b'somekey')))
     )
 
     assert_round_trip(KeyValue.noop.request(), vstruct())
