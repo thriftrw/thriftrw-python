@@ -57,6 +57,7 @@ class ServiceSpecLinker(object):
 
     def link(self):
         service_specs = {}
+        services = []
 
         for name, service_spec in self.scope.service_specs.items():
             service_spec = service_spec.link(self.scope)
@@ -66,8 +67,10 @@ class ServiceSpecLinker(object):
                 self.scope.add_surface(
                     service_spec.name, service_spec.surface
                 )
+                services.append(service_spec.surface)
 
         self.scope.service_specs = service_specs
+        self.scope.add_surface('services', tuple(services))
 
 
 class ConstSpecLinker(object):

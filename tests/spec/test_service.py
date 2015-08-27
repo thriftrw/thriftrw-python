@@ -177,6 +177,10 @@ def test_load(loads):
             void noop();
         }
     ''')
+    assert (
+        (keyvalue.KeyValue, keyvalue.BaseService) == keyvalue.services or
+        (keyvalue.BaseService, keyvalue.KeyValue) == keyvalue.services
+    )
 
     KeyValue = keyvalue.KeyValue
 
