@@ -15,7 +15,7 @@ setup(
     author='Abhinav Gupta',
     author_email='dev@uber.com',
     url='https://github.com/uber/thriftrw-python',
-    packages=find_packages(exclude=('tests', 'test.*')),
+    packages=find_packages(exclude=('tests', 'tests.*')),
     license='MIT',
     install_requires=['six', 'ply'],
     tests_require=['pytest', 'mock'],

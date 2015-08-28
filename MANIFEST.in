@@ -1,5 +1,3 @@
-include *.rst
+include README.rst
 include LICENSE
-include tox.ini
 recursive-include thriftrw *.py
-recursive-include tests *.py
