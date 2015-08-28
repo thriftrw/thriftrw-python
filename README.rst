@@ -23,7 +23,7 @@ Features
 
 * No code generation. The ``.thrift`` files are parsed and compiled in-memory
   at runtime.
-* No assumptions about how bytes are sent or received. The library only
+* No assumptions about how bytes are sent or received. The library
   concerns itself with serialization and deserialization only.
 * Supports Python 2 and 3.
 * Forward and cyclic references in types.
