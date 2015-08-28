@@ -33,12 +33,43 @@ __all__ = ['EnumTypeSpec']
 class EnumTypeSpec(TypeSpec):
     """TypeSpec for enum types.
 
-    :ivar name:
-        Name of the enum
-    :ivar items:
-        Mapping of enum item names to item values.
-    :ivar surface:
-        The generated Enum class.
+    The surface for enum types is a class with the following attributes:
+
+    ``items``
+        A tuple of the names of all enum items.
+    ``values``
+        A tuple of the values of all enum items in the same order as the
+        ``items`` tuple.
+    ``name_of(value)``
+        Accepts an enum item value and returns the name of that enum item, or
+        None if no such item exists.
+    ``type_spec``
+        The TypeSpec for the enum.
+
+    And one attribute for each enum item that has the same name as the
+    attribute and points to the value for that item.
+
+    Given the definition,::
+
+        enum Role {
+            User, Admin
+        }
+
+    The generated class is roughly equivalent to,
+
+    .. code-block:: python
+
+        class Role(object):
+            User = 0
+            Admin = 1
+
+            items = ('User', 'Admin')
+            values = (0, 1)
+
+            type_spec = # ...
+
+            def name_of(self, value):
+                # ...
     """
 
     __slots__ = ('name', 'items', 'values_to_names', 'linked', 'surface')
@@ -46,17 +77,13 @@ class EnumTypeSpec(TypeSpec):
     ttype_code = TType.I32
 
     def __init__(self, name, items):
-        """Initialize an EnumTypeSpec.
-
-        :param name:
-            Name of the enum class
-        :param items:
-            Mapping of enum item name to item value
-        """
         assert name
         assert items is not None
 
+        #: Name of the enum class.
         self.name = name
+
+        #: Mapping of enum item names to item values.
         self.items = items
 
         values_to_names = {}
@@ -71,8 +98,11 @@ class EnumTypeSpec(TypeSpec):
                 )
             values_to_names[value] = name
 
+        #: Mapping of enum item values to their names.
         self.values_to_names = values_to_names
         self.linked = False
+
+        #: The surface for this spec.
         self.surface = None
 
     def link(self, scope):
@@ -94,11 +124,6 @@ class EnumTypeSpec(TypeSpec):
 
     @classmethod
     def compile(cls, enum):
-        """Compiles an Enum AST into an EnumTypeSpec.
-
-        :param thriftrw.idl.Enum enum:
-            Enum AST
-        """
         items = {}
 
         # TODO check for int32 overflow.
@@ -135,17 +160,6 @@ class EnumTypeSpec(TypeSpec):
 
 def enum_cls(enum_spec):
     """Generates a class for the given EnumTypeSpec.
-
-    Generated classes have the following attributes and methods.
-
-
-    ``items``
-        An attribute which is a tuple of all items defined for that Enum.
-    ``name_of(value)``
-        A method which takes an enum value and returns the name of the
-        corresponding enum item.
-    ``type_spec``
-        Points back to the EnumTypeSpec.
 
     :param EnumTypeSpec enum_spec:
         EnumTypeSpec for which the class is being generated.

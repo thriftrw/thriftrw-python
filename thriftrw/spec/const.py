@@ -91,13 +91,44 @@ class ConstValueReference(object):
 
 
 class ConstSpec(object):
+    """Spec for a constant value defined in the Thrift file.
+
+    The surface for a ConstSpec is the value defined in the Thrift file.
+
+    The following,::
+
+        const list<i32> foo = [1, 2, 3]
+
+    Roughly translates to,
+
+    .. code-block:: python
+
+        foo = [1, 2, 3]
+
+    In the generated module.
+    """
 
     __slots__ = (
         'name', 'type_spec', 'value_spec', 'linked', 'surface', 'save'
     )
 
     def __init__(self, name, value_spec, type_spec, save=None):
+        """
+        :param name:
+            Name of the constant.
+        :param value_spec:
+            spec of the constant value
+        :param type_spec:
+            TypeSpec for the type of the value. The value will be validated
+            against this spec.
+        :param save:
+            Whether the constant's surface should be exposed in the generated
+            module. Defaults to True.
+        """
+
+        #: Name of the constant.
         self.name = name
+
         self.value_spec = value_spec
         self.type_spec = type_spec
 

@@ -64,16 +64,19 @@ class Loader(object):
         If the file was already compiled before, a cached copy of the compiled
         module is returned.
 
+        The compiled module has a top-level ``services`` attribute that points
+        to a collection of the generated service classes.
+
         :param str path:
             Path to the ``.thrift`` file.
         :param str name:
             Name of the generated module. Defaults to the base name of the
-            ``.thrift`` file.
-        :path bool force:
-            Force loading the thrift file at the given path instead of reading
-            from cache.
+            file.
+        :param bool force:
+            Whether to ignore the cache and load the file anew. Defaults to
+            False.
         :returns:
-            A module representing the result of compiling the .thrift file.
+            The compiled module.
         """
         path = os.path.abspath(path)
         if path in self.compiled_modules and not force:
@@ -96,6 +99,13 @@ _DEFAULT_LOADER = Loader()
 #: Uses the binary protocol to serialize and deserialize values.
 #:
 #: For more advanced use, see :py:class:`thriftrw.loader.Loader`.
+#:
+#: :param str path:
+#:     Path to the ``.thrift`` file.
+#: :param str name:
+#:     Name of the generated module. Defaults to the basename of the file.
+#: :param bool force:
+#:     Whether to ignore the cache and load the file anew. Defaults to False.
 load = _DEFAULT_LOADER.load
 
 

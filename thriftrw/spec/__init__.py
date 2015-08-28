@@ -18,6 +18,93 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+Specs
+-----
+
+Specs represent compiled ASTs and act as the *specification* of behavior for
+the types or values they represent. All specs have a ``name`` and may have a
+``surface`` attribute which, if not None, is exposed in the generated module
+at the top-level.
+
+.. autoclass:: thriftrw.spec.TypeSpec
+    :members:
+
+Native types
+~~~~~~~~~~~~
+
+.. autodata:: thriftrw.spec.BoolTypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.ByteTypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.DoubleTypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.I16TypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.I32TypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.I64TypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.BinaryTypeSpec
+    :annotation:
+
+.. autodata:: thriftrw.spec.TextTypeSpec
+    :annotation:
+
+.. autoclass:: thriftrw.spec.ListTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.MapTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.SetTypeSpec
+    :members:
+
+Custom Types
+~~~~~~~~~~~~
+
+.. autoclass:: thriftrw.spec.EnumTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.StructTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.ExceptionTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.UnionTypeSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.FieldSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.TypedefTypeSpec
+    :members:
+
+Services
+~~~~~~~~
+
+.. autoclass:: thriftrw.spec.ServiceSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.FunctionSpec
+    :members:
+
+.. autoclass:: thriftrw.spec.ServiceFunction
+    :members:
+
+Constants
+~~~~~~~~~
+
+.. autoclass:: thriftrw.spec.ConstSpec
+    :members:
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .base import TypeSpec
@@ -29,9 +116,12 @@ from .set import SetTypeSpec
 from .struct import StructTypeSpec, FieldSpec
 from .exc import ExceptionTypeSpec
 from .union import UnionTypeSpec
-from .service import ServiceSpec, FunctionSpec
 from .typedef import TypedefTypeSpec
-from .reference import TypeReference
+from .service import (
+    ServiceSpec,
+    FunctionSpec,
+    ServiceFunction,
+)
 from .primitive import (
     BoolTypeSpec,
     ByteTypeSpec,
@@ -71,12 +161,12 @@ __all__ = [
     'UnionTypeSpec',
     'FieldSpec',
 
-    'TypeReference',
     'TypedefTypeSpec',
 
     # Services
     'ServiceSpec',
     'FunctionSpec',
+    'ServiceFunction',
 
     # Constants
     'ConstSpec',

@@ -32,10 +32,7 @@ __all__ = ['ListTypeSpec']
 
 
 class ListTypeSpec(TypeSpec):
-    """
-    :param TypeSpec vspec:
-        TypeSpec of values stored in the list.
-    """
+    """Spec for list types."""
 
     __slots__ = ('vspec', 'linked')
 
@@ -43,6 +40,13 @@ class ListTypeSpec(TypeSpec):
     surface = list
 
     def __init__(self, vspec):
+        """
+        :param TypeSpec vspec:
+            TypeSpec of values stored in the list.
+        """
+
+        #: TypeSpec for the kind of values lists conforming to this spec can
+        #: contain.
         self.vspec = vspec
         self.linked = False
 

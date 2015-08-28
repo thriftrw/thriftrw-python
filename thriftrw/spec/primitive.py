@@ -129,4 +129,7 @@ BinaryTypeSpec = PrimitiveTypeSpec(
 )
 
 #: TypeSpec for unicode data.
+#:
+#: Values will be decoded/encoded using UTF-8 encoding before/after being
+#: serialized/deserialized.
 TextTypeSpec = _TextTypeSpec()

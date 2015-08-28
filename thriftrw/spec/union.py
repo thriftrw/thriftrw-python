@@ -32,6 +32,19 @@ __all__ = ['UnionTypeSpec', 'FieldSpec']
 
 
 class UnionTypeSpec(TypeSpec):
+    """Spec for Thrift unions.
+
+    The surface for union types is a class with the following attributes:
+
+    ``type_spec``
+        Attribute pointing to the ``TypeSpec`` for the type.
+    ``__init__(*args, **kwargs)``
+        Accepts all fields of the unions as keyword arguments but only one of
+        them is allowed to be non-None. Positional arguments are not accepted.
+
+    The ``__str__`` function for the generated class includes only the
+    non-None field of the object.
+    """
 
     __slots__ = ('name', 'fields', 'linked', 'surface', 'allow_empty')
 

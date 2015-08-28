@@ -24,6 +24,11 @@ from .spec_mapper import type_spec_or_ref
 
 
 class TypedefTypeSpec(object):
+    """Typedefs are aliases for other types.
+
+    Typedefs resolve themselves to the target type at link time and eliminate
+    themselves from the tree.
+    """
 
     __slots__ = ('name', 'target_spec')
 

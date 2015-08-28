@@ -55,12 +55,15 @@ class Compiler(object):
             Serializes the object ``obj`` into a binary blob.
         ``loads(cls, s)``
             Deserialize an object of class ``cls`` from the binary blob ``s``.
+        ``services``
+            A collection of generated classes for all services defined in the
+            file.
 
         And one class each for every struct, union, exception, enum, and
         service defined in the IDL.
 
         Service classes have references to
-        :py:class:`thriftrw.compile.ServiceFunction` objects for each method
+        :py:class:`thriftrw.spec.ServiceFunction` objects for each method
         defined in the service.
 
         :param str name:
@@ -71,9 +74,6 @@ class Compiler(object):
         :returns:
             The generated module.
         """
-        # TODO it may be worth caching generated modules in sys.modules or
-        # Loader in case the user accidentally calls this twice on the same
-        # file.
         scope = Scope(name)
 
         for header in program.headers:

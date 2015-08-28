@@ -22,6 +22,11 @@ API Reference
 
 .. automodule:: thriftrw.protocol
 
+``thriftrw.spec``
+-----------------
+
+.. automodule:: thriftrw.spec
+
 ``thriftrw.wire``
 -----------------
 

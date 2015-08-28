@@ -29,7 +29,9 @@ from .struct import StructTypeSpec, FieldSpec
 from .union import UnionTypeSpec
 
 
-__all__ = ['ServiceSpec', 'FunctionSpec']
+__all__ = [
+    'ServiceSpec', 'FunctionSpec', 'ServiceFunction',
+]
 
 
 class FunctionArgsSpec(StructTypeSpec):
@@ -38,6 +40,9 @@ class FunctionArgsSpec(StructTypeSpec):
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
     """
+
+    # TODO is it worth exposing FunctionArgsSpec and FunctionResultSpec with
+    # their own attributes?
 
     @classmethod
     def compile(cls, parameters, service_name, function_name):
@@ -116,23 +121,28 @@ class FunctionResultSpec(UnionTypeSpec):
 class FunctionSpec(object):
     """Specification of a single function on a service.
 
-    :ivar name:
-        Name of the function.
-    :ivar FunctionArgsSpec args_spec:
-        Arguments accepted by this function.
-    :ivar FunctionResultSpec result_spec:
-        Response of this function.
-
     The ``surface`` for a FunctionSpec is a :py:class:`ServiceFunction`
-    object.
+    object. Unlike the ``surface`` for other specs, a FunctionSpec's surface
+    is attached to the service class as a class attribute.
     """
 
     __slots__ = ('name', 'args_spec', 'result_spec', 'linked', 'surface')
 
     def __init__(self, name, args_spec, result_spec):
+        #: Name of the function.
         self.name = name
+
+        #: TypeSpec specifying the arguments accepted by this function as a
+        #: struct.
         self.args_spec = args_spec
+
+        #: TypeSpec specifying the output of this function as a union of the
+        #: return type and the exceptions raised by the function.
+        #:
+        #: The return type of the function (if any) is a field in the union
+        #: with field ID 0 and name 'success'.
         self.result_spec = result_spec
+
         self.linked = False
         self.surface = None
 
@@ -183,40 +193,34 @@ class FunctionSpec(object):
 class ServiceSpec(object):
     """Spec for a single service.
 
-    :ivar name:
-        Name of the service.
-    :ivar functions:
-        Collection of ``FunctionSpec`` objects.
-    :ivar parent:
-        Name of the parent service or None if this service does not inherit
-        any service.
-
     The ``surface`` for a ``ServiceSpec`` is a class that has the following
     attributes:
 
     ``service_spec``
         Reference back to the service spec.
 
-    And a reference to one ``ServiceFunction`` object for each function
-    defined in the service.
+    And a reference to one :py:class:`ServiceFunction` object for each
+    function defined in the service.
     """
 
     __slots__ = ('name', 'functions', 'parent', 'linked', 'surface')
 
     def __init__(self, name, functions, parent):
+        #: Name of the service.
         self.name = name
+
+        #: Collection of :py:class:`FunctionSpec` objects.
         self.functions = functions
+
+        #: ServiceSpec of the parent service or None if this service does not
+        #: inherit from anything.
         self.parent = parent
+
         self.linked = False
         self.surface = None
 
     @classmethod
     def compile(cls, service):
-        """Compile a service AST into a ServiceSpec.
-
-        :param thriftrw.idl.Service service:
-            AST defining the service.
-        """
         functions = []
         names = set()
 

@@ -29,8 +29,7 @@ class TypeSpec(object):
     """Base class for classes representing TypeSpecs.
 
     A TypeSpec knows how to convert values of the corresponding type to and
-    from the intermediate Thrift representation (as defined in
-    ``thriftrw.wire.value``).
+    from :py:class:`thriftrw.wire.Value` objects.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -43,7 +42,7 @@ class TypeSpec(object):
     def ttype_code(self):
         """Numeric TType used for the type spec.
 
-        The value must be from ``thriftrw.wire.TType``.
+        The value must be from :py:data:`thriftrw.wire.TType`.
         """
         raise NotImplementedError
 
@@ -58,8 +57,11 @@ class TypeSpec(object):
 
     @abc.abstractmethod
     def to_wire(self, value):
-        """Converts the given value into a :py:class:`Value` object.
+        """Converts the given value into a :py:class:`thriftrw.wire.Value`
+        object.
 
+        :returns thriftrw.wire.Value:
+            Wire representation of the value.
         :raises TypeError:
             If the value did not match the type expected by this TypeSpec.
         :raises ValueError:
@@ -69,10 +71,11 @@ class TypeSpec(object):
 
     @abc.abstractmethod
     def from_wire(self, wire_value):
-        """Converts the given `Value` back into the original type.
+        """Converts the given :py:class:`thriftrw.wire.Value` back into the
+        original type.
 
         :param thriftr.wire.Value wire_value:
-            Value to convert
+            Value to convert.
         :raises ValueError:
             If the type of the wire value does not have the correct Thrift
             type for this type spec.
@@ -80,10 +83,4 @@ class TypeSpec(object):
 
     @abc.abstractmethod
     def link(self, scope):
-        """Link any types this type depends on.
-
-        This may mutate this type.
-
-        :returns:
-            The linked type, or self.
-        """
+        pass

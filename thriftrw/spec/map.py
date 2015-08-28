@@ -32,12 +32,7 @@ __all__ = ['MapTypeSpec']
 
 
 class MapTypeSpec(TypeSpec):
-    """
-    :param TypeSpec kspec:
-        TypeSpec of the keys in the map.
-    :param TypeSpec vspec:
-        TypeSpec of the values in the map.
-    """
+    """Spec for map types."""
 
     __slots__ = ('kspec', 'vspec', 'linked')
 
@@ -45,8 +40,19 @@ class MapTypeSpec(TypeSpec):
     surface = dict
 
     def __init__(self, kspec, vspec):
+        """
+        :param TypeSpec kspec:
+            TypeSpec of the keys in the map.
+        :param TypeSpec vspec:
+            TypeSpec of the values in the map.
+        """
+
+        #: TypeSpec for the kind of keys matching maps can contain.
         self.kspec = kspec
+
+        #: TypeSpec for the kind of values matching maps can contain.
         self.vspec = vspec
+
         self.linked = False
 
     @property

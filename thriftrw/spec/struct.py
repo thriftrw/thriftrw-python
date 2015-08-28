@@ -35,12 +35,19 @@ __all__ = ['StructTypeSpec', 'FieldSpec']
 class StructTypeSpec(TypeSpec):
     """A struct is a collection of named fields.
 
-    :ivar name:
-        Name of the struct.
-    :ivar fields:
-        Collection of :py:class:`FieldSpec` objects.
-    :ivar surface:
-        The generated Struct class.
+    The surface for struct types is a class with the following attributes:
+
+    ``type_spec``
+        Attribute pointing to the ``TypeSpec`` for the type.
+    ``__init__(*args, **kwargs)``
+        Accepts all fields of the struct as arguments. Required arguments are
+        placed first and may be specified as positional arguments (in the same
+        order as they appear in the IDL). Optional arguments and required
+        arguments come next. A TypeError will be raised if the required
+        arguments for the struct are not filled with non-None values.
+
+    The ``__str__`` function for the generated class includes all fields of
+    the struct.
     """
 
     __slots__ = (
@@ -59,7 +66,11 @@ class StructTypeSpec(TypeSpec):
         :param base_cls:
             Base class to use for generates classes. Defaults to ``object``.
         """
+
+        #: Name of the struct.
         self.name = name
+
+        #: Collection of :py:class:`FieldSpec` objects.
         self.fields = fields
         self.linked = False
         self.surface = None
@@ -74,11 +85,6 @@ class StructTypeSpec(TypeSpec):
 
     @classmethod
     def compile(cls, struct, require_requiredness=True):
-        """Compiles a StructTypeSpec from a Struct AST.
-
-        :param thriftrw.idl.Struct struct:
-            AST of the Thrift struct
-        """
         fields = []
         ids = set()
         names = set()
@@ -154,22 +160,25 @@ class StructTypeSpec(TypeSpec):
 class FieldSpec(object):
     """Specification for a single field on a struct.
 
-    :param int id:
-        Field ID
-    :param str name:
-        Name of the attribute on the class it's attached with.
-    :param TypeSpec spec:
-        :py:class:`TypeSpec` object containing information about the kind of
-        value this field can store.
+    FieldSpecs do not expose anything at the module level.
     """
 
     __slots__ = ('id', 'name', 'spec', 'required', 'default_value', 'linked')
 
     def __init__(self, id, name, spec, required, default_value=None):
+        #: Field identifier of the field.
         self.id = id
+
+        #: Name of the field.
         self.name = name
+
+        #: TypeSpec for the type of values accepted by the field.
         self.spec = spec
+
+        #: Whether this field is required or not.
         self.required = required
+
+        #: Default value of the field.
         self.default_value = default_value
 
         self.linked = False
@@ -429,19 +438,6 @@ def struct_cls(struct_spec, scope):
     """Generate a class for a struct.
 
     The generated class has the following attributes:
-
-    ``type_spec``
-        Attribute pointing to the ``TypeSpec`` for the type.
-
-    The ``__init__`` method of the class accepts all fields of the struct as
-    arguments. Required arguments are placed first and may be specified as
-    positional arguments (in the same order as they appear in the IDL).
-    Optional arguments and required arguments with default values are placed
-    after that. A TypeError will be raised if at least the required arguments
-    without default values are not specified.
-
-    A ``__str__`` method that returns the contents of all fields of the struct
-    is also added to the class.
 
     :param StructTypeSpec struct_spec:
         Type specification of the struct.

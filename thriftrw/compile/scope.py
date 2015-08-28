@@ -47,7 +47,7 @@ class Scope(object):
         self.const_specs = {}
         self.service_specs = {}
 
-        self.module = types.ModuleType(name)
+        self.module = types.ModuleType(str(name))
 
     def __str__(self):
         return "Scope(%r)" % {

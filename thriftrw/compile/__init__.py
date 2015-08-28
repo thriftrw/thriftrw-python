@@ -21,8 +21,6 @@
 .. autoclass:: thriftrw.compile.Compiler
     :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
 .. autoclass:: thriftrw.compile.ThriftCompilerError
     :members:
 """

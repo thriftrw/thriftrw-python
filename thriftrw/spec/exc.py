@@ -27,6 +27,11 @@ __all__ = ['ExceptionTypeSpec']
 
 
 class ExceptionTypeSpec(StructTypeSpec):
+    """Spec for ``exception`` types defined in the Thrift file.
+
+    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
+    except that the generated class inherits the ``Exception`` class.
+    """
 
     def __init__(self, *args, **kwargs):
         kwargs['base_cls'] = Exception
