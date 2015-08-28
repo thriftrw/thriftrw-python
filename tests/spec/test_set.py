@@ -17,19 +17,51 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+import pytest
+
+from thriftrw.idl import Parser
+from thriftrw.spec import primitive as prim_spec
+from thriftrw.spec.set import SetTypeSpec
+from thriftrw.spec.typedef import TypedefTypeSpec
+from thriftrw.spec.spec_mapper import type_spec_or_ref
+from thriftrw.wire.ttype import TType
+
+from ..util.value import vbinary, vset
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+@pytest.fixture
+def parse():
+    return Parser(start='set_type', silent=True).parse
+
+
+def test_mapper(parse):
+    ast = parse('set<binary>')
+    spec = type_spec_or_ref(ast)
+    assert spec == SetTypeSpec(prim_spec.BinaryTypeSpec)
+
+
+def test_link(parse, scope):
+    ast = parse('set<Foo>')
+    spec = type_spec_or_ref(ast)
+
+    scope.add_type_spec(
+        'Foo', TypedefTypeSpec('Foo', prim_spec.TextTypeSpec), 1
+    )
+
+    spec = spec.link(scope)
+    assert spec.vspec == prim_spec.TextTypeSpec
+
+    value = set([u'foo', u'bar'])
+    assert (
+        spec.to_wire(value) == vset(
+            TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
+        )
+    ) or (
+        spec.to_wire(value) == vset(
+            TType.BINARY, vbinary(b'bar'), vbinary(b'foo')
+        )
+    )
+    assert value == spec.from_wire(spec.to_wire(value))

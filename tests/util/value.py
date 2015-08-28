@@ -18,39 +18,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+This module provides helpers to construct Value objects for tests.
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-import abc
+from thriftrw.wire import value
 
 
-__all__ = ['Protocol']
+vbool = value.BoolValue
+vbyte = value.ByteValue
+vi16 = value.I16Value
+vi32 = value.I32Value
+vi64 = value.I64Value
+vdouble = value.DoubleValue
 
 
-class Protocol(object):
-    """Base class for all protocol implementations."""
+def vbinary(s):
+    return value.BinaryValue(s)
 
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
-    def dump(self, value):
-        """Serialize the given ``Value``.
-        
-        :param ~thriftrw.wire.Value value:
-            Value to serialize.
-        :returns:
-            Serialized value.
-        """
+def vstruct(*fields):
+    return value.StructValue([value.FieldValue(*args) for args in fields])
 
-    @abc.abstractmethod
-    def load(self, typ, s):
-        """Parse a ``Value`` of the given type.
 
-        :param ~thriftrw.wire.TType typ:
-            Type code of the value to parse.
-        :param s:
-            Bytes to decode.
-        :returns:
-            Parsed :py:class:`~thriftrw.wire.Value`.
-        """
+def vlist(typ, *items):
+    return value.ListValue(typ, list(items))
 
-    # TODO do we care about Message envelopes?
+
+def vmap(ktype, vtype, *items):
+    return value.MapValue(ktype, vtype, list(items))
+
+
+def vset(vtype, *items):
+    return value.SetValue(vtype, list(items))
+
+
+__all__ = [
+    'vbool', 'vbyte', 'vi16', 'vi32', 'vi64', 'vdouble', 'vbinary', 'vstruct',
+    'vlist', 'vmap', 'vset'
+]

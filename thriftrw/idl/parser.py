@@ -115,17 +115,21 @@ class ParserSpec(object):
         p[0] = p[1]
 
     def p_const_value_native(self, p):
-        '''const_value_native : INTCONSTANT
-                              | DUBCONSTANT
-                              | LITERAL
-                              | BOOLCONSTANT
+        '''const_value_native : const_value_primitive
                               | const_list
                               | const_map'''
+        p[0] = p[1]
+
+    def p_const_value_primitive(self, p):
+        '''const_value_primitive : INTCONSTANT
+                                 | DUBCONSTANT
+                                 | LITERAL
+                                 | BOOLCONSTANT'''
         p[0] = ast.ConstPrimitiveValue(p[1], lineno=p.lineno(1))
 
     def p_const_list(self, p):
         '''const_list : '[' const_list_seq ']' '''
-        p[0] = p[2]
+        p[0] = ast.ConstList(list(p[2]), p.lineno(2))
 
     def p_const_list_seq(self, p):
         '''const_list_seq : const_value sep const_list_seq
@@ -135,8 +139,7 @@ class ParserSpec(object):
 
     def p_const_map(self, p):
         '''const_map : '{' const_map_seq '}' '''
-
-        p[0] = dict(p[2])
+        p[0] = ast.ConstMap(dict(p[2]), p.lineno(2))
 
     def p_const_map_seq(self, p):
         '''const_map_seq : const_map_item sep const_map_seq
@@ -374,9 +377,9 @@ class ParserSpec(object):
         '''annotations : '(' annotation_seq ')'
                        |'''
         if len(p) == 1:
-            p[0] = deque()
+            p[0] = []
         else:
-            p[0] = p[2]
+            p[0] = list(p[2])
 
     def p_annotation_seq(self, p):
         '''annotation_seq : annotation sep annotation_seq
@@ -427,6 +430,9 @@ class Parser(ParserSpec):
     """Parser for Thrift IDL files."""
 
     def __init__(self, **kwargs):
+        if kwargs.pop('silent', False):
+            kwargs['errorlog'] = yacc.NullLogger()
+
         kwargs.setdefault('debug', False)
         kwargs.setdefault('write_tables', False)
         self._parser = yacc.yacc(module=self, **kwargs)

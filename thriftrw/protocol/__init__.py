@@ -17,19 +17,39 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
 """
-.. autoclass:: thriftrw.compile.Compiler
+Protocols
+---------
+
+.. autoclass:: thriftrw.protocol.Protocol
     :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
+.. autoclass:: thriftrw.protocol.BinaryProtocol
+    :members:
 
-.. autoclass:: thriftrw.compile.ThriftCompilerError
+Exceptions
+----------
+
+.. autoclass:: thriftrw.protocol.ThriftProtocolError
+    :members:
+
+.. autoclass:: thriftrw.protocol.EndOfInputError
     :members:
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+from .binary import BinaryProtocol
+from .core import Protocol
+from .exceptions import ThriftProtocolError, EndOfInputError
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+__all__ = [
+    # Protocol
+    'Protocol',
+    'BinaryProtocol',
+
+    # Exceptions
+    'ThriftProtocolError',
+    'EndOfInputError',
+]

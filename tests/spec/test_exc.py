@@ -17,19 +17,42 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+import pytest
+
+from thriftrw.idl import Parser
+from thriftrw.spec.exc import ExceptionTypeSpec
+from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec import primitive as prim_spec
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+@pytest.fixture
+def parse():
+    return Parser(start='exception', silent=True).parse
+
+
+def test_compile(parse):
+    spec = ExceptionTypeSpec.compile(parse('''exception MyException {
+        1: required string message
+    }'''))
+
+    assert spec.name == 'MyException'
+    assert spec.fields == [
+        FieldSpec(1, 'message', prim_spec.TextTypeSpec, True)
+    ]
+
+
+def test_load(loads):
+    MyException = loads('''
+        exception MyException {
+            1: required string message
+        }
+    ''').MyException
+
+    assert issubclass(MyException, Exception)
+
+    with pytest.raises(MyException):
+        # Must be raise-able
+        raise MyException('hello world')

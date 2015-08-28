@@ -22,44 +22,82 @@
 Types
 -----
 
-.. autodata:: TType
+.. autodata:: thriftrw.wire.TType
     :annotation:
-
-Protocols
----------
-
-.. autoclass:: Protocol
-    :members:
-
-.. autoclass:: BinaryProtocol
-    :members:
 
 Value
 -----
 
-.. autoclass:: Value
+.. autoclass:: thriftrw.wire.Value
     :members:
 
-.. autoclass:: ValueVisitor
+.. autoclass:: thriftrw.wire.ValueVisitor
     :members:
 
-.. autoclass:: FieldValue
-    :members:
+Value Types
+~~~~~~~~~~~
 
-Exceptions
-----------
+.. autoclass:: thriftrw.wire.BoolValue
 
-.. autoclass:: ThriftProtocolError
-    :members:
+.. autoclass:: thriftrw.wire.ByteValue
 
-.. autoclass:: EndOfInputError
-    :members:
+.. autoclass:: thriftrw.wire.DoubleValue
 
+.. autoclass:: thriftrw.wire.I16Value
+
+.. autoclass:: thriftrw.wire.I32Value
+
+.. autoclass:: thriftrw.wire.I64Value
+
+.. autoclass:: thriftrw.wire.BinaryValue
+
+.. autoclass:: thriftrw.wire.FieldValue
+
+.. autoclass:: thriftrw.wire.StructValue
+
+.. autoclass:: thriftrw.wire.MapValue
+
+.. autoclass:: thriftrw.wire.SetValue
+
+.. autoclass:: thriftrw.wire.ListValue
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .exceptions import *  # noqa
-from .binary import BinaryProtocol  # noqa
-from .protocol import Protocol  # noqa
-from .ttype import TType  # noqa
-from .value import *  # noqa
+from .ttype import TType
+
+from .value import (
+    Value,
+    BoolValue,
+    ByteValue,
+    DoubleValue,
+    I16Value,
+    I32Value,
+    I64Value,
+    BinaryValue,
+    FieldValue,
+    StructValue,
+    MapValue,
+    SetValue,
+    ListValue,
+    ValueVisitor,
+)
+
+__all__ = [
+    'TType',
+
+    # Value
+    'Value',
+    'BoolValue',
+    'ByteValue',
+    'DoubleValue',
+    'I16Value',
+    'I32Value',
+    'I64Value',
+    'BinaryValue',
+    'FieldValue',
+    'StructValue',
+    'MapValue',
+    'SetValue',
+    'ListValue',
+    'ValueVisitor',
+]

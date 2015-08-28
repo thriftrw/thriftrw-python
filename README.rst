@@ -1,12 +1,19 @@
 ``thriftrw``
 ============
 
-|docs|
+|build| |coverage| |docs|
 
 ``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
 `Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
 Read The Docs.
+
+.. |build| image:: https://travis-ci.org/uber/thriftrw-python.svg?branch=master
+    :target: https://travis-ci.org/uber/thriftrw-python
+
+.. |coverage| image:: https://coveralls.io/repos/uber/thriftrw-python/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/uber/thriftrw-python?branch=master
+
 
 .. |docs| image:: https://readthedocs.org/projects/thriftrw/badge/?version=latest
     :target: https://readthedocs.org/projects/thriftrw/?badge=latest
@@ -75,7 +82,6 @@ You can use the library to send and receive requests and responses like so,
         # send_to_server is implemented by the user.
         response_payload = send_to_server(payload)
         response = blog.loads(BlogService.newPost.response, response_payload)
-
         if response.unauthorized is not None:
             raise response.unauthorized
         else:
@@ -94,7 +100,6 @@ You can use the library to send and receive requests and responses like so,
     # The user's server handler calls handle_new_post with the payload.
     def handle_new_post(request_payload):
         request = blog.loads(BlogService.newPost.request, request_payload)
-
         if request.post.author != 'admin':
             response = BlogService.newPost.response(
                 unauthorized=blog.UnauthorizedRequestError()

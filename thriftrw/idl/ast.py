@@ -22,6 +22,33 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
+__all__ = [
+    'Program',
+    'Include',
+    'Namespace',
+    'Const',
+    'Typedef',
+    'Enum',
+    'EnumItem',
+    'Struct',
+    'Union',
+    'Exc',
+    'Service',
+    'Function',
+    'Field',
+    'PrimitiveType',
+    'MapType',
+    'SetType',
+    'ListType',
+    'DefinedType',
+    'ConstValue',
+    'ConstPrimitiveValue',
+    'ConstReference',
+    'ConstList',
+    'ConstMap',
+    'Annotation',
+]
+
 
 ##############################################################################
 # Program
@@ -349,8 +376,19 @@ class DefinedType(namedtuple('DefinedType', 'name lineno')):
 ##############################################################################
 # Constants
 
+# TODO Move things that are sectioned like this into separate modules and
+# explicitly specify their visitor interfaces.
 
-class ConstPrimitiveValue(namedtuple('ConstPrimitiveValue', 'value lineno')):
+class ConstValue(object):
+    """Base class for constant value types."""
+
+    def apply(self, visitor):
+        raise NotImplementedError
+
+
+class ConstPrimitiveValue(
+    namedtuple('ConstPrimitiveValue', 'value lineno'), ConstValue
+):
     """A complete constant value.
 
     ``value``
@@ -361,7 +399,7 @@ class ConstPrimitiveValue(namedtuple('ConstPrimitiveValue', 'value lineno')):
         return visitor.visit_primitive(self)
 
 
-class ConstReference(namedtuple('ConstReference', 'name lineno')):
+class ConstReference(namedtuple('ConstReference', 'name lineno'), ConstValue):
     """Reference to another constant value or enum item.
 
     ``name``
@@ -370,6 +408,28 @@ class ConstReference(namedtuple('ConstReference', 'name lineno')):
 
     def apply(self, visitor):
         return visitor.visit_reference(self)
+
+
+class ConstList(namedtuple('ConstList', 'values lineno'), ConstValue):
+    """A list of constant values.
+
+    ``values``
+        Collection of ``ConstValue`` objects.
+    """
+
+    def apply(self, visitor):
+        return visitor.visit_list(self)
+
+
+class ConstMap(namedtuple('ConstList', 'pairs lineno'), ConstValue):
+    """A map of constant values.
+
+    ``pairs``
+        Collection of pairs of ``ConstValue`` objects.
+    """
+
+    def apply(self, visitor):
+        return visitor.visit_map(self)
 
 
 ##############################################################################

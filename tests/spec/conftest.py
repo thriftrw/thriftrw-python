@@ -17,19 +17,21 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-"""
-.. autoclass:: thriftrw.compile.Compiler
-    :members:
 
-.. autoclass:: thriftrw.compile.ServiceFunction
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
-"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+import pytest
+from functools import partial
+
+from thriftrw.loader import Loader
+from thriftrw.compile.scope import Scope
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+@pytest.fixture
+def scope(request):
+    return Scope(request.node.name)
+
+
+@pytest.fixture
+def loads(request):
+    return partial(Loader().loads, request.node.name)
