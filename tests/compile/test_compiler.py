@@ -99,3 +99,23 @@ def test_service_type_conflict(loads):
 
     assert 'Cannot define "foo"' in str(exc_info)
     assert 'name has already been used' in str(exc_info)
+
+
+def test_services_and_types(loads):
+    m = loads('''
+        struct Foo {}
+        union Bar {}
+
+        service A {}
+        service B {}
+    ''')
+
+    assert (
+        m.types == (m.Foo, m.Bar) or
+        m.types == (m.Bar, m.Foo)
+    )
+
+    assert (
+        m.services == (m.A, m.B) or
+        m.services == (m.B, m.A)
+    )

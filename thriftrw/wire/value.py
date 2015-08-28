@@ -138,11 +138,16 @@ class BinaryValue(namedtuple('BinaryValue', 'value'), Value):
 class FieldValue(namedtuple('FieldValue', 'id ttype value'), Value):
     """A single field in a struct.
 
-    ``id``
+    .. py:attribute:: id
+
         Field identifier.
-    ``ttype``
+
+    .. py:attribute:: ttype
+
         :py:data:`~thriftrw.wire.TType` of the value held in this field.
-    ``value``
+
+    .. py:attribute:: value
+
         Value for this field.
     """
 
@@ -150,7 +155,8 @@ class FieldValue(namedtuple('FieldValue', 'id ttype value'), Value):
 class StructValue(Value):
     """A struct value is a collection of fields of different types.
 
-    ``fields``
+    .. py:attribute:: fields
+
         Collection of :py:class:`FieldValue` objects.
     """
 
@@ -198,11 +204,16 @@ class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
 
     This object may be treated as a map.
 
-    ``key_ttype``
+    .. py:attribute:: key_ttype
+
         Type of the keys stored in the map. This must be a value from TType.
-    ``value_ttype``
+
+    .. py:attribute:: value_ttype
+
         Type of the values stored in the map. This must be a value from TType.
-    ``pairs``
+
+    .. py:attribute:: pairs
+
         Collection of key-value tuples. Note that this is **not** a dict.
     """
 
@@ -215,9 +226,12 @@ class MapValue(namedtuple('MapValue', 'key_ttype value_ttype pairs'), Value):
 class SetValue(namedtuple('SetValue', 'value_ttype values'), Value):
     """A collection of unique values of the same type.
 
-    ``value_ttype``
+    .. py:attribute:: value_ttype
+
         Type of values in the set. This must be a value from TType.
-    ``values``
+
+    .. py:attribute:: values
+
         Collection of the values.
     """
 
@@ -230,9 +244,12 @@ class SetValue(namedtuple('SetValue', 'value_ttype values'), Value):
 class ListValue(namedtuple('ListValue', 'value_ttype values'), Value):
     """A collection of values.
 
-    ``value_ttype``
+    .. py:attribute:: value_ttype
+
         Type of values in the list. This must be a value from TType.
-    ``values``
+
+    .. py:attribute:: values
+
         Collection of the values.
     """
 

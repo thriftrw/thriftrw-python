@@ -34,16 +34,39 @@ __all__ = ['UnionTypeSpec', 'FieldSpec']
 class UnionTypeSpec(TypeSpec):
     """Spec for Thrift unions.
 
-    The surface for union types is a class with the following attributes:
+    The surface for union types is a class with the following:
 
-    ``type_spec``
-        Attribute pointing to the ``TypeSpec`` for the type.
-    ``__init__(*args, **kwargs)``
+    .. py:attribute:: type_spec
+
+        :py:class:`UnionTypeSpec` for the type.
+
+    .. py:method:: __init__(self, *args, **kwargs)
+
         Accepts all fields of the unions as keyword arguments but only one of
         them is allowed to be non-None. Positional arguments are not accepted.
 
-    The ``__str__`` function for the generated class includes only the
-    non-None field of the object.
+    .. py:method:: __str__(self)
+
+        Returns a string representation of all fields of the struct.
+
+    Given the definition,::
+
+        union Body {
+            1: string plainText
+            2: binary richText
+        }
+
+    A class roughly equivalent to the following is generated,
+
+    .. code-block:: python
+
+        class Body(object):
+
+            __slots__ = ('plainText', 'richText')
+
+            def __init__(self, plainText=None, richText=None):
+                # Only one of plainText and richText may be non-None.
+                # ...
     """
 
     __slots__ = ('name', 'fields', 'linked', 'surface', 'allow_empty')

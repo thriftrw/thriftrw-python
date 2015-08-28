@@ -59,10 +59,12 @@ class Program(namedtuple('Program', 'headers definitions')):
 
     The following attributes are available:
 
-    ``headers``
+    .. py:attribute:: headers
+
         Collection of :py:class:`Include` and :py:class:`Namespace` objects.
 
-    ``definitions``
+    .. py:attribute:: definitions
+
         Collection of items of the following types.
 
         - :py:class:`Const`
@@ -86,7 +88,8 @@ class Include(namedtuple('Include', 'path lineno')):
 
         include "common.thrift"
 
-    ``path``
+    .. py:attribute:: path
+
         Path to the file to be included.
     """
 
@@ -101,10 +104,13 @@ class Namespace(namedtuple('Namespace', 'scope name lineno')):
 
         namespace py my_service.generated
 
-    ``scope``
+    .. py:attribute:: scope
+
         Scope to which this namespace rule applies. Can be a language
         specifier or '*' to apply to all languages.
-    ``name``
+
+    .. py:attribute:: name
+
         Namespace for the specified scope.
     """
 
@@ -123,11 +129,16 @@ class Const(namedtuple('Const', 'name value_type value lineno')):
 
         const i32 DEFAULT_ID = 0;
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the constant.
-    ``value_type``
+
+    .. py:attribute:: value_type
+
         Type of value held by the constant.
-    ``value``
+
+    .. py:attribute:: value
+
         Value specified for the constant.
     """
 
@@ -142,11 +153,16 @@ class Typedef(namedtuple('Typedef', 'name target_type annotations lineno')):
 
         typedef string UUID
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the new defined type.
-    ``target_type``
+
+    .. py:attribute:: target_type
+
         Type being aliased.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -164,11 +180,16 @@ class Enum(namedtuple('Enum', 'name items annotations lineno')):
             ADMIN,
         }
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the enum type.
-    ``items``
+
+    .. py:attribute:: items
+
         Items defined in this Enum type. See :py:class:`EnumItem`.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -179,11 +200,16 @@ class Enum(namedtuple('Enum', 'name items annotations lineno')):
 class EnumItem(namedtuple('EnumItem', 'name value annotations lineno')):
     """An item defined in an :py:class:`Enum` definition.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the item.
-    ``value``
+
+    .. py:attribute:: value
+
         Value specified for this item, if any. ``None`` othewise.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this item. See :py:class:`Annotation`.
     """
 
@@ -191,11 +217,16 @@ class EnumItem(namedtuple('EnumItem', 'name value annotations lineno')):
 class Struct(namedtuple('Struct', 'name fields annotations lineno')):
     """A struct is a collection of named fields.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the struct.
-    ``fields``
+
+    .. py:attribute:: fields
+
         Fields defined in the struct. See :py:class:`Field`.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -206,11 +237,16 @@ class Struct(namedtuple('Struct', 'name fields annotations lineno')):
 class Union(namedtuple('Union', 'name fields annotations lineno')):
     """A union is a sum of different types.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the union.
-    ``fields``
+
+    .. py:attribute:: fields
+
         Fields defined in the union. See :py:class:`Field`.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -221,11 +257,16 @@ class Union(namedtuple('Union', 'name fields annotations lineno')):
 class Exc(namedtuple('Exc', 'name fields annotations lineno')):
     """A Thrift exception definition.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the exception class.
-    ``fields``
+
+    .. py:attribute:: fields
+
         Fields defined for the class. See :py:class:`Field`.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -241,15 +282,22 @@ class Service(
 ):
     """A service definition.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the service.
-    ``functions``
+
+    .. py:attribute:: functions
+
         Collection of function defined in the service. See
         :py:class:`Function`.
-    ``parent``
+
+    .. py:attribute:: parent
+
         Name of the service that this service extends. ``None`` if this service
         doesn't have a parent service.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this service. See :py:class:`Annotation`.
     """
 
@@ -265,18 +313,29 @@ class Function(
 ):
     """A function defined inside a service.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the function.
-    ``parameters``
+
+    .. py:attribute:: parameters
+
         Collection of parameters accepted by this method. See
         :py:class:`Field`.
-    ``return_type``
+
+    .. py:attribute:: return_type
+
         The type of value returned by this method.
-    ``exceptions``
+
+    .. py:attribute:: exceptions
+
         Collection of exceptions raised by this method. See :py:class:`Field`.
-    ``oneway``
+
+    .. py:attribute:: oneway
+
         Whether this method is ``oneway`` or not.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this method. See :py:class:`Annotation`.
     """
 
@@ -289,18 +348,29 @@ class Field(
 ):
     """A field defined inside a struct, union, exception, or parameter list.
 
-    ``id``
+    .. py:attribute:: id
+
         The numeric field identifier. `None` if not specified.
-    ``name``
+
+    .. py:attribute:: name
+
         Name of the field.
-    ``field_type``
+
+    .. py:attribute:: field_type
+
         Type of value held by the field.
-    ``requiredness``
+
+    .. py:attribute:: requiredness
+
         ``True`` if this field was ``required``, ``False`` if ``optional``.
         ``None`` if required or optional was not specified.
-    ``default``
+
+    .. py:attribute:: default
+
         Default value of the field. ``None`` if not specified.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this field. See :py:class:`Annotation`.
     """
 
@@ -311,9 +381,12 @@ class Field(
 class PrimitiveType(namedtuple('PrimitiveType', 'name annotations')):
     """Reference to primitive types.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the primitive type.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -324,11 +397,16 @@ class PrimitiveType(namedtuple('PrimitiveType', 'name annotations')):
 class MapType(namedtuple('MapType', 'key_type value_type annotations')):
     """A ``map<key, value>`` type.
 
-    ``key_type``
+    .. py:attribute:: key_type
+
         Type of the keys in the map.
-    ``value_type``
+
+    .. py:attribute:: value_type
+
         Type of the values in the map.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -339,9 +417,12 @@ class MapType(namedtuple('MapType', 'key_type value_type annotations')):
 class SetType(namedtuple('SetType', 'value_type annotations')):
     """A ``set<item>`` type.
 
-    ``value_type``
+    .. py:attribute:: value_type
+
         Type of items in the set.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -352,9 +433,12 @@ class SetType(namedtuple('SetType', 'value_type annotations')):
 class ListType(namedtuple('ListType', 'value_type annotations')):
     """A ``list<item>`` type.
 
-    ``value_type``
+    .. py:attribute:: value_type
+
         Type of items in the list.
-    ``annotations``
+
+    .. py:attribute:: annotations
+
         Annotations for this type. See :py:class:`Annotation`.
     """
 
@@ -365,7 +449,8 @@ class ListType(namedtuple('ListType', 'value_type annotations')):
 class DefinedType(namedtuple('DefinedType', 'name lineno')):
     """Reference to a type defined by the user.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the referenced type.
     """
 
@@ -391,7 +476,8 @@ class ConstPrimitiveValue(
 ):
     """A complete constant value.
 
-    ``value``
+    .. py:attribute:: value
+
         Value held in this constant.
     """
 
@@ -402,7 +488,8 @@ class ConstPrimitiveValue(
 class ConstReference(namedtuple('ConstReference', 'name lineno'), ConstValue):
     """Reference to another constant value or enum item.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the constant or enum item.
     """
 
@@ -413,7 +500,8 @@ class ConstReference(namedtuple('ConstReference', 'name lineno'), ConstValue):
 class ConstList(namedtuple('ConstList', 'values lineno'), ConstValue):
     """A list of constant values.
 
-    ``values``
+    .. py:attribute:: values
+
         Collection of ``ConstValue`` objects.
     """
 
@@ -424,7 +512,8 @@ class ConstList(namedtuple('ConstList', 'values lineno'), ConstValue):
 class ConstMap(namedtuple('ConstList', 'pairs lineno'), ConstValue):
     """A map of constant values.
 
-    ``pairs``
+    .. py:attribute:: pairs
+
         Collection of pairs of ``ConstValue`` objects.
     """
 
@@ -449,8 +538,11 @@ class Annotation(namedtuple('Annotation', 'name value lineno')):
             1: string name (sensitive = "true");
         }
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the annotation.
-    ``value``
+
+    .. py:attribute:: value
+
         Value specified for the annotation.
     """

@@ -35,19 +35,44 @@ __all__ = ['StructTypeSpec', 'FieldSpec']
 class StructTypeSpec(TypeSpec):
     """A struct is a collection of named fields.
 
-    The surface for struct types is a class with the following attributes:
+    The surface for struct types is a class with the following:
 
-    ``type_spec``
-        Attribute pointing to the ``TypeSpec`` for the type.
-    ``__init__(*args, **kwargs)``
+    .. py:attribute:: type_spec
+
+        :py:class:`StructTypeSpec` for the type.
+
+    .. py:method:: __init__(self, *args, **kwargs)
+
         Accepts all fields of the struct as arguments. Required arguments are
         placed first and may be specified as positional arguments (in the same
         order as they appear in the IDL). Optional arguments and required
         arguments come next. A TypeError will be raised if the required
         arguments for the struct are not filled with non-None values.
 
-    The ``__str__`` function for the generated class includes all fields of
-    the struct.
+    .. py:method:: __str__(self)
+
+        Returns a string representation of all fields of the struct.
+
+    Given the definition,::
+
+        struct User {
+            1: required string name
+            2: optional string email
+            3: required bool isActive = true
+        }
+
+    A class roughly equivalent to the following is generated,
+
+    .. code-block:: python
+
+        class User(object):
+
+            __slots__ = ('name', 'email', 'isActive')
+
+            type_spec = # ...
+
+            def __init__(name, email=None, isActive=True):
+                # ...
     """
 
     __slots__ = (

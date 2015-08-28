@@ -51,13 +51,25 @@ class Compiler(object):
 
         The generated module contains,
 
-        ``dumps(obj)``
-            Serializes the object ``obj`` into a binary blob.
-        ``loads(cls, s)``
-            Deserialize an object of class ``cls`` from the binary blob ``s``.
-        ``services``
+        .. py:attribute:: services
+
             A collection of generated classes for all services defined in the
-            file.
+            thrift file.
+
+        .. py:attribute:: types
+
+            A collection of generated types for all types defined in the
+            thrift file.
+
+        .. py:function:: dumps(obj)
+
+            Serializes the given object using the protocol the compiler was
+            instantiated with.
+
+        .. py:function:: loads(cls, payload)
+
+            Deserializes an object of type ``cls`` from ``payload`` using the
+            protocol the compiler was instantiated with.
 
         And one class each for every struct, union, exception, enum, and
         service defined in the IDL.

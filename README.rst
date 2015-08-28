@@ -26,6 +26,7 @@ Features
 * No assumptions about how bytes are sent or received. The library only
   concerns itself with serialization and deserialization only.
 * Supports Python 2 and 3.
+* Forward and cyclic references in types.
 
 Example
 -------

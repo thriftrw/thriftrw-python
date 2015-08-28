@@ -196,8 +196,9 @@ class ServiceSpec(object):
     The ``surface`` for a ``ServiceSpec`` is a class that has the following
     attributes:
 
-    ``service_spec``
-        Reference back to the service spec.
+    .. py:attribute:: type_spec
+
+        :py:class:`ServiceSpec` for this service.
 
     And a reference to one :py:class:`ServiceFunction` object for each
     function defined in the service.
@@ -266,11 +267,16 @@ class ServiceSpec(object):
 class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
     """Represents a single function on a service.
 
-    ``name``
+    .. py:attribute:: name
+
         Name of the function.
-    ``request``
+
+    .. py:attribute:: request
+
         Class representing requests for this function.
-    ``response``
+
+    .. py:attribute:: response
+
         Class representing responses for this function.
     """
 

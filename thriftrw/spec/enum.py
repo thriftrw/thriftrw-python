@@ -33,18 +33,29 @@ __all__ = ['EnumTypeSpec']
 class EnumTypeSpec(TypeSpec):
     """TypeSpec for enum types.
 
-    The surface for enum types is a class with the following attributes:
+    The surface for enum types is a class with the following:
 
-    ``items``
-        A tuple of the names of all enum items.
-    ``values``
-        A tuple of the values of all enum items in the same order as the
-        ``items`` tuple.
-    ``name_of(value)``
-        Accepts an enum item value and returns the name of that enum item, or
-        None if no such item exists.
-    ``type_spec``
-        The TypeSpec for the enum.
+    .. py:attribute:: type_spec
+
+        :py:class:`EnumTypeSpec` for the type.
+
+    .. py:attribute:: items
+
+        A tuple of the names of all items in this enum.
+
+    .. py:attribute:: values
+
+        A tuple of the values of all items in this enum in the same order as
+        ``items``.
+
+    .. py:classmethod:: name_of(value)
+
+        Finds the name of an enum item by its value.
+
+        :param int value:
+            A value for an item defined in this enum.
+        :returns:
+            Name of the item with that value or None if no such item exists.
 
     And one attribute for each enum item that has the same name as the
     attribute and points to the value for that item.

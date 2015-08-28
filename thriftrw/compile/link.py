@@ -36,6 +36,7 @@ class TypeSpecLinker(object):
         """Resolve and link all types in the scope."""
 
         type_specs = {}
+        types = []
 
         for name, type_spec in self.scope.type_specs.items():
             type_spec = type_spec.link(self.scope)
@@ -43,8 +44,10 @@ class TypeSpecLinker(object):
 
             if type_spec.surface is not None:
                 self.scope.add_surface(name, type_spec.surface)
+                types.append(type_spec.surface)
 
         self.scope.type_specs = type_specs
+        self.scope.add_surface('types', tuple(types))
 
 
 class ServiceSpecLinker(object):
