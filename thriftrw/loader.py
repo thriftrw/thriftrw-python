@@ -64,9 +64,6 @@ class Loader(object):
         If the file was already compiled before, a cached copy of the compiled
         module is returned.
 
-        The compiled module has a top-level ``services`` attribute that points
-        to a collection of the generated service classes.
-
         :param str path:
             Path to the ``.thrift`` file.
         :param str name:

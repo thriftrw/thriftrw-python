@@ -86,6 +86,7 @@ class ConstSpecLinker(object):
 
     def link(self):
         const_specs = {}
+        constants = {}
 
         for name, const_spec in self.scope.const_specs.items():
             const_spec = const_spec.link(self.scope)
@@ -95,5 +96,7 @@ class ConstSpecLinker(object):
                 self.scope.add_surface(
                     const_spec.name, const_spec.surface
                 )
+                constants[const_spec.name] = const_spec.surface
 
         self.scope.const_specs = const_specs
+        self.scope.add_surface('constants', constants)

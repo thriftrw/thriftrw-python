@@ -108,7 +108,17 @@ def test_services_and_types(loads):
 
         service A {}
         service B {}
+
+        const list<i32> z = [x, y];
+        const i32 x = 42;
+        const i32 y = 123;
     ''')
+
+    assert {
+        'z': [m.x, m.y],
+        'x': 42,
+        'y': 123,
+    } == m.constants
 
     assert (
         m.types == (m.Foo, m.Bar) or

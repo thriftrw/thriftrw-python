@@ -64,6 +64,21 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
         contain the object that was requested or if the required fields for it
         were missing.
 
+.. py:attribute:: services
+
+    Collection of :py:class:`ServiceSpec` objects for all services defined in
+    the source thrift file.
+
+.. py:attribute:: types
+
+    Collection of :py:class:`TypeSpec` objects for all types defined in the
+    source thrift file.
+
+.. py:attribute:: constants
+
+    Mapping of constant name to value for all constants defined in the source
+    thrift file.
+
 Structs
 ~~~~~~~
 
