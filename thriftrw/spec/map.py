@@ -20,9 +20,12 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import collections
+
 from thriftrw.wire import TType
 from thriftrw.wire.value import MapValue
 
+from . import check
 from .base import TypeSpec
 
 __all__ = ['MapTypeSpec']
@@ -39,6 +42,7 @@ class MapTypeSpec(TypeSpec):
     __slots__ = ('kspec', 'vspec', 'linked')
 
     ttype_code = TType.MAP
+    surface = dict
 
     def __init__(self, kspec, vspec):
         self.kspec = kspec
@@ -57,6 +61,7 @@ class MapTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
+        check.instanceof_class(self, collections.Mapping, value)
         return MapValue(
             key_ttype=self.kspec.ttype_code,
             value_ttype=self.vspec.ttype_code,
@@ -67,6 +72,7 @@ class MapTypeSpec(TypeSpec):
         )
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         return {
             self.kspec.from_wire(k): self.vspec.from_wire(v)
             for k, v in wire_value.pairs

@@ -33,6 +33,7 @@ from thriftrw.wire.value import (
     BinaryValue,
 )
 
+from . import check
 from .base import TypeSpec
 
 __all__ = [
@@ -63,10 +64,12 @@ class PrimitiveTypeSpec(TypeSpec):
         return self.code
 
     def to_wire(self, value):
+        check.instanceof_surface(self, value)
+        # TODO check bounds for numeric values.
         return self.value_cls(value)
 
     def from_wire(self, wire_value):
-        # TODO validate types?
+        check.type_code_matches(self, wire_value)
         return wire_value.value
 
     def link(self, scope):
@@ -91,9 +94,11 @@ class _TextTypeSpec(TypeSpec):
         return TType.BINARY
 
     def to_wire(self, value):
+        check.instanceof_surface(self, value)
         return BinaryValue(value.encode('utf-8'))
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         return wire_value.value.decode('utf-8')
 
     def link(self, scope):

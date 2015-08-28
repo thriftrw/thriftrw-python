@@ -180,6 +180,19 @@ def test_simple_to_wire(loads):
     )
 
 
+def test_required_field_missing(loads):
+    X = loads('struct X { 1: required string foo }').X
+    spec = X.type_spec
+
+    x = X('foo')
+    x.foo = None
+
+    with pytest.raises(TypeError) as exc_info:
+        spec.to_wire(x)
+
+    assert 'Field "foo" of "X" is required' in str(exc_info)
+
+
 def test_empty(loads):
     S = loads('struct S {}').S
     spec = S.type_spec

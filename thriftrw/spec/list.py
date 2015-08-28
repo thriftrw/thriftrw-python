@@ -20,9 +20,12 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import collections
+
 from thriftrw.wire import TType
 from thriftrw.wire.value import ListValue
 
+from . import check
 from .base import TypeSpec
 
 __all__ = ['ListTypeSpec']
@@ -37,6 +40,7 @@ class ListTypeSpec(TypeSpec):
     __slots__ = ('vspec', 'linked')
 
     ttype_code = TType.LIST
+    surface = list
 
     def __init__(self, vspec):
         self.vspec = vspec
@@ -53,12 +57,14 @@ class ListTypeSpec(TypeSpec):
         return 'list<%s>' % self.vspec.name
 
     def to_wire(self, value):
+        check.instanceof_class(self, collections.Sequence, value)
         return ListValue(
             value_ttype=self.vspec.ttype_code,
             values=[self.vspec.to_wire(v) for v in value],
         )
 
     def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
         return [self.vspec.from_wire(v) for v in wire_value.values]
 
     def __str__(self):

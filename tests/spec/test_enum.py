@@ -95,6 +95,7 @@ def test_link(loads):
     assert TestEnum.name_of(3) == 'C'
     assert not TestEnum.name_of(4)
 
+    assert set(TestEnum.values) == set((1, 2, 3))
     assert set(TestEnum.items) == set(('A', 'B', 'C'))
 
 

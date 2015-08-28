@@ -121,16 +121,20 @@ class ConstSpec(object):
             self.linked = True
             self.type_spec = self.type_spec.link(scope)
             self.value_spec = self.value_spec.link(scope)
-
-            if False and not self.type_spec.matches(self.value_spec):
-                # TODO implement type_spec.matches -- assuming we want to do
-                # validation
+            value = self.value_spec.surface
+            try:
+                self.type_spec.to_wire(value)
+            except TypeError as e:
                 raise ThriftCompilerError(
-                    'Value for constant "%s" does not match its type "%s"'
-                    % (self.name, self.type_spec.name)
+                    'Value for constant "%s" does not match its type "%s": %s'
+                    % (self.name, self.type_spec.name, e)
                 )
-
-            self.surface = self.value_spec.surface
+            except ValueError as e:
+                raise ThriftCompilerError(
+                    'Value for constant "%s" is not valid: %s'
+                    % (self.name, e)
+                )
+            self.surface = value
 
         return self
 
