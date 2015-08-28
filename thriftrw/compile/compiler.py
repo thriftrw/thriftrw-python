@@ -61,6 +61,11 @@ class Compiler(object):
             A collection of generated types for all types defined in the
             thrift file.
 
+        .. py:attribute:: constants
+
+            A mapping of constant name to value for all constants defined in
+            the thrift file.
+
         .. py:function:: dumps(obj)
 
             Serializes the given object using the protocol the compiler was
