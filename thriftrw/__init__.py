@@ -20,9 +20,12 @@
 
 """
 .. autofunction:: load
+
+.. autofunction:: install
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .loader import load
+from .loader import install
 
-__all__ = ['load']
+__all__ = ['load', 'install']
