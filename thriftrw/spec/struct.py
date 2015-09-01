@@ -25,6 +25,7 @@ from thriftrw.wire.value import StructValue, FieldValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
 from . import check
+from . import common
 from .base import TypeSpec
 from .const import const_value_or_ref
 from .spec_mapper import type_spec_or_ref
@@ -49,9 +50,7 @@ class StructTypeSpec(TypeSpec):
         arguments come next. A TypeError will be raised if the required
         arguments for the struct are not filled with non-None values.
 
-    .. py:method:: __str__(self)
-
-        Returns a string representation of all fields of the struct.
+    And obvious definitions of ``__str__`` and ``__eq__``.
 
     Given the definition,::
 
@@ -439,26 +438,6 @@ def struct_docstring(cls_name, required_fields, optional_fields):
     return header + required_section + optional_section
 
 
-def struct_str(cls_name, field_names):
-    """Generate a ``__str__`` method for a struct."""
-
-    def __str__(self):
-        fields = {name: getattr(self, name) for name in field_names}
-        return "%s(%r)" % (cls_name, fields)
-
-    return __str__
-
-
-def struct_eq(fields):
-
-    def __eq__(self, other):
-        return all(
-            getattr(self, name) == getattr(other, name) for name in fields
-        )
-
-    return __eq__
-
-
 def struct_cls(struct_spec, scope):
     """Generate a class for a struct.
 
@@ -501,9 +480,9 @@ def struct_cls(struct_spec, scope):
         field_defaults,
         struct_spec.base_cls,
     )
-    struct_dct['__str__'] = struct_str(struct_spec.name, field_names)
+    struct_dct['__str__'] = common.fields_str(struct_spec.name, field_names)
     struct_dct['__repr__'] = struct_dct['__str__']
-    struct_dct['__eq__'] = struct_eq(set(field_names))
+    struct_dct['__eq__'] = common.fields_eq(set(field_names))
     struct_dct['__doc__'] = struct_docstring(
         struct_spec.name,
         required_fields,

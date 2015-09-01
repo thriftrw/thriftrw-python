@@ -25,6 +25,7 @@ from thriftrw.wire.value import StructValue
 from thriftrw.compile.exceptions import ThriftCompilerError
 
 from . import check
+from . import common
 from .base import TypeSpec
 from .struct import FieldSpec
 
@@ -45,9 +46,7 @@ class UnionTypeSpec(TypeSpec):
         Accepts all fields of the unions as keyword arguments but only one of
         them is allowed to be non-None. Positional arguments are not accepted.
 
-    .. py:method:: __str__(self)
-
-        Returns a string representation of all fields of the struct.
+    And obvious definitions of ``__str__`` and ``__eq__``.
 
     Given the definition,::
 
@@ -230,31 +229,6 @@ def union_init(cls_name, fields, allow_empty):
     return __init__
 
 
-def union_str(cls_name, fields):
-    """Generates the ``__str__`` method for unions.
-
-    :param cls_name:
-        Name of the class.
-    :param fields:
-        Collection of fields on the union.
-    """
-
-    def __str__(self):
-        field_name = None
-        field_value = None
-
-        for name in fields:
-            value = getattr(self, name)
-            if value is not None:
-                field_name = name
-                field_value = value
-                break
-
-        return '%s(%s=%r)' % (cls_name, field_name, field_value)
-
-    return __str__
-
-
 def union_docstring(cls_name, fields):
     """Generates a docstring for generated unions."""
 
@@ -267,14 +241,6 @@ def union_docstring(cls_name, fields):
     header = '%s(%s)' % (cls_name, params)
 
     return header + '\n\n' + fields_section
-
-
-def union_eq(fields):
-    def __eq__(self, other):
-        return all(
-            getattr(self, name) == getattr(other, name) for name in fields
-        )
-    return __eq__
 
 
 def union_cls(union_spec, scope):
@@ -304,9 +270,11 @@ def union_cls(union_spec, scope):
     union_dct['__init__'] = union_init(
         union_spec.name, field_names, union_spec.allow_empty
     )
-    union_dct['__str__'] = union_str(union_spec.name, field_names)
+    union_dct['__str__'] = common.fields_str(
+        union_spec.name, field_names, False
+    )
     union_dct['__repr__'] = union_dct['__str__']
-    union_dct['__eq__'] = union_eq(field_names)
+    union_dct['__eq__'] = common.fields_eq(field_names)
     union_dct['__doc__'] = union_docstring(
         union_spec.name, field_names
     )
