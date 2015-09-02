@@ -13,7 +13,7 @@ setup(
     ),
     long_description=long_description,
     author='Abhinav Gupta',
-    author_email='dev@uber.com',
+    author_email='abg@uber.com',
     url='https://github.com/uber/thriftrw-python',
     packages=find_packages(exclude=('tests', 'tests.*')),
     license='MIT',
