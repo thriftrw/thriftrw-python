@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 from __future__ import absolute_import, unicode_literals, print_function
 
+import sys
+import inspect
 import os.path
 
 from .idl import Parser
@@ -108,4 +110,60 @@ _DEFAULT_LOADER = Loader()
 load = _DEFAULT_LOADER.load
 
 
-__all__ = ['Loader', 'load']
+def install(path, name=None):
+    """Compiles a Thrift file and installs it as a submodule of the caller.
+
+    Given a tree organized like so::
+
+        foo/
+            __init__.py
+            bar.py
+            my_service.thrift
+
+    You would do,
+
+    .. code-block:: python
+
+        my_service = thriftrw.install('my_service.thrift')
+
+    To install ``my_service`` as a submodule of the module from which you made
+    the call. If the call was made in ``foo/bar.py``, the compiled
+    Thrift file will be installed as ``foo.bar.my_service``. If the call was
+    made in ``foo/__init__.py``, the compiled Thrift file will be installed as
+    ``foo.my_service``. This allows other modules to import ``from`` the
+    compiled module like so,
+
+    .. code-block:: python
+
+        from foo.my_service import MyService
+
+    .. versionadded:: 0.2
+
+    :param path:
+        Path of the Thrift file. This may be an absolute path, or a path
+        relative to the Python module making the call.
+    :param str name:
+        Name of the submodule. Defaults to the basename of the Thrift file.
+    :returns:
+        The compiled module
+    """
+    if name is None:
+        name = os.path.splitext(os.path.basename(path))[0]
+
+    callermod = inspect.getmodule(inspect.stack()[1][0])
+    name = '%s.%s' % (callermod.__name__, name)
+
+    if name in sys.modules:
+        return sys.modules[name]
+
+    if not os.path.isabs(path):
+        callerfile = callermod.__file__
+        path = os.path.normpath(
+            os.path.join(os.path.dirname(callerfile), path)
+        )
+
+    sys.modules[name] = mod = load(path, name=name)
+    return mod
+
+
+__all__ = ['Loader', 'load', 'install']

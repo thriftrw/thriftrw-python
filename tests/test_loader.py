@@ -20,6 +20,10 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from textwrap import dedent
+
+import pytest
+
 from thriftrw.loader import Loader
 
 
@@ -54,3 +58,80 @@ def test_caching(tmpdir, monkeypatch):
 
     mod3 = loader.load(path, force=True)
     assert mod3 is not mod2
+
+
+@pytest.mark.unimport('foo.bar.svc')
+def test_install_absolute(tmpdir, monkeypatch):
+    module_root = tmpdir.mkdir('foo')
+    module_root.join('__init__.py').ensure()
+
+    thrift_file = module_root.join('service.thrift')
+    thrift_file.write(
+        'struct Foo { 1: required string a 2: optional string b }'
+    )
+
+    py_file = module_root.join('bar.py')
+    py_file.write(
+        dedent('''
+            import thriftrw
+
+            thriftrw.install(%r, name='svc')
+        ''' % str(thrift_file))
+    )
+
+    monkeypatch.syspath_prepend(str(tmpdir))
+
+    from foo.bar.svc import Foo
+
+    assert Foo(a=1) == Foo(a=1)
+
+
+@pytest.mark.unimport('foo.service', 'foo.bar')
+def test_install_relative(tmpdir, monkeypatch):
+    module_root = tmpdir.mkdir('foo')
+    module_root.join('service.thrift').write('struct Bar {}')
+
+    module_root.join('bar.py').write(dedent('''
+        from __future__ import absolute_import
+        from .service import Bar
+    '''))
+
+    module_root.join('__init__.py').write(dedent('''
+        import thriftrw
+
+        thriftrw.install('service.thrift')
+    '''))
+
+    monkeypatch.syspath_prepend(str(tmpdir))
+
+    from foo.bar import Bar
+
+    assert Bar() == Bar()
+
+
+@pytest.mark.unimport('foo.service')
+def test_install_twice(tmpdir, monkeypatch):
+    module_root = tmpdir.mkdir('foo')
+    module_root.join('__init__.py').write(dedent('''
+        import thriftrw
+
+        def go():
+            return thriftrw.install('service.thrift')
+    '''))
+
+    module_root.join('service.thrift').write(
+        'struct Foo { 1: required string a 2: optional string b }'
+    )
+
+    monkeypatch.syspath_prepend(str(tmpdir))
+
+    from foo import go
+
+    with pytest.raises(ImportError):
+        from foo.service import Foo
+        Foo()
+
+    assert go() is go()
+
+    from foo.service import Foo
+    assert go().Foo is Foo

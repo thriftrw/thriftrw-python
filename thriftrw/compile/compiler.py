@@ -83,6 +83,9 @@ class Compiler(object):
         :py:class:`thriftrw.spec.ServiceFunction` objects for each method
         defined in the service.
 
+        .. versionadded:: 0.2
+           The ``constants`` attribute in generated modules.
+
         :param str name:
             Name of the Thrift document. This will be the name of the
             generated module.

@@ -16,6 +16,39 @@ the ``.thrift`` file.
 
 This generates a module which contains the generated types and constants.
 
+Importing generated modules
+---------------------------
+
+When using just :py:func:`thriftrw.load`, you cannot reference the generated
+module in ``import`` statements. For example, the following will not work:
+
+.. code-block:: python
+
+    keyvalue = thriftrw.load('keyvalue.thrift')
+
+    from keyvalue import KeyValue  # ImportError
+
+That's because the system doesn't yet know that the module name ``keyvalue``
+maps to that generated module. This can be remedied by using
+:py:func:`thriftrw.install`.
+
+.. code-block:: python
+
+    # some_module.py
+
+    import thriftrw
+
+    keyvalue = thriftrw.install('keyvalue.thrift')
+
+This will install ``keyvalue`` as a submodule of ``some_module`` so that you
+can do,
+
+.. code-block:: python
+
+    from some_module.keyvalue import KeyValue
+
+For more information, see :py:func:`thriftrw.install`.
+
 What gets generated?
 --------------------
 
