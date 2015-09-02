@@ -38,7 +38,7 @@ maps to that generated module. This can be remedied by using
 
     import thriftrw
 
-    thriftrw.install('keyvalue.thrift')
+    keyvalue = thriftrw.install('keyvalue.thrift')
 
 This will install ``keyvalue`` as a submodule of ``some_module`` so that you
 can do,

@@ -137,6 +137,8 @@ def install(path, name=None):
 
         from foo.my_service import MyService
 
+    .. versionadded:: 0.2
+
     :param path:
         Path of the Thrift file. This may be an absolute path, or a path
         relative to the Python module making the call.

@@ -1,11 +1,13 @@
 Releases
 ========
 
-0.1.1 (unreleased)
+0.2.0 (unreleased)
 ------------------
 
 - Export a mapping of constants in the generated module under the ``constants``
   attribute.
+- Added ``thriftrw.install`` to install a Thrift file as a submodule of a
+  module.
 
 
 0.1.0 (2015-08-28)
