@@ -196,7 +196,7 @@ class ServiceSpec(object):
     The ``surface`` for a ``ServiceSpec`` is a class that has the following
     attributes:
 
-    .. py:attribute:: type_spec
+    .. py:attribute:: service_spec
 
         :py:class:`ServiceSpec` for this service.
 
