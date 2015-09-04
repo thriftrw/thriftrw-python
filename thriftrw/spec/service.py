@@ -30,7 +30,7 @@ from .union import UnionTypeSpec
 
 
 __all__ = [
-    'ServiceSpec', 'FunctionSpec', 'ServiceFunction',
+    'ServiceSpec', 'FunctionSpec', 'ServiceFunction', 'FunctionResultSpec'
 ]
 
 
@@ -41,15 +41,12 @@ class FunctionArgsSpec(StructTypeSpec):
     parameters as its fields, which are optional by default.
     """
 
-    # TODO is it worth exposing FunctionArgsSpec and FunctionResultSpec with
-    # their own attributes?
-
     @classmethod
     def compile(cls, parameters, service_name, function_name):
         """Compiles a parameter list into a FunctionArgsSpec.
 
         :param parameters:
-            Collection of ``thriftrw.idl.Field`` objects.
+            Collection of :py:class:`thriftrw.idl.Field` objects.
         :param str service_name:
             Name of the service under which the function was defined.
         :param str function_name:
@@ -74,40 +71,73 @@ class FunctionResultSpec(UnionTypeSpec):
     The return value of a function and the exceptions raised by it implicitly
     form a union which contains the return value at field ID ``0`` and the
     exceptions on the remaining field IDs.
+
+    .. versionchanged:: 0.2
+
+        Expose the class and add the ``return_spec`` and ``exception_specs``
+        attributes.
     """
+
+    __slots__ = UnionTypeSpec.__slots__ + ('return_spec', 'exception_specs')
+
+    def __init__(self, name, return_spec, exceptions):
+        #: :py:class:`thriftrw.spec.TypeSpec` of the return type or None if
+        #: the function does not return anything.
+        self.return_spec = return_spec
+
+        #: Collection of :py:class:`thriftrw.spec.FieldSpec` objects defining
+        #: the exceptions that this function can raise.
+        self.exception_specs = exceptions
+
+        result_specs = []
+        if return_spec is not None:
+            result_specs.append(
+                FieldSpec(
+                    id=0,
+                    name='success',
+                    spec=return_spec,
+                    required=False,
+                    default_value=None
+                )
+            )
+        result_specs.extend(exceptions)
+
+        super(FunctionResultSpec, self).__init__(
+            name, result_specs, allow_empty=True
+        )
+
+    def link(self, scope):
+        if self.return_spec is not None:
+            self.return_spec = self.return_spec.link(scope)
+        self.exception_specs = [e.link(scope) for e in self.exception_specs]
+        return super(FunctionResultSpec, self).link(scope)
 
     @classmethod
     def compile(cls, return_type, exceptions, service_name, function_name):
         """Compiles information from the AST into a FunctionResultSpec.
 
         :param return_type:
-            A ``thriftrw.idl.Type`` representing the return type or None if
-            the function doesn't return anything.
+            A :py:class:`thriftrw.idl.Type` representing the return type or
+            None if the function doesn't return anything.
         :param exceptions:
-            Collection of ``thriftrw.idl.Field`` objects representing raised
-            by the function.
+            Collection of :py:class:`thriftrw.idl.Field` objects representing
+            raised by the function.
         :param str service_name:
             Name of the service under which the function was defined.
         :param str function_name:
             Name of the function whose result this object represents.
         """
+        exceptions = exceptions or []
         result_name = str('%s_%s_response' % (service_name, function_name))
 
-        result_specs = []
         if return_type is not None:
-            result_specs.append(
-                FieldSpec(
-                    id=0,
-                    name='success',
-                    spec=type_spec_or_ref(return_type),
-                    required=False,
-                    default_value=None
-                )
-            )
+            return_spec = type_spec_or_ref(return_type)
+        else:
+            return_spec = None
 
-        exceptions = exceptions or []
+        exc_specs = []
         for exc in exceptions:
-            result_specs.append(
+            exc_specs.append(
                 FieldSpec.compile(
                     field=exc,
                     struct_name=result_name,
@@ -115,7 +145,7 @@ class FunctionResultSpec(UnionTypeSpec):
                 )
             )
 
-        return cls(result_name, result_specs, allow_empty=True)
+        return cls(result_name, return_spec, exc_specs)
 
 
 class FunctionSpec(object):
@@ -136,8 +166,9 @@ class FunctionSpec(object):
         #: struct.
         self.args_spec = args_spec
 
-        #: TypeSpec specifying the output of this function as a union of the
-        #: return type and the exceptions raised by the function.
+        #: :py:class:`FunctionResultSpec` specifying the output of this
+        #: function as a  union of the return type and the exceptions raised
+        #: by this function.
         #:
         #: The return type of the function (if any) is a field in the union
         #: with field ID 0 and name 'success'.

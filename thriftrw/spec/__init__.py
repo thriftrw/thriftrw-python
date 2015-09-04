@@ -93,10 +93,13 @@ Services
 .. autoclass:: thriftrw.spec.ServiceSpec
     :members:
 
+.. autoclass:: thriftrw.spec.ServiceFunction
+    :members:
+
 .. autoclass:: thriftrw.spec.FunctionSpec
     :members:
 
-.. autoclass:: thriftrw.spec.ServiceFunction
+.. autoclass:: thriftrw.spec.FunctionResultSpec
     :members:
 
 Constants
@@ -120,6 +123,7 @@ from .typedef import TypedefTypeSpec
 from .service import (
     ServiceSpec,
     FunctionSpec,
+    FunctionResultSpec,
     ServiceFunction,
 )
 from .primitive import (
@@ -166,6 +170,7 @@ __all__ = [
     # Services
     'ServiceSpec',
     'FunctionSpec',
+    'FunctionResultSpec',
     'ServiceFunction',
 
     # Constants

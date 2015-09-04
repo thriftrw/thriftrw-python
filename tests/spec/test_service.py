@@ -115,6 +115,7 @@ def test_compile(parse):
         FieldSpec(1, 'alreadyExists', TypeReference('ItemAlreadyExists', 6),
                   False),
     ]
+    assert put_item_spec.result_spec.return_spec is None
 
     assert get_item_spec.name == 'getItem'
     assert get_item_spec.args_spec.fields == [
@@ -125,6 +126,7 @@ def test_compile(parse):
         FieldSpec(1, 'doesNotExist', TypeReference('KeyDoesNotExist', 10),
                   False),
     ]
+    assert get_item_spec.result_spec.return_spec == TypeReference('Item', 8)
 
     assert healthy_spec.name == 'healthy'
     assert healthy_spec.args_spec.fields == []
@@ -183,6 +185,12 @@ def test_load(loads):
     )
 
     KeyValue = keyvalue.KeyValue
+
+    assert KeyValue.putItem.response.type_spec.return_spec is None
+    assert (
+        KeyValue.getItem.response.type_spec.return_spec is
+        keyvalue.Item.type_spec
+    )
 
     assert_round_trip(
         KeyValue.putItem.request(
