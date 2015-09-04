@@ -6,6 +6,14 @@
 Welcome to thriftrw's documentation!
 ====================================
 
+thriftrw is a Python library to serialize and deserialize Thrift types.
+
+GitHub
+    https://github.com/uber/thriftrw-python
+
+PyPI
+    https://pypi.python.org/pypi/thriftrw
+
 Contents:
 
 .. toctree::
