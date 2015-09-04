@@ -99,13 +99,13 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
 
 .. py:attribute:: services
 
-    Collection of :py:class:`ServiceSpec` objects for all services defined in
-    the source thrift file.
+    Collection of all classes generated for all services defined in the source
+    thrift file.
 
 .. py:attribute:: types
 
-    Collection of :py:class:`TypeSpec` objects for all types defined in the
-    source thrift file.
+    Collection of all classes generated for all types defined in the source
+    thrift file.
 
 .. py:attribute:: constants
 
