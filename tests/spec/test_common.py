@@ -20,38 +20,22 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from collections import namedtuple
 
-def fields_eq(fields):
-    """Generates an ``__eq__`` method.
-
-    :param list fields:
-        List of fields of the object to be compared.
-    """
-    def __eq__(self, other):
-        return all(
-            getattr(self, name) == getattr(other, name) for name in fields
-        )
-    return __eq__
+from thriftrw.spec import common
 
 
-def fields_str(cls_name, field_list, include_none=True):
-    """Generates a ``__str__`` method.
+def test_fields_str():
+    Foo = namedtuple('Foo', 'bar')
+    to_str = common.fields_str('Foo', ('bar',))
 
-    :param cls_name:
-        Name of the class for which the method is being generated.
-    :param list field_list:
-        List of field_list of the class to be included in the output.
-    :param bool include_none:
-        Whether None attributes should be included in the output.
-    """
-    def __str__(self):
-        fields = {}
+    assert to_str(Foo(42)) == ('Foo({%r: 42})' % 'bar')
+    assert to_str(Foo(None)) == ('Foo({%r: None})' % 'bar')
 
-        for name in field_list:
-            # TODO use to_primitive?
-            value = getattr(self, name)
-            if include_none or value is not None:
-                fields[name] = value
 
-        return "%s(%r)" % (cls_name, fields)
-    return __str__
+def test_fields_str_ignore_none():
+    Foo = namedtuple('Foo', 'bar')
+    to_str = common.fields_str('Foo', ('bar',), False)
+
+    assert to_str(Foo(42)) == ('Foo({%r: 42})' % 'bar')
+    assert to_str(Foo(None)) == 'Foo({})'
