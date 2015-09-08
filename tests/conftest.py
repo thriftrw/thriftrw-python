@@ -26,6 +26,7 @@ import sys
 import pytest
 
 from thriftrw.loader import Loader
+from thriftrw.protocol import BinaryProtocol
 
 
 def unimport(*names):
@@ -74,4 +75,4 @@ def pytest_runtest_teardown(item, nextitem):
 
 @pytest.fixture
 def loads(request):
-    return partial(Loader().loads, request.node.name)
+    return partial(Loader(BinaryProtocol()).loads, request.node.name)

@@ -15,6 +15,8 @@ Releases
   function spec itself.
 - ServiceSpec now provides a ``lookup`` method to look up the specs for
   functions defined under that service.
+- Added ``Message`` wrapper for Thrift payloads. This may be used to make
+  requests to and receive responses from existing services using Apache Thrift.
 
 
 0.5.2 (2015-10-19)

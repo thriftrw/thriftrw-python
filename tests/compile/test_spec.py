@@ -58,6 +58,16 @@ def test_primitive_wire_conversion(args):
     assert obj == t_spec.from_wire(value)
 
 
+@pytest.mark.parametrize('t_spec, value', [
+    (spec.BoolTypeSpec, vbyte(1)),
+    (spec.ByteTypeSpec, vbool(True)),
+    (spec.ListTypeSpec(spec.I32TypeSpec), vset(ttype.I32, vi32(42))),
+])
+def test_ttype_mismatch(t_spec, value):
+    with pytest.raises(ValueError):
+        t_spec.from_wire(value)
+
+
 @pytest.mark.parametrize('t_spec, pairs, obj', [
     (spec.MapTypeSpec(spec.TextTypeSpec, spec.I32TypeSpec), [], {}),
     (

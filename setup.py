@@ -13,6 +13,8 @@ ext_modules = []
 cython_modules = [
     'thriftrw._buffer',
     'thriftrw._cython',
+    'thriftrw._runtime',
+    'thriftrw.protocol.core',
     'thriftrw.protocol.binary',
     'thriftrw.spec.base',
     'thriftrw.spec.common',
@@ -27,8 +29,10 @@ cython_modules = [
     'thriftrw.spec.struct',
     'thriftrw.spec.typedef',
     'thriftrw.spec.union',
-    'thriftrw.wire.value',
+    'thriftrw.wire.message',
+    'thriftrw.wire.mtype',
     'thriftrw.wire.ttype',
+    'thriftrw.wire.value',
 ]
 
 # If Cython is available we will re-cythonize the pyx files, otherwise we just

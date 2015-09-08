@@ -27,6 +27,8 @@ from thriftrw.errors import EndOfInputError
 from thriftrw.protocol.binary import BinaryProtocol
 from thriftrw.wire import ttype
 from thriftrw.wire import value
+from thriftrw.wire import Message
+from thriftrw.wire.mtype import CALL, REPLY, EXCEPTION, ONEWAY
 
 from ..util.value import *  # noqa
 
@@ -354,3 +356,126 @@ def test_unknown_type_id(typ, bs):
         protocol.deserialize_value(typ, bytes(bytearray(bs)))
 
     assert 'Unknown TType' in str(exc_info)
+
+
+@pytest.mark.parametrize('bs, message', [
+    ([
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
+
+        0x01,                       # type = CALL
+        0x00, 0x00, 0x00, 0x2a,     # seqId = 42
+
+        0x00,
+    ], Message(
+        name='getFoo',
+        seqid=42,
+        message_type=CALL,
+        body=vstruct()
+    )),
+    ([
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x73, 0x65, 0x74, 0x42, 0x61, 0x72,     # 'setBar'
+
+        0x02,                       # type = REPLY
+        0x00, 0x00, 0x00, 0x01,     # seqId = 1
+
+        0x02, 0x00, 0x01, 0x01,     # {1: True}
+        0x00,
+    ], Message(
+        name='setBar',
+        seqid=1,
+        message_type=REPLY,
+        body=vstruct((1, ttype.BOOL, vbool(True))),
+    )),
+])
+def test_message_round_trip(bs, message):
+    bs = bytes(bytearray(bs))
+    protocol = BinaryProtocol()
+
+    result = protocol.deserialize_message(bs)
+    assert message == result
+
+    result = protocol.serialize_message(message)
+    assert bs == result
+
+
+@pytest.mark.parametrize('bs, message', [
+    ([
+        0x80, 0x01,  # version = 1
+        0x00, 0x03,  # type = EXCEPTION
+
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
+
+        0x00, 0x00, 0x00, 0x2a,     # seqId = 42
+
+        0x02, 0x00, 0x08, 0x00,     # {8: False}
+        0x00,
+    ], Message(
+        name='getFoo',
+        seqid=42,
+        message_type=EXCEPTION,
+        body=vstruct((8, ttype.BOOL, vbool(False))),
+    )),
+    ([
+        0x80, 0x01,  # version = 1
+        0x00, 0x04,  # type = ONEWAY
+
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x73, 0x65, 0x74, 0x42, 0x61, 0x72,     # 'setBar'
+
+        0x00, 0x00, 0x00, 0x01,     # seqId = 1
+
+        0x00,
+    ], Message(
+        name='setBar',
+        seqid=1,
+        message_type=ONEWAY,
+        body=vstruct(),
+    )),
+])
+def test_message_parse_strict(bs, message):
+    bs = bytes(bytearray(bs))
+    protocol = BinaryProtocol()
+
+    result = protocol.deserialize_message(bs)
+    assert message == result
+
+
+@pytest.mark.parametrize('bs', [
+    [
+        0x80, 0x2a,  # version = 42
+        0x00, 0x01,  # type = CALL
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
+        0x00, 0x00, 0x00, 0x01,     # seqId = 1
+        0x00,   # STOP
+    ]
+])
+def test_message_invalid_version(bs):
+    bs = bytes(bytearray(bs))
+
+    with pytest.raises(ThriftProtocolError) as exc_info:
+        BinaryProtocol().deserialize_message(bs)
+
+    assert 'Unsupported version "42"' in str(exc_info)
+
+
+@pytest.mark.parametrize('bs', [
+    [
+        0x80, 0x01,  # version = 1
+        0x00, 0x05,  # type = invalid
+        0x00, 0x00, 0x00, 0x06,                 # length = 6
+        0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
+        0x00, 0x00, 0x00, 0x01,     # seqId = 1
+        0x00,   # STOP
+    ]
+])
+def test_message_invalid_message_type(bs):
+    bs = bytes(bytearray(bs))
+
+    with pytest.raises(ThriftProtocolError) as exc_info:
+        BinaryProtocol().deserialize_message(bs)
+
+    assert 'Unknown message type "5"' in str(exc_info)

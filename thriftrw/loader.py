@@ -48,7 +48,7 @@ class Loader(object):
             language. Setting this to ``False`` is only recommended for
             compatibility with existing Thrift files.
         """
-        protocol = BinaryProtocol()
+        protocol = protocol or BinaryProtocol()
 
         self.parser = Parser()
         self.compiler = Compiler(protocol, strict=strict)
@@ -99,7 +99,7 @@ class Loader(object):
         return module
 
 
-_DEFAULT_LOADER = Loader()
+_DEFAULT_LOADER = Loader(protocol=BinaryProtocol())
 
 #: Parses and compiles the given Thrift file.
 #:

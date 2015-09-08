@@ -27,6 +27,8 @@ from .link import ServiceSpecLinker
 from .scope import Scope
 from ..errors import ThriftCompilerError
 
+from thriftrw._runtime import Serializer, Deserializer
+
 
 __all__ = ['Compiler']
 
@@ -77,6 +79,27 @@ class Compiler(object):
             Deserializes an object of type ``cls`` from ``payload`` using the
             protocol the compiler was instantiated with.
 
+        .. py:function:: dumps.message(obj, seqid=0)
+
+            Serializes the given request or response into a
+            :py:class:`~thriftrw.wire.Message` using the protocol that the
+            compiler was instantiated with.
+
+            See :ref:`calling-apache-thrift`.
+
+            .. versionadded:: 0.6
+
+        .. py:function:: loads.message(service, payload)
+
+            Deserializes a :py:class:`~thriftrw.wire.Message`  from
+            ``payload`` using the protocol the compiler was instantiated with.
+            A request or response of a method defined in the given service is
+            parsed in the message body.
+
+            See :ref:`calling-apache-thrift`.
+
+            .. versionadded:: 0.6
+
         And one class each for every struct, union, exception, enum, and
         service defined in the IDL.
 
@@ -108,8 +131,8 @@ class Compiler(object):
         for linker in self.LINKERS:
             linker(scope).link()
 
-        scope.add_function('loads', self.protocol.loads)
-        scope.add_function('dumps', self.protocol.dumps)
+        scope.add_surface('loads', Deserializer(self.protocol))
+        scope.add_surface('dumps', Serializer(self.protocol))
 
         return scope.module
 
