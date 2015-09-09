@@ -46,13 +46,28 @@ def from_wire(t, s):
     return t.type_spec.from_wire(s)
 
 
-def test_compile_oneway_function(parse):
+def test_compile_oneway_with_return_type(parse):
     with pytest.raises(ThriftCompilerError) as exc_info:
         ServiceSpec.compile(parse('''
-            service Foo { oneway void bar(); }
+            service Foo {
+                oneway string foo();
+            }
         '''))
 
-    assert 'Oneway functions are not supported' in str(exc_info)
+    assert 'Function "Foo.foo" is oneway' in str(exc_info)
+    assert 'It cannot return a value' in str(exc_info)
+
+
+def test_compile_oneway_with_exceptions(parse):
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        ServiceSpec.compile(parse('''
+            service Foo {
+                oneway void foo() throws (1: SomeException exc);
+            }
+        '''))
+
+    assert 'Function "Foo.foo" is oneway' in str(exc_info)
+    assert 'It cannot raise exceptions' in str(exc_info)
 
 
 def test_compile_dupe_func(parse):
@@ -157,6 +172,8 @@ def test_load(loads):
             Item getItem(
                 1: string key,
             ) throws (1: KeyDoesNotExist doesNotExist);
+
+            oneway void clear();
         }
 
         struct Item {
@@ -186,6 +203,11 @@ def test_load(loads):
 
     KeyValue = keyvalue.KeyValue
 
+    assert KeyValue.clear.spec.oneway
+    assert KeyValue.clear.request is not None
+    assert KeyValue.clear.response is None
+
+    assert not KeyValue.putItem.spec.oneway
     assert KeyValue.putItem.response.type_spec.return_spec is None
     assert (
         KeyValue.getItem.response.type_spec.return_spec is
