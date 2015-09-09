@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.3.1 (unreleased)
+0.3.1 (2015-09-09)
 ------------------
 
 - Allow binary values to be passed for ``string`` types.
