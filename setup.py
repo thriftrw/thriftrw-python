@@ -7,7 +7,7 @@ with open('README.rst') as f:
 
 setup(
     name='thriftrw',
-    version='0.2.0',
+    version='0.2.1.dev0',
     description=(
         'A library to serialize and deserialize Thrift values.'
     ),
