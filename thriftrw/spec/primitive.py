@@ -94,8 +94,13 @@ class _TextTypeSpec(TypeSpec):
         return TType.BINARY
 
     def to_wire(self, value):
-        check.instanceof_surface(self, value)
-        return BinaryValue(value.encode('utf-8'))
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+        elif not isinstance(value, six.binary_type):
+            raise TypeError(
+                'Cannot serialize %r into a "string".' % (value,)
+            )
+        return BinaryValue(value)
 
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
@@ -132,4 +137,8 @@ BinaryTypeSpec = PrimitiveTypeSpec(
 #:
 #: Values will be decoded/encoded using UTF-8 encoding before/after being
 #: serialized/deserialized.
+#:
+#: .. versionchanged:: 0.3.1
+#:
+#:     Allows passing binary values directly.
 TextTypeSpec = _TextTypeSpec()
