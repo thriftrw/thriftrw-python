@@ -154,11 +154,16 @@ class FunctionSpec(object):
     The ``surface`` for a FunctionSpec is a :py:class:`ServiceFunction`
     object. Unlike the ``surface`` for other specs, a FunctionSpec's surface
     is attached to the service class as a class attribute.
+
+    .. versionchanged:: 0.3
+
+        Added the ``oneway`` attribute.
     """
 
-    __slots__ = ('name', 'args_spec', 'result_spec', 'linked', 'surface')
+    __slots__ = ('name', 'args_spec', 'result_spec', 'oneway', 'linked',
+                 'surface')
 
-    def __init__(self, name, args_spec, result_spec):
+    def __init__(self, name, args_spec, result_spec, oneway):
         #: Name of the function.
         self.name = name
 
@@ -172,44 +177,61 @@ class FunctionSpec(object):
         #:
         #: The return type of the function (if any) is a field in the union
         #: with field ID 0 and name 'success'.
+        #:
+        #: This value is None if the function is oneway.
         self.result_spec = result_spec
+
+        #: Whether this function is oneway or not.
+        self.oneway = oneway
 
         self.linked = False
         self.surface = None
 
     @classmethod
     def compile(cls, func, service_name):
-        if func.oneway:
-            raise ThriftCompilerError(
-                'Function "%s.%s" is oneway. '
-                'Oneway functions are not supported by thriftrw.'
-                % (service_name, func.name)
-            )
-
         args_spec = FunctionArgsSpec.compile(
             parameters=func.parameters,
             service_name=service_name,
             function_name=func.name,
         )
 
-        result_spec = FunctionResultSpec.compile(
-            return_type=func.return_type,
-            exceptions=func.exceptions,
-            service_name=service_name,
-            function_name=func.name,
-        )
+        if func.oneway:
+            result_spec = None
+            if func.return_type is not None:
+                raise ThriftCompilerError(
+                    'Function "%s.%s" is oneway. It cannot return a value.'
+                    % (service_name, func.name)
+                )
+            if func.exceptions:
+                raise ThriftCompilerError(
+                    'Function "%s.%s" is oneway. It cannot raise exceptions.'
+                    % (service_name, func.name)
+                )
+        else:
+            result_spec = FunctionResultSpec.compile(
+                return_type=func.return_type,
+                exceptions=func.exceptions,
+                service_name=service_name,
+                function_name=func.name,
+            )
 
-        return cls(func.name, args_spec, result_spec)
+        return cls(func.name, args_spec, result_spec, func.oneway)
 
     def link(self, scope):
         if not self.linked:
             self.linked = True
             self.args_spec = self.args_spec.link(scope)
-            self.result_spec = self.result_spec.link(scope)
+            if self.result_spec:
+                self.result_spec = self.result_spec.link(scope)
+                result_spec_surface = self.result_spec.surface
+            else:
+                result_spec_surface = None
+
             self.surface = ServiceFunction(
                 self.name,
                 self.args_spec.surface,
-                self.result_spec.surface,
+                result_spec_surface,
+                self,
             )
         return self
 
@@ -295,7 +317,9 @@ class ServiceSpec(object):
     __repr__ = __str__
 
 
-class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
+class ServiceFunction(
+    namedtuple('ServiceFunction', 'name request response spec')
+):
     """Represents a single function on a service.
 
     .. py:attribute:: name
@@ -308,7 +332,16 @@ class ServiceFunction(namedtuple('ServiceFunction', 'name request response')):
 
     .. py:attribute:: response
 
-        Class representing responses for this function.
+        Class representing responses for this function, or ``None`` if this
+        function is ``oneway``.
+
+    .. py:attribute:: spec
+
+        :py:class:`thriftrw.spec.FunctionSpec` for this function.
+
+    .. versionchanged:: 0.3
+
+        Added the ``spec`` attribute.
     """
 
 
