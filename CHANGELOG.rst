@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.3.0 (unreleased)
+0.3.0 (2015-09-09)
 ------------------
 
 - Support ``oneway`` functions.
