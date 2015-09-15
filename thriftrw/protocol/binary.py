@@ -69,7 +69,7 @@ class BinaryProtocolReader(object):
         :param spec:
             Spec for ``struct.unpack``
         """
-        (result,) = struct.unpack(spec, self._read(num_bytes))
+        (result,) = struct.unpack(str(spec), self._read(num_bytes))
         return result
 
     def _byte(self):
@@ -233,7 +233,7 @@ class BinaryProtocolWriter(V.ValueVisitor):
         :param value:
             Value to pack.
         """
-        self.writer.write(struct.pack(spec, value))
+        self.writer.write(struct.pack(str(spec), value))
 
     def visit_bool(self, value):  # bool:1
         self.visit_byte(1 if value else 0)
