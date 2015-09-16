@@ -366,10 +366,12 @@ def test_unknown_type_id(typ, bytes):
         reader.read(typ)
     assert 'Unknown TType' in str(exc_info)
 
+
 @pytest.mark.parametrize('typ, bytes, value', [
-    (typ, 0x00, vi16(0)) for typ in TType
+    (typ, 0x01, vi16(0)) for typ in TType
 ], ids=reader_writer_ids)
 def test_backwards_compatibility_with_python_266(typ, bytes, value):
+    bytes = bytearray(bytes)
 
     class SawExpectedType(Exception):
         pass
