@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.3.2 (unreleased)
+0.3.2 (2015-09-15)
 ------------------
 
 - Backwards compatibility for Python 2.7.6 and earlier due to Python #19099.
