@@ -26,6 +26,7 @@ from six import BytesIO
 from thriftrw.protocol.exceptions import ThriftProtocolError
 from thriftrw.protocol.exceptions import EndOfInputError
 from thriftrw.protocol.binary import BinaryProtocolReader
+from thriftrw.protocol.binary import BinaryProtocolWriter
 from thriftrw.protocol.binary import BinaryProtocol
 from thriftrw.wire import TType
 from thriftrw.wire import value
@@ -364,3 +365,33 @@ def test_unknown_type_id(typ, bytes):
     with pytest.raises(ThriftProtocolError) as exc_info:
         reader.read(typ)
     assert 'Unknown TType' in str(exc_info)
+
+@pytest.mark.parametrize('typ, bytes, value', [
+    (typ, 0x00, vi16(0)) for typ in TType
+], ids=reader_writer_ids)
+def test_backwards_compatibility_with_python_266(typ, bytes, value):
+
+    class SawExpectedType(Exception):
+        pass
+
+    class TestProtocolReader(BinaryProtocolReader):
+        def _unpack(self, num_bytes, spec):
+            assert type(spec) is type(b'')
+            raise SawExpectedType()
+
+    class TestProtocolWriter(BinaryProtocolWriter):
+        def _pack(self, spec, value):
+            assert type(spec) is type(b'')
+            raise SawExpectedType()
+
+    class TestProtocol(BinaryProtocol):
+        reader_class = TestProtocolReader
+        writer_class = TestProtocolWriter
+
+    with pytest.raises(SawExpectedType):
+        protocol = TestProtocol()
+        protocol.deserialize_value(typ, bytes)
+
+    with pytest.raises(SawExpectedType):
+        protocol = TestProtocol()
+        protocol.serialize_value(value)

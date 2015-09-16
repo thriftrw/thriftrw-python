@@ -69,17 +69,17 @@ class BinaryProtocolReader(object):
         :param spec:
             Spec for ``struct.unpack``
         """
-        (result,) = struct.unpack(str(spec), self._read(num_bytes))
+        (result,) = struct.unpack(spec, self._read(num_bytes))
         return result
 
     def _byte(self):
-        return self._unpack(1, '!b')
+        return self._unpack(1, b'!b')
 
     def _i16(self):
-        return self._unpack(2, '!h')
+        return self._unpack(2, b'!h')
 
     def _i32(self):
-        return self._unpack(4, '!i')
+        return self._unpack(4, b'!i')
 
     def read_bool(self):
         """Reads a boolean."""
@@ -91,7 +91,7 @@ class BinaryProtocolReader(object):
 
     def read_double(self):
         """Reads a double."""
-        return V.DoubleValue(self._unpack(8, '!d'))
+        return V.DoubleValue(self._unpack(8, b'!d'))
 
     def read_i16(self):
         """Reads a 16-bit integer."""
@@ -103,7 +103,7 @@ class BinaryProtocolReader(object):
 
     def read_i64(self):
         """Reads a 64-bit integer."""
-        return V.I64Value(self._unpack(8, '!q'))
+        return V.I64Value(self._unpack(8, b'!q'))
 
     def read_binary(self):
         """Reads a binary blob."""
@@ -233,25 +233,25 @@ class BinaryProtocolWriter(V.ValueVisitor):
         :param value:
             Value to pack.
         """
-        self.writer.write(struct.pack(str(spec), value))
+        self.writer.write(struct.pack(spec, value))
 
     def visit_bool(self, value):  # bool:1
         self.visit_byte(1 if value else 0)
 
     def visit_byte(self, value):  # byte:1
-        self._pack('!b', value)
+        self._pack(b'!b', value)
 
     def visit_double(self, value):  # double:8
-        self._pack('!d', value)
+        self._pack(b'!d', value)
 
     def visit_i16(self, value):  # i16:2
-        self._pack('!h', value)
+        self._pack(b'!h', value)
 
     def visit_i32(self, value):  # i32:4
-        self._pack('!i', value)
+        self._pack(b'!i', value)
 
     def visit_i64(self, value):  # i64:8
-        self._pack('!q', value)
+        self._pack(b'!q', value)
 
     def visit_binary(self, value):  # len:4 str:len
         self.visit_i32(len(value))
@@ -297,15 +297,18 @@ class BinaryProtocol(Protocol):
 
     __slots__ = ()
 
+    writer_class = BinaryProtocolWriter
+    reader_class = BinaryProtocolReader
+
     def serialize_value(self, value):
         buff = six.BytesIO()
-        writer = BinaryProtocolWriter(buff)
+        writer = self.writer_class(buff)
         writer.write(value)
         return buff.getvalue()
 
     def deserialize_value(self, typ, s):
         buff = six.BytesIO(s)
-        reader = BinaryProtocolReader(buff)
+        reader = self.reader_class(buff)
         return reader.read(typ)
 
 __all__ = ['BinaryProtocol']
