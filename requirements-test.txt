@@ -1,2 +1,3 @@
 doubles
 pytest
+pytest-cov
