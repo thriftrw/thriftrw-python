@@ -59,6 +59,12 @@ def test_compile_missing_requiredness(parse):
     )
 
 
+def test_compile_non_strict_missing_requiredness(parse):
+    struct_ast = parse('struct Foo { 1: string param }')
+
+    assert StructTypeSpec.compile(struct_ast, require_requiredness=False)
+
+
 def test_compile_duplicate_fields(parse):
     struct_ast = parse(
         'struct Foo { 1: required string x; 2: optional i32 x }'

@@ -33,17 +33,25 @@ class Loader(object):
 
     __slots__ = ('parser', 'compiler', 'compiled_modules')
 
-    def __init__(self, protocol=None):
+    def __init__(self, protocol=None, strict=True):
         """Initialize a loader.
 
         :param thriftrw.protocol.Protocol protocol:
             The protocol to use to serialize and deserialize types. Defaults
             to the binary protocol.
+
+        :param strict:
+            When ``True`` this enforces that "required" or "optional" always be
+            specified for struct elements. This is desirable because Apache
+            Thrift generates different behaviors for elements without
+            "required" or "optional" depending on the language. Setting this to
+            ``False`` is only recommended for compatibility with existing
+            Thrift files.
         """
         protocol = BinaryProtocol()
 
         self.parser = Parser()
-        self.compiler = Compiler(protocol)
+        self.compiler = Compiler(protocol, strict=strict)
 
         # Mapping of absolute file path to compiled module. This is used to
         # cache the result of calling load() multiple times on the same file.
