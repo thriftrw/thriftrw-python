@@ -130,7 +130,7 @@ I64TypeSpec = PrimitiveTypeSpec('i64', TType.I64, I64Value, int)
 
 #: TypeSpec for binary blobs.
 BinaryTypeSpec = PrimitiveTypeSpec(
-    'binary', TType.BINARY, BinaryValue, six.binary_type
+    'binary', TType.BINARY, BinaryValue, (bytes, basestring)
 )
 
 #: TypeSpec for unicode data.

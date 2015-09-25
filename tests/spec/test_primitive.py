@@ -25,6 +25,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 
 from thriftrw.spec.primitive import TextTypeSpec
+from thriftrw.spec.primitive import BinaryTypeSpec
 from thriftrw.wire.value import BinaryValue
 
 
@@ -33,10 +34,24 @@ from thriftrw.wire.value import BinaryValue
     (b'\xe2\x98\x83', b'\xe2\x98\x83', u'☃'),
     (b'foo', b'foo', u'foo'),
 ])
-def test_text_round_trip(s, val, out):
+def test_text_round_trip_text(s, val, out):
     if out is None:
         out = s
 
     wire_val = TextTypeSpec.to_wire(s)
     assert wire_val == BinaryValue(val)
     assert TextTypeSpec.from_wire(wire_val) == out
+
+
+@pytest.mark.parametrize('s, val, out', [
+    (b'foo', b'foo', b'foo'),
+    ('foo', b'foo', b'foo'),
+    (u'foo', b'foo', b'foo'),
+])
+def test_text_round_trip_binary(s, val, out):
+    if out is None:
+        out = s
+
+    wire_val = BinaryTypeSpec.to_wire(s)
+    assert wire_val == BinaryValue(val)
+    assert BinaryTypeSpec.from_wire(wire_val) == out

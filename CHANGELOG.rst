@@ -4,7 +4,7 @@ Releases
 0.3.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Passing unicode values to binary fields no longer results in ``TypeError``.
 
 
 0.3.2 (2015-09-15)
