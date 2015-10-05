@@ -211,7 +211,10 @@ class FieldSpec(object):
         if not self.linked:
             self.linked = True
             if self.default_value is not None:
-                self.default_value = self.default_value.link(scope).surface
+                self.default_value = self.default_value.link(
+                    scope,
+                    self.spec
+                ).surface
             self.spec = self.spec.link(scope)
         return self
 
