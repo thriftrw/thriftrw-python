@@ -460,7 +460,7 @@ def struct_cls(struct_spec, scope):
         default = None
         if field.default_value is not None:
             if field.ttype_code == TType.BINARY:
-                default = bytes(field.default_value)
+                default = field.default_value.encode('utf-8')
             else:
                 default = field.default_value
 
