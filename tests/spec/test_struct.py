@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+import six
 
 from thriftrw.compile.exceptions import ThriftCompilerError
 from thriftrw.spec.struct import StructTypeSpec
@@ -245,6 +246,14 @@ def test_default_values(loads):
         (3, TType.BINARY, vbinary(b'world')),
         (4, TType.BINARY, vbinary(b'hello')),
     )
+
+
+def test_default_binary_value(loads):
+    Struct = loads('''struct Struct {
+        1: optional binary field = "";
+    }''').Struct
+
+    assert isinstance(Struct().field, six.binary_type)
 
 
 def test_constructor_behavior(loads):
