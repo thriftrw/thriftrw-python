@@ -34,15 +34,16 @@ class Generator(object):
     references to each other.
     """
 
-    __slots__ = ('scope', 'type_mapper')
+    __slots__ = ('scope', 'type_mapper', 'strict')
 
-    def __init__(self, scope):
+    def __init__(self, scope, strict=True):
         """Initialize the generator.
 
         :param thriftrw.compile.scope.Scope scope:
             Scope maintaining the current compilation state.
         """
         self.scope = scope
+        self.strict = strict
 
     def process(self, definition):
         """Process the given definition from the AST.
@@ -77,7 +78,10 @@ class Generator(object):
         self.scope.add_type_spec(enum.name, enum_spec, enum.lineno)
 
     def visit_struct(self, struct):
-        struct_spec = spec.StructTypeSpec.compile(struct)
+        struct_spec = spec.StructTypeSpec.compile(
+            struct,
+            require_requiredness=self.strict,
+        )
         self.scope.add_type_spec(struct_spec.name, struct_spec, struct.lineno)
 
     def visit_union(self, union):
