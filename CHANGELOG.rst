@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.3.3 (unreleased)
+0.3.3 (2015-10-05)
 ------------------
 
 - Default values for binary fields are no longer unicode.
