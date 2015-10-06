@@ -84,3 +84,15 @@ class TypeSpec(object):
     @abc.abstractmethod
     def link(self, scope):
         pass
+
+    @abc.abstractmethod
+    def validate(self, instance):
+        """Whether an instance this spec is valid.
+
+        :param instance:
+            An instance of the type described by this spec.
+
+        Raises a ``TypeError`` or ``ValueError`` if any fields have types that
+        do not match types specified by the Thrift definition.
+        """
+        raise NotImplementedError

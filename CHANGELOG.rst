@@ -1,10 +1,10 @@
 Releases
 ========
 
-0.3.4 (unreleased)
+0.4.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added a ``validate`` method to all ``Spec`` types.
 
 
 0.3.3 (2015-10-05)

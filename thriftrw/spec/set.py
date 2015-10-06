@@ -56,7 +56,7 @@ class SetTypeSpec(TypeSpec):
         return 'set<%s>' % self.vspec.name
 
     def to_wire(self, value):
-        check.instanceof_class(self, collections.Set, value)
+        self.validate(value)
         return SetValue(
             value_ttype=self.vspec.ttype_code,
             values=[self.vspec.to_wire(v) for v in value],
@@ -67,6 +67,11 @@ class SetTypeSpec(TypeSpec):
         return set(
             self.vspec.from_wire(v) for v in wire_value.values
         )
+
+    def validate(self, value):
+        check.instanceof_class(self, collections.Set, value)
+        for v in value:
+            self.vspec.validate(v)
 
     def __str__(self):
         return 'SetTypeSpec(vspec=%r)' % self.vspec

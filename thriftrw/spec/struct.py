@@ -136,7 +136,7 @@ class StructTypeSpec(TypeSpec):
         return cls(struct.name, fields)
 
     def to_wire(self, struct):
-        check.instanceof_surface(self, struct)
+        check.type_code_matches(self, wire_value)
         fields = []
 
         for field in self.fields:
@@ -166,6 +166,13 @@ class StructTypeSpec(TypeSpec):
         # positional argument is missing, we know that the request was
         # invalid.
         return self.surface(**kwargs)
+
+    def validate(self, instance):
+        for field in self.fields:
+            field_value = getattr(instance, field.name)
+            if field_value is None:
+                continue
+            field.spec.validate(field_value)
 
     def __str__(self):
         return 'StructTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)

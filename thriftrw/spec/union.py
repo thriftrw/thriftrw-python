@@ -135,7 +135,7 @@ class UnionTypeSpec(TypeSpec):
         return cls(union.name, fields)
 
     def to_wire(self, union):
-        check.instanceof_surface(self, union)
+        self.validate(union)
         fields = []
 
         for field in self.fields:
@@ -159,6 +159,14 @@ class UnionTypeSpec(TypeSpec):
         # positional argument is missing, we know that the request was
         # invalid.
         return self.surface(**kwargs)
+
+    def validate(self, value):
+        check.instanceof_surface(self, value)
+        for field in self.fields:
+            field_value = getattr(value, field.name)
+            if field_value is None:
+                continue
+            field.spec.validate(field_value)
 
     def __str__(self):
         return 'UnionTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)
