@@ -136,7 +136,7 @@ class StructTypeSpec(TypeSpec):
         return cls(struct.name, fields)
 
     def to_wire(self, struct):
-        check.type_code_matches(self, wire_value)
+        check.instanceof_surface(self, struct)
         fields = []
 
         for field in self.fields:
