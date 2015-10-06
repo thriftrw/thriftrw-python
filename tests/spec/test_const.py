@@ -29,6 +29,7 @@ from thriftrw.compile.exceptions import ThriftCompilerError
     'const i32 foo = "hello"',
     'const bool b = 1',
     'const string foo = 42',
+    'const binary foo = 42',
     'const list<string> foo = [1, 2, 3]',
     'const list<string> foo = {"foo": "bar"}',
     'const map<string, i32> foo = {"foo": "bar"}',

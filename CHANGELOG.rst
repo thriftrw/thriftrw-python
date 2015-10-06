@@ -4,7 +4,7 @@ Releases
 0.3.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Default values for binary fields are no longer unicode.
 
 
 0.3.2 (2015-09-15)

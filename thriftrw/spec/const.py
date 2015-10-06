@@ -20,6 +20,8 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import six
+
 from thriftrw.compile.exceptions import ThriftCompilerError
 
 from .spec_mapper import type_spec_or_ref
@@ -32,7 +34,13 @@ class ConstValuePrimitive(object):
     def __init__(self, value):
         self.surface = value
 
-    def link(self, scope):
+    def link(self, scope, type_spec):
+        if (
+            type_spec.name == 'binary' and
+            isinstance(self.surface, six.string_types)
+        ):
+            self.surface = self.surface.encode('utf-8')
+
         return self
 
 
@@ -45,11 +53,14 @@ class ContsValueMap(object):
         self.linked = False
         self.surface = None
 
-    def link(self, scope):
+    def link(self, scope, type_spec):
         if not self.linked:
             self.linked = True
             self.surface = {
-                k.link(scope).surface: v.link(scope).surface
+                k.link(
+                    scope,
+                    type_spec
+                ).surface: v.link(scope, type_spec).surface
                 for k, v in self.items.items()
             }
         return self
@@ -64,10 +75,12 @@ class ConstValueList(object):
         self.linked = False
         self.surface = None
 
-    def link(self, scope):
+    def link(self, scope, type_spec):
         if not self.linked:
             self.linked = True
-            self.surface = [v.link(scope).surface for v in self.values]
+            self.surface = [
+                v.link(scope, type_spec).surface for v in self.values
+            ]
         return self
 
 
@@ -79,7 +92,7 @@ class ConstValueReference(object):
         self.name = name
         self.lineno = lineno
 
-    def link(self, scope):
+    def link(self, scope, type_spec):
         return scope.resolve_const_spec(self.name, self.lineno)
 
     def __str__(self):
@@ -151,7 +164,7 @@ class ConstSpec(object):
         if not self.linked:
             self.linked = True
             self.type_spec = self.type_spec.link(scope)
-            self.value_spec = self.value_spec.link(scope)
+            self.value_spec = self.value_spec.link(scope, self.type_spec)
             value = self.value_spec.surface
             try:
                 self.type_spec.to_wire(value)
