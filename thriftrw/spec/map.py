@@ -86,7 +86,7 @@ class MapTypeSpec(TypeSpec):
 
     def validate(self, value):
         check.instanceof_class(self, collections.Mapping, value)
-        for k, v in value.iteritems():
+        for k, v in value.items():
             self.kspec.validate(k)
             self.vspec.validate(v)
 
