@@ -170,21 +170,35 @@ def test_load_simple(loads):
     assert SimpleStruct('hello', 42) != SimpleStruct('world', 42)
 
 
-def test_simple_to_wire(loads):
-    ToWireStruct = loads('''struct ToWireStruct {
+def test_simple_convert(loads):
+    SimpleStruct = loads('''struct SimpleStruct {
         1: required string a;
         2: optional binary b
-    }''').ToWireStruct
-    spec = ToWireStruct.type_spec
+    }''').SimpleStruct
+    spec = SimpleStruct.type_spec
 
-    assert spec.to_wire(ToWireStruct('hello', b'world')) == vstruct(
-        (1, TType.BINARY, vbinary(b'hello')),
-        (2, TType.BINARY, vbinary(b'world')),
-    )
+    cases = [
+        (
+            SimpleStruct('hello', b'world'),
+            vstruct(
+                (1, TType.BINARY, vbinary(b'hello')),
+                (2, TType.BINARY, vbinary(b'world')),
+            ),
+            {'a': 'hello', 'b': b'world'},
+        ),
+        (
+            SimpleStruct('hello'),
+            vstruct((1, TType.BINARY, vbinary(b'hello'))),
+            {'a': 'hello'},
+        ),
+    ]
 
-    assert spec.to_wire(ToWireStruct('hello')) == vstruct(
-        (1, TType.BINARY, vbinary(b'hello'))
-    )
+    for value, wire_value, prim_value in cases:
+        assert spec.to_wire(value) == wire_value
+        assert value.to_primitive() == prim_value
+
+        assert spec.from_wire(wire_value) == value
+        assert SimpleStruct.from_primitive(prim_value) == value
 
 
 def test_required_field_missing(loads):
@@ -240,18 +254,43 @@ def test_default_values(loads):
     # )
     #
 
-    assert spec.to_wire(Struct('hello')) == vstruct(
-        (2, TType.I64, vi64(42)),
-        (3, TType.BINARY, vbinary(b'')),
-        (4, TType.BINARY, vbinary(b'hello')),
-    )
+    cases = [
+        (
+            Struct('hello'),
+            vstruct(
+                (2, TType.I64, vi64(42)),
+                (3, TType.BINARY, vbinary(b'')),
+                (4, TType.BINARY, vbinary(b'hello')),
+            ),
+            {
+                'optionalFieldWithDefault': 42,
+                'requiredFieldWithDefault': '',
+                'requiredField': 'hello',
+            },
+        ),
+        (
+            Struct('hello', 10, 100, u'world'),
+            vstruct(
+                (1, TType.I32, vi32(10)),
+                (2, TType.I64, vi64(100)),
+                (3, TType.BINARY, vbinary(b'world')),
+                (4, TType.BINARY, vbinary(b'hello')),
+            ),
+            {
+                'optionalField': 10,
+                'optionalFieldWithDefault': 100,
+                'requiredFieldWithDefault': 'world',
+                'requiredField': 'hello',
+            },
+        )
+    ]
 
-    assert spec.to_wire(Struct('hello', 10, 100, u'world')) == vstruct(
-        (1, TType.I32, vi32(10)),
-        (2, TType.I64, vi64(100)),
-        (3, TType.BINARY, vbinary(b'world')),
-        (4, TType.BINARY, vbinary(b'hello')),
-    )
+    for value, wire_value, prim_value in cases:
+        assert spec.to_wire(value) == wire_value
+        assert value.to_primitive() == prim_value
+
+        assert spec.from_wire(wire_value) == value
+        assert Struct.from_primitive(prim_value) == value
 
 
 def test_default_binary_value(loads):
@@ -316,4 +355,19 @@ def test_self_referential(loads):
         )),
     )
 
+    assert c.to_primitive() == {
+        'value': 1,
+        'next': {
+            'value': 2,
+            'next': {
+                'value': 3,
+                'next': {
+                    'value': 4,
+                    'next': {'value': 5},
+                },
+            },
+        },
+    }
+
     assert spec.from_wire(spec.to_wire(c)) == c
+    assert Cons.from_primitive(c.to_primitive()) == c

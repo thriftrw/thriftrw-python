@@ -40,3 +40,15 @@ def test_text_round_trip(s, val, out):
     wire_val = TextTypeSpec.to_wire(s)
     assert wire_val == BinaryValue(val)
     assert TextTypeSpec.from_wire(wire_val) == out
+
+
+@pytest.mark.parametrize('s, prim_s, out_s', [
+    (u'☃', u'☃', None),
+    (b'\xe2\x98\x83', u'☃', u'☃'),
+])
+def test_text_primitive(s, prim_s, out_s):
+    if out_s is None:
+        out_s = s
+
+    assert TextTypeSpec.to_primitive(s) == prim_s
+    assert TextTypeSpec.from_primitive(prim_s) == out_s
