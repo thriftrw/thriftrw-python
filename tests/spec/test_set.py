@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+from itertools import permutations
 
 from thriftrw.idl import Parser
 from thriftrw.spec import primitive as prim_spec
@@ -65,3 +66,12 @@ def test_link(parse, scope):
         )
     )
     assert value == spec.from_wire(spec.to_wire(value))
+
+
+def test_primitive(parse, scope):
+    ast = parse('set<i32>')
+    spec = type_spec_or_ref(ast).link(scope)
+
+    prim_value = spec.to_primitive(set([1, 2, 3]))
+    assert any(prim_value == list(xs) for xs in permutations([1, 2, 3]))
+    assert spec.from_primitive(prim_value) == set([1, 2, 3])

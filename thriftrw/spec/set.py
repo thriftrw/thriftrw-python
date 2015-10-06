@@ -62,11 +62,17 @@ class SetTypeSpec(TypeSpec):
             values=[self.vspec.to_wire(v) for v in value],
         )
 
+    def to_primitive(self, value):
+        return [self.vspec.to_primitive(x) for x in value]
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return set(
             self.vspec.from_wire(v) for v in wire_value.values
         )
+
+    def from_primitive(self, prim_value):
+        return set(self.vspec.from_primitive(v) for v in prim_value)
 
     def __str__(self):
         return 'SetTypeSpec(vspec=%r)' % self.vspec
