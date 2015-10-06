@@ -5,6 +5,9 @@ Releases
 ------------------
 
 - Added an option to disable "required/optional" strictness on structs.
+- Added ``to_primitive`` and ``from_primitive`` methods to generated types to
+  allow converting struct, union, and exception values to and from primitive
+  representations.
 
 
 0.3.3 (2015-10-05)

@@ -77,11 +77,23 @@ class MapTypeSpec(TypeSpec):
             ]
         )
 
+    def to_primitive(self, value):
+        return {
+            self.kspec.to_primitive(k): self.vspec.to_primitive(v)
+            for k, v in value.items()
+        }
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return {
             self.kspec.from_wire(k): self.vspec.from_wire(v)
             for k, v in wire_value.pairs
+        }
+
+    def from_primitive(self, prim_value):
+        return {
+            self.kspec.from_primitive(k): self.vspec.from_primitive(v)
+            for k, v in prim_value.items()
         }
 
     def __str__(self):

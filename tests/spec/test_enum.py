@@ -116,6 +116,10 @@ def test_round_trip(loads):
     assert spec.from_wire(spec.to_wire(Enum.B)) == Enum.B
     assert spec.from_wire(spec.to_wire(Enum.C)) == Enum.C
 
+    assert spec.from_primitive(spec.to_primitive(Enum.A)) == Enum.A
+    assert spec.from_primitive(spec.to_primitive(Enum.B)) == Enum.B
+    assert spec.from_primitive(spec.to_primitive(Enum.C)) == Enum.C
+
 
 def test_enums_are_constants(loads):
     mod = loads('''
