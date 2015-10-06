@@ -129,9 +129,15 @@ class EnumTypeSpec(TypeSpec):
             )
         return I32Value(value)
 
+    def to_primitive(self, value):
+        return value
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
+
+    def from_primitive(self, prim_value):
+        return prim_value
 
     @classmethod
     def compile(cls, enum):

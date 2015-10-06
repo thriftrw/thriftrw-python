@@ -69,3 +69,25 @@ def test_link(parse, scope):
         )
     )
     assert value == spec.from_wire(spec.to_wire(value))
+
+
+def test_primitive(parse, scope, loads):
+    Foo = loads('struct Foo { 1: required string bar }').Foo
+    scope.add_type_spec('Foo', Foo.type_spec, 1)
+
+    spec = type_spec_or_ref(parse('map<string, Foo>')).link(scope)
+
+    value = {
+        'a': Foo('1'),
+        'b': Foo('2'),
+        'c': Foo('3'),
+    }
+
+    prim_value = {
+        'a': {'bar': '1'},
+        'b': {'bar': '2'},
+        'c': {'bar': '3'},
+    }
+
+    assert spec.to_primitive(value) == prim_value
+    assert spec.from_primitive(prim_value) == value

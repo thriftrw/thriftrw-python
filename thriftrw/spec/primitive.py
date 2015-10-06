@@ -68,9 +68,15 @@ class PrimitiveTypeSpec(TypeSpec):
         # TODO check bounds for numeric values.
         return self.value_cls(value)
 
+    def to_primitive(self, value):
+        return value
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
+
+    def from_primitive(self, prim_value):
+        return prim_value
 
     def link(self, scope):
         return self
@@ -79,6 +85,9 @@ class PrimitiveTypeSpec(TypeSpec):
         return 'PrimitiveType(%r, %s)' % (self.code, self.value_cls)
 
     __repr__ = __str__
+
+
+# TODO _BinaryTypeSpec
 
 
 class _TextTypeSpec(TypeSpec):
@@ -102,9 +111,21 @@ class _TextTypeSpec(TypeSpec):
             )
         return BinaryValue(value)
 
+    def to_primitive(self, value):
+        if isinstance(value, six.binary_type):
+            value = value.decode('utf-8')
+        elif not isinstance(value, six.text_type):
+            raise TypeError(
+                'Cannot convert %r into a "string".' % (value,)
+            )
+        return value
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value.decode('utf-8')
+
+    def from_primitive(self, prim_value):
+        return prim_value
 
     def link(self, scope):
         return self

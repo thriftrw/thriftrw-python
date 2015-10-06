@@ -1,10 +1,12 @@
 Releases
 ========
 
-0.3.4 (unreleased)
+0.4.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add ``to_primitive`` and ``from_primitive`` to generated types to allow
+  converting structs, unions, and exceptions to and from primitive
+  representations of their values.
 
 
 0.3.3 (2015-10-05)
