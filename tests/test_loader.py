@@ -24,6 +24,7 @@ from textwrap import dedent
 
 import pytest
 
+from thriftrw.compile.exceptions import ThriftCompilerError
 from thriftrw.loader import Loader
 
 
@@ -36,6 +37,36 @@ def test_load_from_file(tmpdir):
     ''')
 
     my_service = Loader().load(str(tmpdir.join('my_service.thrift')))
+    my_service.Foo(b='b', a='a')
+
+
+def test_load_from_file_missing_requiredness(tmpdir):
+    tmpdir.join('my_service.thrift').write('''
+        struct Foo {
+            1: required string a
+            2: string b
+        }
+    ''')
+
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        Loader().load(str(tmpdir.join('my_service.thrift')))
+
+    assert (
+        '"b" of "Foo" on line 4 does not explicitly specify requiredness.'
+        in str(exc_info)
+    )
+
+
+def test_load_from_file_non_strict_missing_requiredness(tmpdir):
+    tmpdir.join('my_service.thrift').write('''
+        struct Foo {
+            1: required string a
+            2: string b
+        }
+    ''')
+
+    loader = Loader(strict=False)
+    my_service = loader.load(str(tmpdir.join('my_service.thrift')))
     my_service.Foo(b='b', a='a')
 
 
