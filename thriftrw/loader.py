@@ -41,12 +41,12 @@ class Loader(object):
             to the binary protocol.
 
         :param strict:
-            When ``True`` this enforces that "required" or "optional" always be
-            specified for struct elements. This is desirable because Apache
-            Thrift generates different behaviors for elements without
-            "required" or "optional" depending on the language. Setting this to
-            ``False`` is only recommended for compatibility with existing
-            Thrift files.
+            When ``True`` (the default behavior) this enforces that "required"
+            or "optional" always be specified for struct elements. This is
+            desirable because Apache Thrift generates different behaviors for
+            elements without "required" or "optional" depending on the
+            language. Setting this to ``False`` is only recommended for
+            compatibility with existing Thrift files.
         """
         protocol = BinaryProtocol()
 
