@@ -64,7 +64,7 @@ class PrimitiveTypeSpec(TypeSpec):
         return self.code
 
     def to_wire(self, value):
-        check.instanceof_surface(self, value)
+        self.validate(value)
         # TODO check bounds for numeric values.
         return self.value_cls(value)
 
@@ -74,6 +74,9 @@ class PrimitiveTypeSpec(TypeSpec):
 
     def link(self, scope):
         return self
+
+    def validate(self, instance):
+        check.instanceof_surface(self, instance)
 
     def __str__(self):
         return 'PrimitiveType(%r, %s)' % (self.code, self.value_cls)
@@ -108,6 +111,10 @@ class _TextTypeSpec(TypeSpec):
 
     def link(self, scope):
         return self
+
+    def validate(self, instance):
+        if not isinstance(instance, six.text_type):
+            raise TypeError()
 
 
 #: TypeSpec for boolean values.

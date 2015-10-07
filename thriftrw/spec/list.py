@@ -71,6 +71,11 @@ class ListTypeSpec(TypeSpec):
         check.type_code_matches(self, wire_value)
         return [self.vspec.from_wire(v) for v in wire_value.values]
 
+    def validate(self, instance):
+        check.instanceof_class(self, collections.Sequence, instance)
+        for v in instance:
+            self.vspec.validate(v)
+
     def __str__(self):
         return 'ListTypeSpec(vspec=%r)' % self.vspec
 

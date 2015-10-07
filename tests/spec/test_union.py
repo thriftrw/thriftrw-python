@@ -170,3 +170,20 @@ def test_constructor(loads):
     with pytest.raises(TypeError) as exc_info:
         Foo(s='foo', i=42)
     assert 'received multiple values' in str(exc_info)
+
+
+def test_validate(loads):
+    Foo = loads('''union Foo {
+        1: string s
+        2: i32 i
+    }''').Foo
+
+    Foo.type_spec.validate(Foo(s='a'))
+
+    Foo.type_spec.validate(Foo(i=1))
+
+    with pytest.raises(TypeError):
+        Foo.type_spec.validate(Foo(i='a'))
+
+    with pytest.raises(TypeError):
+        Foo.type_spec.validate(Foo(s=1))

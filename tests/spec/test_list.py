@@ -59,3 +59,14 @@ def test_link(parse, scope):
         TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
     )
     assert value == spec.from_wire(spec.to_wire(value))
+
+
+def test_validate():
+    spec = ListTypeSpec(prim_spec.BinaryTypeSpec)
+    spec.validate([b'a'])
+
+    with pytest.raises(TypeError):
+        spec.validate([u'a'])
+
+    with pytest.raises(TypeError):
+        spec.validate('a')

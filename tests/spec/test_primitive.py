@@ -40,3 +40,11 @@ def test_text_round_trip(s, val, out):
     wire_val = TextTypeSpec.to_wire(s)
     assert wire_val == BinaryValue(val)
     assert TextTypeSpec.from_wire(wire_val) == out
+
+
+def test_validate():
+    spec = TextTypeSpec
+    spec.validate('foo')
+
+    with pytest.raises(TypeError):
+        spec.validate(1)
