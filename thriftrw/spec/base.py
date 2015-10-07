@@ -116,7 +116,6 @@ class TypeSpec(object):
             A value matching this TypeSpec.
         """
 
-
     @abc.abstractmethod
     def validate(self, instance):
         """Whether an instance of this spec is valid.
