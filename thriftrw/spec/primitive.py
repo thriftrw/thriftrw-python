@@ -75,8 +75,8 @@ class PrimitiveTypeSpec(TypeSpec):
     def link(self, scope):
         return self
 
-    def validate(self, value):
-        check.instanceof_surface(self, value)
+    def validate(self, instance):
+        check.instanceof_surface(self, instance)
 
     def __str__(self):
         return 'PrimitiveType(%r, %s)' % (self.code, self.value_cls)
@@ -112,8 +112,8 @@ class _TextTypeSpec(TypeSpec):
     def link(self, scope):
         return self
 
-    def validate(self, value):
-        if not isinstance(value, six.text_type):
+    def validate(self, instance):
+        if not isinstance(instance, six.text_type):
             raise TypeError()
 
 

@@ -65,3 +65,15 @@ def test_link(parse, scope):
         )
     )
     assert value == spec.from_wire(spec.to_wire(value))
+
+
+def test_validate():
+    spec = SetTypeSpec(prim_spec.TextTypeSpec)
+
+    spec.validate(set(['a']))
+
+    with pytest.raises(TypeError):
+        spec.validate(set([1]))
+
+    with pytest.raises(TypeError):
+        spec.validate(1)

@@ -130,10 +130,10 @@ class EnumTypeSpec(TypeSpec):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def validate(self, value):
-        if value not in self.values_to_names:
+    def validate(self, instance):
+        if instance not in self.values_to_names:
             raise ValueError(
-                '%r is not a valid value for enum "%s"' % (value, self.name)
+                '%r is not a valid value for enum "%s"' % (instance, self.name)
             )
 
     @classmethod

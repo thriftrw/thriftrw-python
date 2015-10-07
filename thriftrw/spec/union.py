@@ -135,7 +135,7 @@ class UnionTypeSpec(TypeSpec):
         return cls(union.name, fields)
 
     def to_wire(self, union):
-        self.validate(union)
+        check.instanceof_surface(self, union)
         fields = []
 
         for field in self.fields:
@@ -160,10 +160,10 @@ class UnionTypeSpec(TypeSpec):
         # invalid.
         return self.surface(**kwargs)
 
-    def validate(self, value):
-        check.instanceof_surface(self, value)
+    def validate(self, instance):
+        check.instanceof_surface(self, instance)
         for field in self.fields:
-            field_value = getattr(value, field.name)
+            field_value = getattr(instance, field.name)
             if field_value is None:
                 continue
             field.spec.validate(field_value)

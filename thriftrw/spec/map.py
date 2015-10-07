@@ -67,7 +67,7 @@ class MapTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
-        self.validate(value)
+        check.instanceof_class(self, collections.Mapping, value)
         return MapValue(
             key_ttype=self.kspec.ttype_code,
             value_ttype=self.vspec.ttype_code,
@@ -84,9 +84,9 @@ class MapTypeSpec(TypeSpec):
             for k, v in wire_value.pairs
         }
 
-    def validate(self, value):
-        check.instanceof_class(self, collections.Mapping, value)
-        for k, v in value.items():
+    def validate(self, instance):
+        check.instanceof_class(self, collections.Mapping, instance)
+        for k, v in instance.items():
             self.kspec.validate(k)
             self.vspec.validate(v)
 
