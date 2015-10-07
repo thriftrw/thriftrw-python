@@ -36,15 +36,16 @@ class Compiler(object):
 
     LINKERS = [ConstSpecLinker, TypeSpecLinker, ServiceSpecLinker]
 
-    __slots__ = ('protocol',)
+    __slots__ = ('protocol', 'strict')
 
-    def __init__(self, protocol):
+    def __init__(self, protocol, strict=True):
         """Initialize the compiler.
 
         :param thriftrw.protocol.Protocol protocol:
            The protocol ot use to serialize and deserialize values.
         """
         self.protocol = protocol
+        self.strict = strict
 
     def compile(self, name, program):
         """Compile the given parsed Thrift document into a Python module.
@@ -99,7 +100,7 @@ class Compiler(object):
         for header in program.headers:
             header.apply(self)
 
-        generator = Generator(scope)
+        generator = Generator(scope, strict=self.strict)
         for definition in program.definitions:
             generator.process(definition)
 

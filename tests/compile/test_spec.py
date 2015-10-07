@@ -29,7 +29,7 @@ from thriftrw.wire import TType
 from ..util.value import *  # noqa
 
 
-@pytest.mark.parametrize('t_spec, value, obj', [
+@pytest.mark.parametrize('args', [
     (spec.BoolTypeSpec, vbool(True), True),
     (spec.BoolTypeSpec, vbool(False), False),
 
@@ -49,7 +49,10 @@ from ..util.value import *  # noqa
      vlist(TType.BYTE, vbyte(1), vbyte(2), vbyte(3)),
      [1, 2, 3]),
 ])
-def test_primitive_wire_conversion(t_spec, value, obj):
+def test_primitive_wire_conversion(args):
+    # workaround for pytest-dev/pytest#1086 until pytest 2.8.2 is released.
+    t_spec, value, obj = args
+
     assert value == t_spec.to_wire(obj)
     assert obj == t_spec.from_wire(value)
 
