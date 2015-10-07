@@ -115,6 +115,8 @@ def test_load_empty(loads):
     spec = Foo.type_spec
 
     assert spec.to_wire(Foo()) == vstruct()
+    assert Foo().to_primitive() == {}
+    assert Foo.from_primitive({}) == Foo()
 
 
 def test_load(loads):
@@ -129,23 +131,48 @@ def test_load(loads):
     bfoo = Foo(b=b'foo')
     sfoo = Foo(s='bar')
     ifoo = Foo(i=42)
-
-    assert spec.to_wire(bfoo) == vstruct((1, TType.BINARY, vbinary(b'foo')))
-    assert spec.to_wire(sfoo) == vstruct((2, TType.BINARY, vbinary(b'bar')))
-    assert spec.to_wire(ifoo) == vstruct((3, TType.I32, vi32(42)))
-
     lfoo = Foo(l=[bfoo, sfoo, ifoo])
 
-    assert spec.to_wire(lfoo) == vstruct(
-        (4, TType.LIST, vlist(
-            TType.STRUCT,
+    cases = [
+        (
+            bfoo,
             vstruct((1, TType.BINARY, vbinary(b'foo'))),
+            {'b': b'foo'}
+        ),
+        (
+            sfoo,
             vstruct((2, TType.BINARY, vbinary(b'bar'))),
+            {'s': u'bar'},
+        ),
+        (
+            ifoo,
             vstruct((3, TType.I32, vi32(42))),
-        ))
-    )
+            {'i': 42},
+        ),
+        (
+            lfoo,
+            vstruct(
+                (4, TType.LIST, vlist(
+                    TType.STRUCT,
+                    vstruct((1, TType.BINARY, vbinary(b'foo'))),
+                    vstruct((2, TType.BINARY, vbinary(b'bar'))),
+                    vstruct((3, TType.I32, vi32(42))),
+                ))
+            ),
+            {'l': [
+                {'b': b'foo'},
+                {'s': u'bar'},
+                {'i': 42},
+            ]},
+        )
+    ]
 
-    assert lfoo == spec.from_wire(spec.to_wire(lfoo))
+    for value, wire_value, prim_value in cases:
+        assert spec.to_wire(value) == wire_value
+        assert spec.from_wire(wire_value) == value
+
+        assert value.to_primitive() == prim_value
+        assert Foo.from_primitive(prim_value) == value
 
 
 def test_constructor(loads):

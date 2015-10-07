@@ -265,6 +265,82 @@ Constants are made available as-is in the generated module::
 
     LAST_UPDATED = '2015-08-28'
 
+Primitive representations
+-------------------------
+
+.. versionadded:: 0.4
+
+It is sometimes required to convert values of generated types into primitive
+representations of themselves. This may be required so that we can pass the
+value to a serialization library or just to provide a readable reprsentation of
+the value. ``thriftrw`` provides the ``to_primitive`` and ``from_primitive``
+methods on generated types for ``struct``, ``union``, and ``exception`` types
+to do just that.
+
+.. py:method:: to_primitive(self)
+
+    Converts ``self`` into a dictionary mapping field names of the struct,
+    union, or exception, to primitive representations of the field values.
+    Fields with ``None`` values are skipped.
+
+.. py:classmethod:: from_primitive(cls, value)
+
+    Reads a primitive representation of a value of this class. Unrecognized
+    fields are ignored.
+
+For example, given::
+
+
+    struct User {
+        1: required string name
+        2: optional string email
+        3: required bool isActive = true
+    }
+
+We have,
+
+.. code-block:: python
+
+    john = User(name='John Smith', email='john@example.com')
+    assert john.to_primitive() == {
+        'name': 'John Smith',
+        'email': 'john@example.com',
+        'isActive': True,
+    }
+
+    jane = User(
+        name='Jane Smith',
+        email='jane@example.com',
+        isActive=True,
+    )
+    assert jane == User.from_primitive({
+        'name': 'Jane Smith',
+        'email': 'jane@example.com',
+    })
+
+Primitive representations of values are composed of ``bool``, ``bytes``,
+``float``, ``str`` (``unicode`` in Python < 3), ``int``, ``long``, ``dict``,
+and ``list``. The Thrift types map to primitive types like so:
+
+=============   ==============
+Thrift Type     Primitive Type
+=============   ==============
+``bool``        ``bool``
+``byte``        ``int``
+``i16``         ``int``
+``i32``         ``int``
+``i64``         ``long``
+``double``      ``float``
+``string``      ``str`` (``unicode`` in Python < 3)
+``binary``      ``bytes``
+``list``        ``list``
+``map``         ``dict``
+``set``         ``list``
+``struct``      ``dict``
+``union``       ``dict``
+``exception``   ``dict``
+=============   ==============
+
 Differences from Apache Thrift
 ------------------------------
 

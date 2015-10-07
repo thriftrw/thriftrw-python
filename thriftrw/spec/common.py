@@ -55,3 +55,22 @@ def fields_str(cls_name, field_list, include_none=True):
 
         return "%s(%r)" % (cls_name, fields)
     return __str__
+
+
+def to_primitive_method(type_spec):
+    """Generates the ``to_primitive`` method for types given the TypeSpec."""
+
+    def to_primitive(self):
+        return type_spec.to_primitive(self)
+
+    return to_primitive
+
+
+def from_primitive_classmethod():
+    """Generates the ``from_primitive`` classmethod for types."""
+
+    @classmethod
+    def from_primitive(cls, prim_value):
+        return cls.type_spec.from_primitive(prim_value)
+
+    return from_primitive

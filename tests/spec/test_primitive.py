@@ -28,18 +28,34 @@ from thriftrw.spec.primitive import TextTypeSpec
 from thriftrw.wire.value import BinaryValue
 
 
-@pytest.mark.parametrize('s, val, out', [
+@pytest.mark.parametrize('args', [
     (u'☃', b'\xe2\x98\x83', None),
     (b'\xe2\x98\x83', b'\xe2\x98\x83', u'☃'),
     (b'foo', b'foo', u'foo'),
 ])
-def test_text_round_trip(s, val, out):
+def test_text_round_trip(args):
+    # workaround for pytest-dev/pytest#1086 until pytest 2.8.2 is released.
+    s, val, out = args
     if out is None:
         out = s
 
     wire_val = TextTypeSpec.to_wire(s)
     assert wire_val == BinaryValue(val)
     assert TextTypeSpec.from_wire(wire_val) == out
+
+
+@pytest.mark.parametrize('args', [
+    (u'☃', u'☃', None),
+    (b'\xe2\x98\x83', u'☃', u'☃'),
+])
+def test_text_primitive(args):
+    # workaround for pytest-dev/pytest#1086 until pytest 2.8.2 is released.
+    s, prim_s, out_s = args
+    if out_s is None:
+        out_s = s
+
+    assert TextTypeSpec.to_primitive(s) == prim_s
+    assert TextTypeSpec.from_primitive(prim_s) == out_s
 
 
 def test_validate():

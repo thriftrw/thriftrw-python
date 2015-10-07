@@ -85,6 +85,37 @@ class TypeSpec(object):
     def link(self, scope):
         pass
 
+    def to_primitive(self, value):
+        """Converts a value matching this type spec into a primitive value.
+
+        A primitive value is a text, binary, integer, or float value, or a
+        list or dict of other primitive values.
+
+        .. versionadded:: 0.4
+
+        :param value:
+            Value matching this TypeSpec.
+        :returns:
+            A representation of that value using only primitive types, lists,
+            and maps.
+        """
+
+    @abc.abstractmethod
+    def from_primitive(self, prim_value):
+        """Converts a primitive value into a value of this type.
+
+        A primitive value is a text, binary, integer, or float value, or a
+        list or dict of other primitive values.
+
+        .. versionadded:: 0.4
+
+        :param prim_value:
+            A primitive value as produced by ``to_primitive``.
+        :returns:
+            A value matching this TypeSpec.
+        """
+
+
     @abc.abstractmethod
     def validate(self, instance):
         """Whether an instance of this spec is valid.

@@ -116,6 +116,10 @@ def test_round_trip(loads):
     assert spec.from_wire(spec.to_wire(Enum.B)) == Enum.B
     assert spec.from_wire(spec.to_wire(Enum.C)) == Enum.C
 
+    assert spec.from_primitive(spec.to_primitive(Enum.A)) == Enum.A
+    assert spec.from_primitive(spec.to_primitive(Enum.B)) == Enum.B
+    assert spec.from_primitive(spec.to_primitive(Enum.C)) == Enum.C
+
 
 def test_validate(loads):
     Enum = loads('enum ToWireEnum { A = 2, B = 3, C = -42 }').ToWireEnum

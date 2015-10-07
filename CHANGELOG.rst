@@ -4,6 +4,10 @@ Releases
 0.4.0 (unreleased)
 ------------------
 
+- Added an option to disable "required/optional" strictness on structs.
+- Added ``to_primitive`` and ``from_primitive`` methods to generated types to
+  allow converting struct, union, and exception values to and from primitive
+  representations.
 - Added a ``validate`` method to all ``TypeSpecs``.
 
 

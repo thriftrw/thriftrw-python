@@ -61,6 +61,28 @@ def test_link(parse, scope):
     assert value == spec.from_wire(spec.to_wire(value))
 
 
+def test_primitive(parse, scope, loads):
+    Foo = loads('struct Foo { 1: required i64 i }').Foo
+    scope.add_type_spec('Foo', Foo.type_spec, 1)
+
+    spec = type_spec_or_ref(parse('list<Foo>')).link(scope)
+
+    value = [
+        Foo(1234),
+        Foo(1234567890),
+        Foo(12345678901234567890),
+    ]
+
+    prim_value = [
+        {'i': 1234},
+        {'i': 1234567890},
+        {'i': 12345678901234567890},
+    ]
+
+    assert spec.to_primitive(value) == prim_value
+    assert spec.from_primitive(prim_value) == value
+
+
 def test_validate():
     spec = ListTypeSpec(prim_spec.BinaryTypeSpec)
     spec.validate([b'a'])

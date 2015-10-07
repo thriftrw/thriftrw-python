@@ -46,6 +46,25 @@ class UnionTypeSpec(TypeSpec):
         Accepts all fields of the unions as keyword arguments but only one of
         them is allowed to be non-None. Positional arguments are not accepted.
 
+    .. py:method:: to_primitive(self)
+
+        Converts the union into a dictionary mapping field names to primitive
+        representation of field values.
+
+        Only the following types are used in primitive representations:
+        ``bool``, ``bytes``, ``float``, ``str`` (``unicode`` in Python < 3),
+        ``int``, ``long``, ``dict``, ``list``.
+
+        .. versionadded:: 0.4
+
+    .. py:classmethod:: from_primitive(cls, value)
+
+        Converts a dictionary holding a primitive representation of a value of
+        this type (as returned by ``to_primitive``) into an instance of this
+        class.
+
+        .. versionadded:: 0.4
+
     And obvious definitions of ``__str__`` and ``__eq__``.
 
     Given the definition,::
@@ -146,6 +165,15 @@ class UnionTypeSpec(TypeSpec):
 
         return StructValue(fields)
 
+    def to_primitive(self, union):
+        for field in self.fields:
+            value = getattr(union, field.name)
+            if value is None:
+                continue
+
+            return {field.name: field.spec.to_primitive(value)}
+        return {}
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         kwargs = {}
@@ -154,10 +182,21 @@ class UnionTypeSpec(TypeSpec):
             if field_value is None:
                 continue
             kwargs[field.name] = field.from_wire(field_value)
+            break
 
-        # TODO For the case where cls fails to instantiate because a required
-        # positional argument is missing, we know that the request was
-        # invalid.
+        return self.surface(**kwargs)
+
+    def from_primitive(self, prim_value):
+        # TODO validate is dict?
+        kwargs = {}
+
+        for field in self.fields:
+            field_value = prim_value.get(field.name)
+            if field_value is None:
+                continue
+            kwargs[field.name] = field.spec.from_primitive(field_value)
+            break
+
         return self.surface(**kwargs)
 
     def validate(self, instance):
@@ -274,6 +313,8 @@ def union_cls(union_spec, scope):
 
     union_dct = {}
     union_dct['type_spec'] = union_spec
+    union_dct['to_primitive'] = common.to_primitive_method(union_spec)
+    union_dct['from_primitive'] = common.from_primitive_classmethod()
     union_dct['__slots__'] = tuple(field_names)
     union_dct['__init__'] = union_init(
         union_spec.name, field_names, union_spec.allow_empty

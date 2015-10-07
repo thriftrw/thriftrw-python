@@ -50,6 +50,25 @@ class StructTypeSpec(TypeSpec):
         arguments come next. A TypeError will be raised if the required
         arguments for the struct are not filled with non-None values.
 
+    .. py:method:: to_primitive(self)
+
+        Converts the struct into a dictionary mapping field names to primitive
+        representation of field values.
+
+        Only the following types are used in primitive representations:
+        ``bool``, ``bytes``, ``float``, ``str`` (``unicode`` in Python < 3),
+        ``int``, ``long``, ``dict``, ``list``.
+
+        .. versionadded:: 0.4
+
+    .. py:classmethod:: from_primitive(cls, value)
+
+        Converts a dictionary holding a primitive representation of a value of
+        this type (as returned by ``to_primitive``) into an instance of this
+        class.
+
+        .. versionadded:: 0.4
+
     And obvious definitions of ``__str__`` and ``__eq__``.
 
     Given the definition,::
@@ -153,6 +172,17 @@ class StructTypeSpec(TypeSpec):
 
         return StructValue(fields)
 
+    def to_primitive(self, union):
+        prim = {}
+
+        for field in self.fields:
+            value = getattr(union, field.name)
+            if value is None:
+                continue
+
+            prim[field.name] = field.spec.to_primitive(value)
+        return prim
+
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         kwargs = {}
@@ -162,9 +192,18 @@ class StructTypeSpec(TypeSpec):
                 continue
             kwargs[field.name] = field.from_wire(field_value)
 
-        # TODO For the case where cls fails to instantiate because a required
-        # positional argument is missing, we know that the request was
-        # invalid.
+        return self.surface(**kwargs)
+
+    def from_primitive(self, prim_value):
+        # TODO validate is dict?
+        kwargs = {}
+
+        for field in self.fields:
+            field_value = prim_value.get(field.name)
+            if field_value is None:
+                continue
+            kwargs[field.name] = field.spec.from_primitive(field_value)
+
         return self.surface(**kwargs)
 
     def validate(self, instance):
@@ -483,6 +522,8 @@ def struct_cls(struct_spec, scope):
 
     struct_dct = {}
     struct_dct['type_spec'] = struct_spec
+    struct_dct['to_primitive'] = common.to_primitive_method(struct_spec)
+    struct_dct['from_primitive'] = common.from_primitive_classmethod()
     struct_dct['__slots__'] = tuple(slots)
     struct_dct['__init__'] = struct_init(
         struct_spec.name,
