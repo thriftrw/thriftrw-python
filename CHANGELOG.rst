@@ -4,7 +4,7 @@ Releases
 0.4.0 (unreleased)
 ------------------
 
-- Added a ``validate`` method to all ``Spec`` types.
+- Added a ``validate`` method to all ``TypeSpecs``.
 
 
 0.3.3 (2015-10-05)

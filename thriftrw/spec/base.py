@@ -87,7 +87,7 @@ class TypeSpec(object):
 
     @abc.abstractmethod
     def validate(self, instance):
-        """Whether an instance this spec is valid.
+        """Whether an instance of this spec is valid.
 
         :param instance:
             An instance of the type described by this spec.
