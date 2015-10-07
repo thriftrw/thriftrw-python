@@ -74,6 +74,11 @@ class SetTypeSpec(TypeSpec):
     def from_primitive(self, prim_value):
         return set(self.vspec.from_primitive(v) for v in prim_value)
 
+    def validate(self, instance):
+        check.instanceof_class(self, collections.Set, instance)
+        for v in instance:
+            self.vspec.validate(v)
+
     def __str__(self):
         return 'SetTypeSpec(vspec=%r)' % self.vspec
 

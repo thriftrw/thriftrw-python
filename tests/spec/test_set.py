@@ -75,3 +75,15 @@ def test_primitive(parse, scope):
     prim_value = spec.to_primitive(set([1, 2, 3]))
     assert any(prim_value == list(xs) for xs in permutations([1, 2, 3]))
     assert spec.from_primitive(prim_value) == set([1, 2, 3])
+
+
+def test_validate():
+    spec = SetTypeSpec(prim_spec.TextTypeSpec)
+
+    spec.validate(set(['a']))
+
+    with pytest.raises(TypeError):
+        spec.validate(set([1]))
+
+    with pytest.raises(TypeError):
+        spec.validate(1)

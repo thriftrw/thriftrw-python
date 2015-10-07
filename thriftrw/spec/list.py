@@ -77,6 +77,11 @@ class ListTypeSpec(TypeSpec):
     def from_primitive(self, prim_value):
         return [self.vspec.from_primitive(v) for v in prim_value]
 
+    def validate(self, instance):
+        check.instanceof_class(self, collections.Sequence, instance)
+        for v in instance:
+            self.vspec.validate(v)
+
     def __str__(self):
         return 'ListTypeSpec(vspec=%r)' % self.vspec
 

@@ -8,6 +8,7 @@ Releases
 - Added ``to_primitive`` and ``from_primitive`` methods to generated types to
   allow converting struct, union, and exception values to and from primitive
   representations.
+- Added a ``validate`` method to all ``TypeSpecs``.
 
 
 0.3.3 (2015-10-05)

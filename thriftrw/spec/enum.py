@@ -123,10 +123,7 @@ class EnumTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
-        if value not in self.values_to_names:
-            raise ValueError(
-                '%r is not a valid value for enum "%s"' % (value, self.name)
-            )
+        self.validate(value)
         return I32Value(value)
 
     def to_primitive(self, value):
@@ -138,6 +135,12 @@ class EnumTypeSpec(TypeSpec):
 
     def from_primitive(self, prim_value):
         return prim_value
+
+    def validate(self, instance):
+        if instance not in self.values_to_names:
+            raise ValueError(
+                '%r is not a valid value for enum "%s"' % (instance, self.name)
+            )
 
     @classmethod
     def compile(cls, enum):

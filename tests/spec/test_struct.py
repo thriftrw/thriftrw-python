@@ -330,6 +330,25 @@ def test_constructor_behavior(loads):
     assert 'require non-None values' in str(exc_info)
 
 
+def test_validate_with_nested_primitives(loads):
+    Struct = loads('''struct Struct {
+        1: optional list<string> strings;
+        2: optional map<string, i32> values
+    }''').Struct
+
+    with pytest.raises(TypeError):
+        s = Struct(strings=[1])
+        Struct.type_spec.validate(s)
+
+    with pytest.raises(TypeError):
+        Struct.type_spec.validate(
+            Struct(values={1: 1})
+        )
+
+    Struct.type_spec.validate(Struct(strings=['foo']))
+    Struct.type_spec.validate(Struct(values={'a': 1}))
+
+
 def test_self_referential(loads):
     Cons = loads('''struct Cons {
         1: required i32 value

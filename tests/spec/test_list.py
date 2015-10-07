@@ -81,3 +81,14 @@ def test_primitive(parse, scope, loads):
 
     assert spec.to_primitive(value) == prim_value
     assert spec.from_primitive(prim_value) == value
+
+
+def test_validate():
+    spec = ListTypeSpec(prim_spec.BinaryTypeSpec)
+    spec.validate([b'a'])
+
+    with pytest.raises(TypeError):
+        spec.validate([u'a'])
+
+    with pytest.raises(TypeError):
+        spec.validate('a')

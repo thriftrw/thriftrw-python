@@ -96,6 +96,12 @@ class MapTypeSpec(TypeSpec):
             for k, v in prim_value.items()
         }
 
+    def validate(self, instance):
+        check.instanceof_class(self, collections.Mapping, instance)
+        for k, v in instance.items():
+            self.kspec.validate(k)
+            self.vspec.validate(v)
+
     def __str__(self):
         return 'MapTypeSpec(kspec=%r, vspec=%r)' % (self.kspec, self.vspec)
 

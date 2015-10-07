@@ -56,3 +56,11 @@ def test_text_primitive(args):
 
     assert TextTypeSpec.to_primitive(s) == prim_s
     assert TextTypeSpec.from_primitive(prim_s) == out_s
+
+
+def test_validate():
+    spec = TextTypeSpec
+    spec.validate('foo')
+
+    with pytest.raises(TypeError):
+        spec.validate(1)

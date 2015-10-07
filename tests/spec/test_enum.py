@@ -121,6 +121,14 @@ def test_round_trip(loads):
     assert spec.from_primitive(spec.to_primitive(Enum.C)) == Enum.C
 
 
+def test_validate(loads):
+    Enum = loads('enum ToWireEnum { A = 2, B = 3, C = -42 }').ToWireEnum
+    Enum.type_spec.validate(2)
+
+    with pytest.raises(ValueError):
+        Enum.type_spec.validate(4)
+
+
 def test_enums_are_constants(loads):
     mod = loads('''
         struct Bar {

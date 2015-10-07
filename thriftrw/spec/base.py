@@ -115,3 +115,15 @@ class TypeSpec(object):
         :returns:
             A value matching this TypeSpec.
         """
+
+    @abc.abstractmethod
+    def validate(self, instance):
+        """Whether an instance of this spec is valid.
+
+        :param instance:
+            An instance of the type described by this spec.
+
+        Raises a ``TypeError`` or ``ValueError`` if any fields have types that
+        do not match types specified by the Thrift definition.
+        """
+        raise NotImplementedError
