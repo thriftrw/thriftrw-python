@@ -85,6 +85,7 @@ class TypeSpec(object):
     def link(self, scope):
         pass
 
+    @abc.abstractmethod
     def to_primitive(self, value):
         """Converts a value matching this type spec into a primitive value.
 
