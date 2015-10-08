@@ -209,7 +209,7 @@ def test_required_field_missing(loads):
     x.foo = None
 
     with pytest.raises(TypeError) as exc_info:
-        spec.to_wire(x)
+        spec.validate(x)
 
     assert 'Field "foo" of "X" is required' in str(exc_info)
 

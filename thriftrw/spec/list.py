@@ -61,7 +61,6 @@ class ListTypeSpec(TypeSpec):
         return 'list<%s>' % self.vspec.name
 
     def to_wire(self, value):
-        check.instanceof_class(self, collections.Sequence, value)
         return ListValue(
             value_ttype=self.vspec.ttype_code,
             values=[self.vspec.to_wire(v) for v in value],

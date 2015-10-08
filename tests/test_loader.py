@@ -98,7 +98,7 @@ def test_install_absolute(tmpdir, monkeypatch):
 
     thrift_file = module_root.join('service.thrift')
     thrift_file.write(
-        'struct Foo { 1: required string a 2: optional string b }'
+        'struct Foo { 1: required string a; 2: optional string b }'
     )
 
     py_file = module_root.join('bar.py')
@@ -114,7 +114,7 @@ def test_install_absolute(tmpdir, monkeypatch):
 
     from foo.bar.svc import Foo
 
-    assert Foo(a=1) == Foo(a=1)
+    assert Foo(a='bar') == Foo(a='bar')
 
 
 @pytest.mark.unimport('foo.service', 'foo.bar')

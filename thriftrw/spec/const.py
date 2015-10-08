@@ -167,7 +167,7 @@ class ConstSpec(object):
             self.value_spec = self.value_spec.link(scope, self.type_spec)
             value = self.value_spec.surface
             try:
-                self.type_spec.to_wire(value)
+                self.type_spec.validate(value)
             except TypeError as e:
                 raise ThriftCompilerError(
                     'Value for constant "%s" does not match its type "%s": %s'

@@ -123,7 +123,6 @@ class EnumTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
-        self.validate(value)
         return I32Value(value)
 
     def to_primitive(self, value):
