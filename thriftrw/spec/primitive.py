@@ -49,6 +49,10 @@ __all__ = [
 ]
 
 
+if six.PY3:
+    long = int  # No long in Py3.
+
+
 class PrimitiveTypeSpec(TypeSpec):
     """TypeSpec for primitive types."""
 
