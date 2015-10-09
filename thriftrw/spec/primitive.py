@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import six
+import numbers
 
 from thriftrw.wire import TType
 from thriftrw.wire.value import (
@@ -48,25 +49,45 @@ __all__ = [
 ]
 
 
+if six.PY3:
+    long = int  # No long in Py3.
+
+
 class PrimitiveTypeSpec(TypeSpec):
     """TypeSpec for primitive types."""
 
     __slots__ = ('name', 'code', 'value_cls', 'surface')
 
-    def __init__(self, name, code, value_cls, surface):
+    def __init__(self, name, code, value_cls, surface, cast=None):
+        """
+        :param name:
+            Name of the primitive type
+        :param code:
+            TType code used by this primitive
+        :param value_cls:
+            Constructor for wire value types
+        :param surface:
+            Values passed through this spec must be instances of this class or
+            an exception will be raised
+        :param cast:
+            If provided, this is used to cast values into a standard shape
+            before passing them to ``value_cls``
+        """
         self.name = name
         self.code = code
         self.value_cls = value_cls
         self.surface = surface
+
+        if cast is None:
+            cast = (lambda x: x)
+        self.cast = cast
 
     @property
     def ttype_code(self):
         return self.code
 
     def to_wire(self, value):
-        self.validate(value)
-        # TODO check bounds for numeric values.
-        return self.value_cls(value)
+        return self.value_cls(self.cast(value))
 
     def to_primitive(self, value):
         return value
@@ -76,24 +97,41 @@ class PrimitiveTypeSpec(TypeSpec):
         return wire_value.value
 
     def from_primitive(self, prim_value):
-        return prim_value
+        return self.cast(prim_value)
 
     def link(self, scope):
         return self
 
     def validate(self, instance):
+        # TODO check bounds for numeric values
         check.instanceof_surface(self, instance)
 
     def __str__(self):
-        return 'PrimitiveType(%r, %s)' % (self.code, self.value_cls)
+        return 'PrimitiveTypeSpec(%r, %s)' % (self.code, self.value_cls)
 
     __repr__ = __str__
 
 
-# TODO _BinaryTypeSpec
+class _TextualTypeSpec(TypeSpec):
+
+    ttype_code = TType.BINARY
+
+    def link(self, scope):
+        return self
+
+    def to_wire(self, value):
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+        return BinaryValue(value)
+
+    def validate(self, instance):
+        if not isinstance(instance, (six.binary_type, six.text_type)):
+            raise TypeError(
+                'Cannot convert %r into a "%s".' % (instance, self.name)
+            )
 
 
-class _TextTypeSpec(TypeSpec):
+class _TextTypeSpec(_TextualTypeSpec):
     """TypeSpec for the text type."""
 
     __slots__ = ()
@@ -101,26 +139,9 @@ class _TextTypeSpec(TypeSpec):
     name = 'string'
     surface = six.text_type
 
-    @property
-    def ttype_code(self):
-        return TType.BINARY
-
-    def to_wire(self, value):
-        if isinstance(value, six.text_type):
-            value = value.encode('utf-8')
-        elif not isinstance(value, six.binary_type):
-            raise TypeError(
-                'Cannot serialize %r into a "string".' % (value,)
-            )
-        return BinaryValue(value)
-
     def to_primitive(self, value):
         if isinstance(value, six.binary_type):
             value = value.decode('utf-8')
-        elif not isinstance(value, six.text_type):
-            raise TypeError(
-                'Cannot convert %r into a "string".' % (value,)
-            )
         return value
 
     def from_wire(self, wire_value):
@@ -128,38 +149,67 @@ class _TextTypeSpec(TypeSpec):
         return wire_value.value.decode('utf-8')
 
     def from_primitive(self, prim_value):
+        if isinstance(prim_value, six.binary_type):
+            prim_value = prim_value.decode('utf-8')
         return prim_value
 
-    def link(self, scope):
-        return self
 
-    def validate(self, instance):
-        if not isinstance(instance, six.text_type):
-            raise TypeError()
+class _BinaryTypeSpec(_TextualTypeSpec):
+
+    __slots__ = ()
+
+    name = 'binary'
+    surface = six.binary_type
+
+    def to_primitive(self, value):
+        if isinstance(value, six.text_type):
+            value = value.encode('utf-8')
+        return value
+
+    def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
+        return wire_value.value
+
+    def from_primitive(self, prim_value):
+        if isinstance(prim_value, six.text_type):
+            prim_value = prim_value.encode('utf-8')
+        return prim_value
 
 
 #: TypeSpec for boolean values.
 BoolTypeSpec = PrimitiveTypeSpec('bool', TType.BOOL, BoolValue, bool)
 
 #: TypeSpec for single-byte integers.
-ByteTypeSpec = PrimitiveTypeSpec('byte', TType.BYTE, ByteValue, int)
+ByteTypeSpec = PrimitiveTypeSpec(
+    'byte', TType.BYTE, ByteValue, numbers.Integral, int
+)
 
 #: TypeSpec for floating point numbers with 64 bits of precision.
-DoubleTypeSpec = PrimitiveTypeSpec('double', TType.DOUBLE, DoubleValue, float)
+DoubleTypeSpec = PrimitiveTypeSpec(
+    'double', TType.DOUBLE, DoubleValue, numbers.Number, float
+)
 
 #: TypeSpec for 16-bit integers.
-I16TypeSpec = PrimitiveTypeSpec('i16', TType.I16, I16Value, int)
+I16TypeSpec = PrimitiveTypeSpec(
+    'i16', TType.I16, I16Value, numbers.Integral, int
+)
 
 #: TypeSpec for 32-bit integers.
-I32TypeSpec = PrimitiveTypeSpec('i32', TType.I32, I32Value, int)
+I32TypeSpec = PrimitiveTypeSpec(
+    'i32', TType.I32, I32Value, numbers.Integral, int
+)
 
 #: TypeSpec for 64-bit integers.
-I64TypeSpec = PrimitiveTypeSpec('i64', TType.I64, I64Value, int)
+I64TypeSpec = PrimitiveTypeSpec(
+    'i64', TType.I64, I64Value, numbers.Integral, long
+)
 
 #: TypeSpec for binary blobs.
-BinaryTypeSpec = PrimitiveTypeSpec(
-    'binary', TType.BINARY, BinaryValue, six.binary_type
-)
+#:
+#: .. versionchanged:: 0.4.0
+#:
+#:     Automatically coerces text values into binary.
+BinaryTypeSpec = _BinaryTypeSpec()
 
 #: TypeSpec for unicode data.
 #:

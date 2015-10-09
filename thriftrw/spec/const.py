@@ -20,8 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import six
-
+from thriftrw.wire import TType
 from thriftrw.compile.exceptions import ThriftCompilerError
 
 from .spec_mapper import type_spec_or_ref
@@ -35,12 +34,10 @@ class ConstValuePrimitive(object):
         self.surface = value
 
     def link(self, scope, type_spec):
-        if (
-            type_spec.name == 'binary' and
-            isinstance(self.surface, six.string_types)
-        ):
-            self.surface = self.surface.encode('utf-8')
-
+        type_spec.validate(self.surface)
+        self.surface = type_spec.from_primitive(
+            type_spec.to_primitive(self.surface)
+        )
         return self
 
 
@@ -54,13 +51,15 @@ class ContsValueMap(object):
         self.surface = None
 
     def link(self, scope, type_spec):
+        if not type_spec.ttype_code == TType.MAP:
+            raise TypeError('Expected a %s but got a map.' % type_spec.name)
         if not self.linked:
             self.linked = True
             self.surface = {
                 k.link(
                     scope,
-                    type_spec
-                ).surface: v.link(scope, type_spec).surface
+                    type_spec.kspec
+                ).surface: v.link(scope, type_spec.vspec).surface
                 for k, v in self.items.items()
             }
         return self
@@ -76,10 +75,12 @@ class ConstValueList(object):
         self.surface = None
 
     def link(self, scope, type_spec):
+        if not type_spec.ttype_code == TType.LIST:
+            raise TypeError('Expected a %s but got a list.' % type_spec.name)
         if not self.linked:
             self.linked = True
             self.surface = [
-                v.link(scope, type_spec).surface for v in self.values
+                v.link(scope, type_spec.vspec).surface for v in self.values
             ]
         return self
 
@@ -164,10 +165,10 @@ class ConstSpec(object):
         if not self.linked:
             self.linked = True
             self.type_spec = self.type_spec.link(scope)
-            self.value_spec = self.value_spec.link(scope, self.type_spec)
-            value = self.value_spec.surface
             try:
-                self.type_spec.to_wire(value)
+                self.value_spec = self.value_spec.link(scope, self.type_spec)
+                value = self.value_spec.surface
+                self.type_spec.validate(value)
             except TypeError as e:
                 raise ThriftCompilerError(
                     'Value for constant "%s" does not match its type "%s": %s'

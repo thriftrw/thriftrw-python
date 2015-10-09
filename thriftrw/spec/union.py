@@ -154,7 +154,6 @@ class UnionTypeSpec(TypeSpec):
         return cls(union.name, fields)
 
     def to_wire(self, union):
-        check.instanceof_surface(self, union)
         fields = []
 
         for field in self.fields:
@@ -187,7 +186,6 @@ class UnionTypeSpec(TypeSpec):
         return self.surface(**kwargs)
 
     def from_primitive(self, prim_value):
-        # TODO validate is dict?
         kwargs = {}
 
         for field in self.fields:
@@ -201,11 +199,30 @@ class UnionTypeSpec(TypeSpec):
 
     def validate(self, instance):
         check.instanceof_surface(self, instance)
+
+        found = 0
+
         for field in self.fields:
             field_value = getattr(instance, field.name)
             if field_value is None:
                 continue
+
+            found += 1
             field.spec.validate(field_value)
+
+        if self.fields and not found and not self.allow_empty:
+            raise TypeError(
+                '%s did not receive any values. '
+                'Exactly one non-None value is required.'
+                % self.name
+            )
+
+        if found > 1:
+            raise TypeError(
+                '%s received %d values. '
+                'Exactly one non-None value must be given.'
+                % (self.name, found)
+            )
 
     def __str__(self):
         return 'UnionTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)
@@ -220,7 +237,7 @@ class UnionTypeSpec(TypeSpec):
         )
 
 
-def union_init(cls_name, fields, allow_empty):
+def union_init(cls_name, fields, allow_empty, validate):
     """Generates the ``__init__`` method for unions.
 
     :param cls_name:
@@ -273,6 +290,8 @@ def union_init(cls_name, fields, allow_empty):
                 % cls_name
             )
 
+        validate(self)
+
     return __init__
 
 
@@ -317,7 +336,10 @@ def union_cls(union_spec, scope):
     union_dct['from_primitive'] = common.from_primitive_classmethod()
     union_dct['__slots__'] = tuple(field_names)
     union_dct['__init__'] = union_init(
-        union_spec.name, field_names, union_spec.allow_empty
+        union_spec.name,
+        field_names,
+        union_spec.allow_empty,
+        union_spec.validate,
     )
     union_dct['__str__'] = common.fields_str(
         union_spec.name, field_names, False

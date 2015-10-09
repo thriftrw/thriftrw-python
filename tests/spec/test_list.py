@@ -83,12 +83,17 @@ def test_primitive(parse, scope, loads):
     assert spec.from_primitive(prim_value) == value
 
 
+def test_from_primitive_invalid(parse, scope):
+    spec = type_spec_or_ref(parse('list<i32>')).link(scope)
+
+    with pytest.raises(ValueError):
+        spec.from_primitive(['a', 'b', 'c'])
+
+
 def test_validate():
     spec = ListTypeSpec(prim_spec.BinaryTypeSpec)
     spec.validate([b'a'])
+    spec.validate([u'a'])
 
     with pytest.raises(TypeError):
-        spec.validate([u'a'])
-
-    with pytest.raises(TypeError):
-        spec.validate('a')
+        spec.validate(42)

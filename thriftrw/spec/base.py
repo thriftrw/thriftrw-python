@@ -62,11 +62,6 @@ class TypeSpec(object):
 
         :returns thriftrw.wire.Value:
             Wire representation of the value.
-        :raises TypeError:
-            If the value did not match the type expected by this TypeSpec.
-        :raises ValueError:
-            If the value matched the type but did not hold the correct set of
-            acceptable values.
         """
 
     @abc.abstractmethod
@@ -123,7 +118,10 @@ class TypeSpec(object):
         :param instance:
             An instance of the type described by this spec.
 
-        Raises a ``TypeError`` or ``ValueError`` if any fields have types that
-        do not match types specified by the Thrift definition.
+        :raises TypeError:
+            If the value did not match the type expected by this TypeSpec.
+        :raises ValueError:
+            If the value matched the type but did not hold the correct set of
+            acceptable values.
         """
         raise NotImplementedError

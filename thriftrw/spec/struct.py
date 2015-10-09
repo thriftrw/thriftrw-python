@@ -155,19 +155,12 @@ class StructTypeSpec(TypeSpec):
         return cls(struct.name, fields)
 
     def to_wire(self, struct):
-        check.instanceof_surface(self, struct)
         fields = []
 
         for field in self.fields:
             value = getattr(struct, field.name)
             if value is None:
-                if field.required:
-                    raise TypeError(
-                        'Field "%s" of "%s" is required. It cannot be None.'
-                        % (field.name, self.name)
-                    )
-                else:
-                    continue
+                continue
             fields.append(field.to_wire(value))
 
         return StructValue(fields)
@@ -195,7 +188,6 @@ class StructTypeSpec(TypeSpec):
         return self.surface(**kwargs)
 
     def from_primitive(self, prim_value):
-        # TODO validate is dict?
         kwargs = {}
 
         for field in self.fields:
@@ -207,10 +199,18 @@ class StructTypeSpec(TypeSpec):
         return self.surface(**kwargs)
 
     def validate(self, instance):
+        check.instanceof_surface(self, instance)
+
         for field in self.fields:
             field_value = getattr(instance, field.name)
             if field_value is None:
-                continue
+                if field.required:
+                    raise TypeError(
+                        'Field "%s" of "%s" is required. It cannot be None.'
+                        % (field.name, self.name)
+                    )
+                else:
+                    continue
             field.spec.validate(field_value)
 
     def __str__(self):
@@ -257,10 +257,22 @@ class FieldSpec(object):
         if not self.linked:
             self.linked = True
             if self.default_value is not None:
-                self.default_value = self.default_value.link(
-                    scope,
-                    self.spec
-                ).surface
+                try:
+                    self.default_value = self.default_value.link(
+                        scope,
+                        self.spec
+                    ).surface
+                except TypeError as e:
+                    raise ThriftCompilerError(
+                        'Default value for field "%s" does not match '
+                        'its type "%s": %s'
+                        % (self.name, self.spec.name, e)
+                    )
+                except ValueError as e:
+                    raise ThriftCompilerError(
+                        'Default value for field "%s" is not valid: %s'
+                        % (self.name, e)
+                    )
             self.spec = self.spec.link(scope)
         return self
 
@@ -339,7 +351,7 @@ class FieldSpec(object):
         )
 
 
-def struct_init(cls_name, field_names, field_defaults, base_cls):
+def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
     """Generate the ``__init__`` method for structs.
 
     ``field_names`` is a list or tuple of field names for the constructor
@@ -454,6 +466,10 @@ def struct_init(cls_name, field_names, field_defaults, base_cls):
                 'Field(s) %r require non-None values.' % list(unassigned)
             )
 
+        # TODO Instead of validating here, validation should be done as values
+        # are assigned.
+        validate(self)
+
     # TODO reasonable docstring
     return __init__
 
@@ -530,6 +546,7 @@ def struct_cls(struct_spec, scope):
         field_names,
         field_defaults,
         struct_spec.base_cls,
+        struct_spec.validate,
     )
     struct_dct['__str__'] = common.fields_str(struct_spec.name, field_names)
     struct_dct['__repr__'] = struct_dct['__str__']

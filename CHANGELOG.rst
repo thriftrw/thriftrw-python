@@ -9,6 +9,9 @@ Releases
   allow converting struct, union, and exception values to and from primitive
   representations.
 - Added a ``validate`` method to all ``TypeSpecs``.
+- Changed to perform validation during struct, union, or exception construction
+  instead of performing it during serialization.
+- Allow unicode to be passed for ``binary`` types.
 
 
 0.3.3 (2015-10-05)

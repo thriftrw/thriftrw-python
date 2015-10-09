@@ -67,7 +67,6 @@ class MapTypeSpec(TypeSpec):
         return self
 
     def to_wire(self, value):
-        check.instanceof_class(self, collections.Mapping, value)
         return MapValue(
             key_ttype=self.kspec.ttype_code,
             value_ttype=self.vspec.ttype_code,
