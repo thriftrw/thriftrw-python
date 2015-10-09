@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.4.0 (unreleased)
+0.4.0 (2015-10-09)
 ------------------
 
 - Added an option to disable "required/optional" strictness on structs.
