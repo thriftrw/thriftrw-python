@@ -40,7 +40,10 @@ def test_type_mismatch(expr, loads):
         loads(expr)
 
     assert 'Value for constant' in str(exc_info)
-    assert 'does not match its type' in str(exc_info)
+    assert (
+        'does not match its type' in str(exc_info) or
+        'is not valid' in str(exc_info)
+    )
 
 
 def test_link(loads):

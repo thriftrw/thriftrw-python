@@ -454,8 +454,8 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
                 'Field(s) %r require non-None values.' % list(unassigned)
             )
 
-        # TODO Instead of validating here, validation should be done while
-        # iterating through fields as values are assigned.
+        # TODO Instead of validating here, validation should be done as values
+        # are assigned.
         validate(self)
 
     # TODO reasonable docstring
