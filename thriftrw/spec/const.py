@@ -34,6 +34,7 @@ class ConstValuePrimitive(object):
         self.surface = value
 
     def link(self, scope, type_spec):
+        type_spec.validate(self.surface)
         self.surface = type_spec.from_primitive(
             type_spec.to_primitive(self.surface)
         )
@@ -51,7 +52,7 @@ class ContsValueMap(object):
 
     def link(self, scope, type_spec):
         if not type_spec.ttype_code == TType.MAP:
-            raise TypeError('Expected a map but got %r' % self.surface)
+            raise TypeError('Expected a %s but got a map.' % type_spec.name)
         if not self.linked:
             self.linked = True
             self.surface = {
@@ -75,7 +76,7 @@ class ConstValueList(object):
 
     def link(self, scope, type_spec):
         if not type_spec.ttype_code == TType.LIST:
-            raise TypeError('Expected a list but got %r' % self.surface)
+            raise TypeError('Expected a %s but got a list.' % type_spec.name)
         if not self.linked:
             self.linked = True
             self.surface = [

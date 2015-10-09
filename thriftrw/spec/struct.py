@@ -257,10 +257,22 @@ class FieldSpec(object):
         if not self.linked:
             self.linked = True
             if self.default_value is not None:
-                self.default_value = self.default_value.link(
-                    scope,
-                    self.spec
-                ).surface
+                try:
+                    self.default_value = self.default_value.link(
+                        scope,
+                        self.spec
+                    ).surface
+                except TypeError as e:
+                    raise ThriftCompilerError(
+                        'Default value for field "%s" does not match '
+                        'its type "%s": %s'
+                        % (self.name, self.spec.name, e)
+                    )
+                except ValueError as e:
+                    raise ThriftCompilerError(
+                        'Default value for field "%s" is not valid: %s'
+                        % (self.name, e)
+                    )
             self.spec = self.spec.link(scope)
         return self
 

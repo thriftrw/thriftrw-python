@@ -330,6 +330,15 @@ def test_constructor_behavior(loads):
     assert 'require non-None values' in str(exc_info)
 
 
+def test_constructor_behavior_with_nested_types(loads):
+    Struct = loads('''struct Struct {
+        1: optional list<string> strings;
+     }''').Struct
+
+    with pytest.raises(TypeError):
+        Struct(strings=[1])
+
+
 def test_validate_with_nested_primitives(loads):
     Struct = loads('''struct Struct {
         1: optional list<string> strings;
@@ -390,3 +399,19 @@ def test_self_referential(loads):
 
     assert spec.from_wire(spec.to_wire(c)) == c
     assert Cons.from_primitive(c.to_primitive()) == c
+
+
+@pytest.mark.parametrize('expr', [
+    'struct Foo { 1: optional list<string> foo = {} }',
+    'struct Bar { 1: optional list<string> foo = [42] }',
+    'struct Baz { 1: optional list<i32> foo = ["a", "b"] }',
+    'struct Foo { 1: required bool bar = 0 }',
+])
+def test_default_value_type_mismatches(loads, expr):
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        loads(expr)
+
+    assert (
+        'Default value for field' in str(exc_info) and
+        'does not match its type' in str(exc_info)
+    )
