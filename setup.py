@@ -11,6 +11,7 @@ try:
         extra = {
             'ext_modules': Cython.Build.cythonize([
                 'thriftrw/protocol/binary.py',
+                'thriftrw/wire/value.py',
                 'thriftrw/spec/*.py',
             ]),
         }
