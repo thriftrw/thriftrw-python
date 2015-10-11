@@ -8,6 +8,8 @@ env:
     - TOX_ENV=py34
     - TOX_ENV=pypy
     - TOX_ENV=pypy3
+    - TOX_ENV=cython
+    - TOX_ENV=cython3
     - TOX_ENV=cover
     - TOX_ENV=flake8
     - TOX_ENV=docs

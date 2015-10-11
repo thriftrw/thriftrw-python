@@ -24,4 +24,6 @@ docsopen: docs
 clean:
 	rm -rf thriftrw.egg-info
 	find tests thriftrw -name \*.pyc -delete
+	find tests thriftrw -name \*.c -delete
+	find tests thriftrw -name \*.so -delete
 	make -C docs clean
