@@ -20,7 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import six
 import struct
 from six.moves import range
 
@@ -30,6 +29,7 @@ from thriftrw.wire import TType
 from .core import Protocol
 from .exceptions import EndOfInputError
 from .exceptions import ThriftProtocolError
+from ..io import BytesIO
 
 
 STRUCT_END = 0
@@ -301,13 +301,13 @@ class BinaryProtocol(Protocol):
     reader_class = BinaryProtocolReader
 
     def serialize_value(self, value):
-        buff = six.BytesIO()
+        buff = BytesIO()
         writer = self.writer_class(buff)
         writer.write(value)
         return buff.getvalue()
 
     def deserialize_value(self, typ, s):
-        buff = six.BytesIO(s)
+        buff = BytesIO(s)
         reader = self.reader_class(buff)
         return reader.read(typ)
 
