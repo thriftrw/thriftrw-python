@@ -2,6 +2,21 @@
 
 from setuptools import setup, find_packages
 
+extra = {}
+
+try:
+    import Cython.Build
+    # cython didn't support "from __future__" statements until 0.17.
+    if tuple(int(v) for v in Cython.__version__.split('.')) > (0, 17, 0):
+        extra = {
+            'ext_modules': Cython.Build.cythonize([
+                'thriftrw/protocol/binary.py',
+                'thriftrw/spec/*.py',
+            ]),
+        }
+except ImportError:
+    pass
+
 with open('README.rst') as f:
     long_description = f.read()
 
@@ -26,5 +41,6 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries :: Python Modules',
-    ]
+    ],
+    **extra
 )

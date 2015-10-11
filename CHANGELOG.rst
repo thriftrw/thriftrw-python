@@ -4,7 +4,8 @@ Releases
 0.4.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Thriftrw will compile some core modules to C if the ``cython`` package
+  (version 0.17 or higher) is available.
 
 
 0.4.0 (2015-10-09)
