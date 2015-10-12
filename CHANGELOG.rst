@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.4.1 (unreleased)
+0.4.1 (2015-10-12)
 ------------------
 
 - Now uses ``io.BytesIO`` for speed improvements in Python 2.
