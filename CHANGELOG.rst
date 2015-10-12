@@ -4,8 +4,7 @@ Releases
 0.4.1 (unreleased)
 ------------------
 
-- ``dumps`` in Python 2 will now use ``cStringIO`` (instead of ``StringIO``)
-  for a noticable performance improvement.
+- Now uses ``io.BytesIO`` for speed improvements on Python 2.
 
 
 0.4.0 (2015-10-09)
