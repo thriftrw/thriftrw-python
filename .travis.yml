@@ -8,8 +8,6 @@ env:
     - TOX_ENV=py34
     - TOX_ENV=pypy
     - TOX_ENV=pypy3
-    - TOX_ENV=cython
-    - TOX_ENV=cython3
     - TOX_ENV=cover
     - TOX_ENV=flake8
     - TOX_ENV=docs
@@ -25,5 +23,6 @@ matrix:
 
 install:
     - pip install tox
+    - pip install cython
 script:
     - tox -e $TOX_ENV
