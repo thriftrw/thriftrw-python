@@ -6,6 +6,9 @@ Releases
 
 - Now uses ``io.BytesIO`` for speed improvements in Python 2.
 - Fixed a bug which allowed empty responses for non-void methods.
+- Fixed a bug which caused the ``eq`` methods for structs, unions, and
+  exceptions to raise ``AttributeError`` if the value being compared was of the
+  wrong type.
 
 
 0.4.0 (2015-10-09)
