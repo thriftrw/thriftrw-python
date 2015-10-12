@@ -40,6 +40,16 @@ class sdist(_sdist):
 
 cmdclass['sdist'] = sdist
 
+# Uhhh let's try this for PyPy.
+try:
+    import __pypy__  # noqa
+    import pyximport
+    pyximport.install()
+    cmdclass = {}
+    ext_modules = []
+except ImportError:
+    pass
+
 
 with open('README.rst') as f:
     long_description = f.read()
