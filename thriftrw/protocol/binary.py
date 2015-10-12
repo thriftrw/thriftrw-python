@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import struct
+from io import BytesIO
 from six.moves import range
 
 from thriftrw.wire import value as V
@@ -29,7 +30,6 @@ from thriftrw.wire import TType
 from .core import Protocol
 from .exceptions import EndOfInputError
 from .exceptions import ThriftProtocolError
-from ..io import BytesIO
 
 
 STRUCT_END = 0
