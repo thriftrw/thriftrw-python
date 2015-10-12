@@ -1,11 +1,20 @@
 Releases
 ========
 
-0.4.1 (unreleased)
+0.4.2 (unreleased)
+------------------
+
+- Core modules have been cythonized for additional performance improvements.
+
+
+0.4.1 (2015-10-12)
 ------------------
 
 - Now uses ``io.BytesIO`` for speed improvements in Python 2.
-- Core modules have been cythonized for additional performance improvements.
+- Fixed a bug which allowed empty responses for non-void methods.
+- Fixed a bug which caused the ``eq`` methods for structs, unions, and
+  exceptions to raise ``AttributeError`` if the value being compared was of the
+  wrong type.
 
 
 0.4.0 (2015-10-09)
