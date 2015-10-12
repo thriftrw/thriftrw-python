@@ -214,7 +214,9 @@ class StructTypeSpec(TypeSpec):
             field.spec.validate(field_value)
 
     def __str__(self):
-        return 'StructTypeSpec(name=%r, fields=%r)' % (self.name, self.fields)
+        return '%s(name=%r, fields=%r)' % (
+            self.__class__.__name__, self.name, self.fields
+        )
 
     __repr__ = __str__
 
