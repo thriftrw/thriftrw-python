@@ -5,6 +5,7 @@ Releases
 ------------------
 
 - Now uses ``io.BytesIO`` for speed improvements in Python 2.
+- Fixed a bug which allowed empty responses for non-void methods.
 
 
 0.4.0 (2015-10-09)
