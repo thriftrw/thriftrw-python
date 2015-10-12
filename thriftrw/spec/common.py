@@ -28,7 +28,7 @@ def fields_eq(fields):
         List of fields of the object to be compared.
     """
     def __eq__(self, other):
-        return all(
+        return isinstance(other, self.__class__) and all(
             getattr(self, name) == getattr(other, name) for name in fields
         )
     return __eq__
