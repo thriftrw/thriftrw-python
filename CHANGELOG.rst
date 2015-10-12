@@ -4,8 +4,8 @@ Releases
 0.4.1 (unreleased)
 ------------------
 
-- Thriftrw will compile some core modules to C if the ``cython`` package
-  (version 0.17 or higher) is available.
+- Now uses ``io.BytesIO`` for speed improvements in Python 2.
+- Core modules have been cythonized for additional performance improvements.
 
 
 0.4.0 (2015-10-09)
