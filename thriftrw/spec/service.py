@@ -103,7 +103,7 @@ class FunctionResultSpec(UnionTypeSpec):
         result_specs.extend(exceptions)
 
         super(FunctionResultSpec, self).__init__(
-            name, result_specs, allow_empty=True
+            name, result_specs, allow_empty=(return_spec is None)
         )
 
     def link(self, scope):

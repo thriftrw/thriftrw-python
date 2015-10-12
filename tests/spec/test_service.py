@@ -273,6 +273,19 @@ def test_load(loads):
     ) == KeyValue.healthy.request()
 
 
+def test_fails_on_absent_return_value(loads):
+    m = loads('service Foo { i32 foo(); void bar() }')
+
+    # '\x00' is an empty struct.
+
+    assert m.loads(m.Foo.bar.response, b'\x00') == m.Foo.bar.response()
+
+    with pytest.raises(TypeError) as exc_info:
+        m.loads(m.Foo.foo.response, b'\x00')
+
+    assert 'did not receive any values' in str(exc_info)
+
+
 def assert_round_trip(instance, value):
     assert to_wire(instance) == value
     assert from_wire(instance.__class__, value) == instance
