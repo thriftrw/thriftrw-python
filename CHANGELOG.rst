@@ -4,7 +4,8 @@ Releases
 0.4.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Lists and sets now allow arbitrary iterables as input.
+- Lists may be used to provide default values for sets.
 
 
 0.4.1 (2015-10-12)

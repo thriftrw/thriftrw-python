@@ -48,9 +48,9 @@ def test_type_mismatch(expr, loads):
 
 def test_link(loads):
     mod = loads('''
-        const list<string> lst = [bar, baz, qux];
-
-        const map<i32, string> mp = {
+        const set<string> aSet = [bar, "world", qux];
+        const list<string> aList = [bar, baz, qux];
+        const map<i32, string> aMap = {
             1: bar,
             2: baz,
             3: qux
@@ -84,8 +84,9 @@ def test_link(loads):
     assert mod.a
     assert not mod.b
 
-    assert mod.lst == ['hello', 'hello', 'world']
-    assert mod.mp == {
+    assert mod.aSet == set(["hello", "world"])
+    assert mod.aList == ['hello', 'hello', 'world']
+    assert mod.aMap == {
         1: 'hello',
         2: 'hello',
         3: 'world',
@@ -121,3 +122,11 @@ def test_invalid_enum(loads):
         ''')
 
     assert 'Value for constant "foo" is not valid' in str(exc_info)
+
+
+def test_set_is_transformed(loads):
+    assert loads('''
+        const map<string, set<i32>> some_const = {
+            "foo": [1, 1, 2, 3, 2, 3, 3]
+        };
+    ''').some_const == {'foo': set([1, 2, 3])}
