@@ -32,6 +32,7 @@ class TypeSpec(object):
     from :py:class:`thriftrw.wire.Value` objects.
     """
     __metaclass__ = abc.ABCMeta
+    __slots__ = ()
 
     @property
     def name(self):
