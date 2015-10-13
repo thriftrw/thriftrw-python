@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.4.2 (unreleased)
+0.4.2 (2015-10-13)
 ------------------
 
 - Lists and sets now allow arbitrary iterables as input.
