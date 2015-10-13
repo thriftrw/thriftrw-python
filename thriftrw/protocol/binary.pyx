@@ -28,8 +28,8 @@ from thriftrw.wire import value as V
 from thriftrw.wire import TType
 
 from .core import Protocol
-from .exceptions import EndOfInputError
-from .exceptions import ThriftProtocolError
+from ..errors import EndOfInputError
+from ..errors import ThriftProtocolError
 
 
 STRUCT_END = 0

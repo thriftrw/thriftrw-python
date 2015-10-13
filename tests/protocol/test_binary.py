@@ -23,8 +23,8 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 from six import BytesIO
 
-from thriftrw.protocol.exceptions import ThriftProtocolError
-from thriftrw.protocol.exceptions import EndOfInputError
+from thriftrw.errors import ThriftProtocolError
+from thriftrw.errors import EndOfInputError
 from thriftrw.protocol.binary import BinaryProtocolReader
 from thriftrw.protocol.binary import BinaryProtocolWriter
 from thriftrw.protocol.binary import BinaryProtocol

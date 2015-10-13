@@ -22,10 +22,10 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire import TType
 from thriftrw.wire.value import I32Value
-from thriftrw.compile.exceptions import ThriftCompilerError
 
 from . import check
 from .base import TypeSpec
+from ..errors import ThriftCompilerError
 
 __all__ = ['EnumTypeSpec']
 

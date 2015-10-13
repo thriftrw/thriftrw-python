@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 import six
 
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec.struct import StructTypeSpec
 from thriftrw.spec.struct import FieldSpec
 from thriftrw.idl import Parser

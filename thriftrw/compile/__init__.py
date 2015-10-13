@@ -27,7 +27,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .compiler import Compiler
-from .exceptions import ThriftCompilerError
+from ..errors import ThriftCompilerError
 
 
 __all__ = ['Compiler', 'ThriftCompilerError']

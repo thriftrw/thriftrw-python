@@ -24,7 +24,7 @@ import pytest
 
 from thriftrw.idl import ast
 from thriftrw.idl.parser import Parser
-from thriftrw.idl.exceptions import ThriftParserError
+from thriftrw.errors import ThriftParserError
 
 
 @pytest.mark.parametrize('s', [

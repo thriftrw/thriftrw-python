@@ -25,7 +25,7 @@ from .link import TypeSpecLinker
 from .link import ConstSpecLinker
 from .link import ServiceSpecLinker
 from .scope import Scope
-from .exceptions import ThriftCompilerError
+from ..errors import ThriftCompilerError
 
 
 __all__ = ['Compiler']

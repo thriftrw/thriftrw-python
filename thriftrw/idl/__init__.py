@@ -100,7 +100,7 @@ Exceptions
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .exceptions import ThriftParserError
+from ..errors import ThriftParserError
 from .parser import Parser
 from .ast import (
     Program,

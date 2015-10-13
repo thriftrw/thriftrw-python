@@ -24,7 +24,7 @@ from textwrap import dedent
 
 import pytest
 
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 from thriftrw.loader import Loader
 
 

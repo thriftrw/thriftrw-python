@@ -41,7 +41,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from .binary import BinaryProtocol
 from .core import Protocol
-from .exceptions import ThriftProtocolError, EndOfInputError
+from ..errors import ThriftProtocolError, EndOfInputError
 
 
 __all__ = [

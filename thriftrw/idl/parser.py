@@ -26,7 +26,7 @@ from ply import yacc
 
 from . import ast
 from .lexer import Lexer
-from .exceptions import ThriftParserError
+from ..errors import ThriftParserError
 
 
 __all__ = ['Parser']

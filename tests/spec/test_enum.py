@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
 
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec.enum import EnumTypeSpec
 from thriftrw.idl import Parser
 
