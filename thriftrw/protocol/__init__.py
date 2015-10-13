@@ -27,29 +27,15 @@ Protocols
 
 .. autoclass:: thriftrw.protocol.BinaryProtocol
     :members:
-
-Exceptions
-----------
-
-.. autoclass:: thriftrw.protocol.ThriftProtocolError
-    :members:
-
-.. autoclass:: thriftrw.protocol.EndOfInputError
-    :members:
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .binary import BinaryProtocol
 from .core import Protocol
-from .exceptions import ThriftProtocolError, EndOfInputError
 
 
 __all__ = [
     # Protocol
     'Protocol',
     'BinaryProtocol',
-
-    # Exceptions
-    'ThriftProtocolError',
-    'EndOfInputError',
 ]

@@ -17,17 +17,42 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+"""
+.. autoclass:: ThriftError
+    :members:
+
+.. autoclass:: ThriftParserError
+    :members:
+
+.. autoclass:: ThriftCompilerError
+    :members:
+
+.. autoclass:: ThriftProtocolError
+    :members:
+
+.. autoclass:: EndOfInputError
+    :members:
+"""
 from __future__ import absolute_import, unicode_literals, print_function
 
-__all__ = ['ThriftProtocolError', 'EndOfInputError']
+
+class ThriftError(Exception):
+    """Base class for all exceptions raised by thriftrw."""
 
 
-class ThriftProtocolError(Exception):
+class ThriftParserError(ThriftError):
+    """Exception raised by the parser or lexer in case of errors."""
+
+
+class ThriftCompilerError(ThriftError):
+    """Exception raised during IDL compilation."""
+
+
+class ThriftProtocolError(ThriftError):
     """Exceptions raised by Protocol implementations for errors encountered
     during serialization or deserialization.
     """
-    # TODO all exceptions raised by this library must havea common parent.
-    pass
 
 
 class EndOfInputError(ThriftProtocolError):

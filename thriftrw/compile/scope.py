@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import types
 
-from .exceptions import ThriftCompilerError
+from ..errors import ThriftCompilerError
 
 __all__ = ['Scope']
 

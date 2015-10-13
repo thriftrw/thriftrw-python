@@ -113,7 +113,7 @@ _DEFAULT_LOADER = Loader()
 #:     Name of the generated module. Defaults to the basename of the file.
 #: :param bool force:
 #:     Whether to ignore the cache and load the file anew. Defaults to False.
-#: :raises thriftrw.compile.ThriftCompilerError:
+#: :raises thriftrw.errors.ThriftCompilerError:
 #:     If there was an error compiling the Thrift file.
 load = _DEFAULT_LOADER.load
 

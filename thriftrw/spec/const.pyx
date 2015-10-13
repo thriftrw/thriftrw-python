@@ -21,9 +21,9 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire import TType
-from thriftrw.compile.exceptions import ThriftCompilerError
 
 from .spec_mapper import type_spec_or_ref
+from ..errors import ThriftCompilerError
 
 
 class ConstValuePrimitive(object):

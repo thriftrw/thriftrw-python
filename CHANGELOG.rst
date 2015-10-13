@@ -5,6 +5,8 @@ Releases
 ------------------
 
 - Core modules have been cythonized for additional performance improvements.
+- **Breaking** All custom exceptions are exported by the ``thriftrw.errors``
+  module only. This includes ``ThriftProtocolError`` and ``EndOfInputError``.
 
 
 0.4.2 (2015-10-13)

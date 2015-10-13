@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import six
 from ply import lex
 
-from .exceptions import ThriftParserError
+from ..errors import ThriftParserError
 
 
 __all__ = ['Lexer']

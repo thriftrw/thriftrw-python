@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 
 from thriftrw.spec import primitive as prim_spec
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec.reference import TypeReference
 from thriftrw.spec.service import ServiceSpec
 from thriftrw.spec.struct import FieldSpec

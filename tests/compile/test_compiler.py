@@ -26,7 +26,7 @@ from functools import partial
 from thriftrw.idl import Parser
 from thriftrw.protocol import BinaryProtocol
 from thriftrw.compile import Compiler
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 
 
 @pytest.fixture

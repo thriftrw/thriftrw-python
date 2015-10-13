@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
 
-from thriftrw.compile.exceptions import ThriftCompilerError
+from thriftrw.errors import ThriftCompilerError
 
 
 @pytest.mark.parametrize('expr', [

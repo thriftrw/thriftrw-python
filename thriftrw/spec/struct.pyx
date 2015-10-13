@@ -22,13 +22,13 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire import TType
 from thriftrw.wire.value import StructValue, FieldValue
-from thriftrw.compile.exceptions import ThriftCompilerError
 
 from . import check
 from . import common
 from .base import TypeSpec
 from .const import const_value_or_ref
 from .spec_mapper import type_spec_or_ref
+from ..errors import ThriftCompilerError
 
 __all__ = ['StructTypeSpec', 'FieldSpec']
 

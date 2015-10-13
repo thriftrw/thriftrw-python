@@ -22,12 +22,10 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
-from thriftrw.compile.exceptions import ThriftCompilerError
-
 from .spec_mapper import type_spec_or_ref
 from .struct import StructTypeSpec, FieldSpec
 from .union import UnionTypeSpec
-
+from ..errors import ThriftCompilerError
 
 __all__ = [
     'ServiceSpec', 'FunctionSpec', 'ServiceFunction', 'FunctionResultSpec'

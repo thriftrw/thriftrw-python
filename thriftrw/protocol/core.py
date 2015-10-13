@@ -53,7 +53,7 @@ class Protocol(object):
             Bytes to decode.
         :returns:
             Parsed :py:class:`~thriftrw.wire.Value`.
-        :raises thriftrw.protocol.ThriftProtocolError:
+        :raises thriftrw.errors.ThriftProtocolError:
             If the object failed to deserialize.
         """
 
@@ -79,7 +79,7 @@ class Protocol(object):
             Binary blob representing the object.
         :returns:
             Deserialized object.
-        :raises thriftrw.protocol.ThriftProtocolError:
+        :raises thriftrw.errors.ThriftProtocolError:
             If the object failed to deserialize.
         """
         value = self.deserialize_value(TType.STRUCT, s)
