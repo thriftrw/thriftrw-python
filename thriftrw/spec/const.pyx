@@ -154,12 +154,12 @@ class ConstSpec(object):
         self.save = save
 
     @classmethod
-    def compile(cls, const):
+    def compile(cls, constant):
         # TODO validate that const.name is a valid python identifier.
-        type_spec = type_spec_or_ref(const.value_type)
-        value_spec = const_value_or_ref(const.value)
+        type_spec = type_spec_or_ref(constant.value_type)
+        value_spec = const_value_or_ref(constant.value)
 
-        return cls(const.name, value_spec, type_spec)
+        return cls(constant.name, value_spec, type_spec)
 
     def link(self, scope):
         if not self.linked:
@@ -192,19 +192,19 @@ class ConstValueMapper(object):
     def get(self, const_value):
         return const_value.apply(self)
 
-    def visit_primitive(self, const):
-        return ConstValuePrimitive(const.value)
+    def visit_primitive(self, constant):
+        return ConstValuePrimitive(constant.value)
 
-    def visit_list(self, const):
-        return ConstValueList([self.get(v) for v in const.values])
+    def visit_list(self, constant):
+        return ConstValueList([self.get(v) for v in constant.values])
 
-    def visit_map(self, const):
+    def visit_map(self, constant):
         return ContsValueMap({
-            self.get(k): self.get(v) for k, v in const.pairs.items()
+            self.get(k): self.get(v) for k, v in constant.pairs.items()
         })
 
-    def visit_reference(self, const):
-        return ConstValueReference(const.name, const.lineno)
+    def visit_reference(self, constant):
+        return ConstValueReference(constant.name, constant.lineno)
 
 
 const_value_or_ref = ConstValueMapper().get

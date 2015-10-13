@@ -4,7 +4,7 @@ Releases
 0.4.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Core modules have been cythonized for additional performance improvements.
 
 
 0.4.1 (2015-10-12)

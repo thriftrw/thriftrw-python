@@ -21,8 +21,6 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
-import doubles
-from doubles import expect
 
 from thriftrw.wire import value
 from thriftrw.wire import TType
@@ -30,57 +28,64 @@ from thriftrw.wire import TType
 
 @pytest.mark.parametrize('value, visit_name, visit_args', [
     # Primitives
-    (value.BoolValue(True), 'visit_bool', [True]),
-    (value.ByteValue(42), 'visit_byte', [42]),
-    (value.DoubleValue(12.34), 'visit_double', [12.34]),
-    (value.I16Value(1234), 'visit_i16', [1234]),
-    (value.I32Value(39813), 'visit_i32', [39813]),
-    (value.I64Value(198735315), 'visit_i64', [198735315]),
-    (value.BinaryValue(b'hello world'), 'visit_binary', [b'hello world']),
+    (value.BoolValue(True), 'visit_bool', (True,)),
+    (value.ByteValue(42), 'visit_byte', (42,)),
+    (value.DoubleValue(12.34), 'visit_double', (12.34,)),
+    (value.I16Value(1234), 'visit_i16', (1234,)),
+    (value.I32Value(39813), 'visit_i32', (39813,)),
+    (value.I64Value(198735315), 'visit_i64', (198735315,)),
+    (value.BinaryValue(b'hello world'), 'visit_binary', (b'hello world',)),
 
     # Struct
     (value.StructValue([
         value.FieldValue(1, TType.BOOL, value.BoolValue(True)),
         value.FieldValue(2, TType.BYTE, value.ByteValue(42)),
-    ]), 'visit_struct', [[
+    ]), 'visit_struct', ([
         value.FieldValue(1, TType.BOOL, value.BoolValue(True)),
         value.FieldValue(2, TType.BYTE, value.ByteValue(42)),
-    ]]),
+    ],)),
 
     # Map
     (value.MapValue(TType.BINARY, TType.I16, [
         (value.BinaryValue('Hello'), value.I16Value(1)),
         (value.BinaryValue('World'), value.I16Value(2)),
-    ]), 'visit_map', [TType.BINARY, TType.I16, [
+    ]), 'visit_map', (TType.BINARY, TType.I16, [
         (value.BinaryValue('Hello'), value.I16Value(1)),
         (value.BinaryValue('World'), value.I16Value(2)),
-    ]]),
+    ])),
 
     # Set
     (value.SetValue(TType.I32, [
         value.I32Value(1234),
         value.I32Value(4567),
-    ]), 'visit_set', [TType.I32, [
+    ]), 'visit_set', (TType.I32, [
         value.I32Value(1234),
         value.I32Value(4567),
-    ]]),
+    ])),
 
     # List
     (value.ListValue(TType.I64, [
         value.I64Value(1380),
         value.I64Value(1479),
-    ]), 'visit_list', [TType.I64, [
+    ]), 'visit_list', (TType.I64, [
         value.I64Value(1380),
         value.I64Value(1479),
-    ]]),
+    ])),
 ])
 def test_visitors(value, visit_name, visit_args):
     """Checks that for each value type, the correct visitor is called."""
 
-    visitor = doubles.InstanceDouble('thriftrw.wire.ValueVisitor')
-    getattr(
-        expect(visitor), visit_name
-    ).with_args(*visit_args).and_return('hello').once()
+    class MockVisitor(object):
+        pass
+
+    visitor = MockVisitor()
+
+    def visit(*args):
+        assert args == visit_args
+        return 'hello'
+
+    setattr(visitor, visit_name, visit)
+
     assert 'hello' == value.apply(visitor)
 
 
