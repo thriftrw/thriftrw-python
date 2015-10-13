@@ -20,7 +20,12 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from functools import partial
 import sys
+
+import pytest
+
+from thriftrw.loader import Loader
 
 
 def unimport(*names):
@@ -65,3 +70,8 @@ def pytest_runtest_teardown(item, nextitem):
     marker = item.get_marker('unimport')
     if marker:
         unimport(*marker.args)
+
+
+@pytest.fixture
+def loads(request):
+    return partial(Loader().loads, request.node.name)

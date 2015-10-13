@@ -77,7 +77,7 @@ class ListTypeSpec(TypeSpec):
         return [self.vspec.from_primitive(v) for v in prim_value]
 
     def validate(self, instance):
-        check.instanceof_class(self, collections.Sequence, instance)
+        check.instanceof_class(self, collections.Iterable, instance)
         for v in instance:
             self.vspec.validate(v)
 

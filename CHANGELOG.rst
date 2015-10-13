@@ -7,6 +7,13 @@ Releases
 - Core modules have been cythonized for additional performance improvements.
 
 
+0.4.2 (2015-10-13)
+------------------
+
+- Lists and sets now allow arbitrary iterables as input.
+- Lists may be used to provide default values for sets.
+
+
 0.4.1 (2015-10-12)
 ------------------
 

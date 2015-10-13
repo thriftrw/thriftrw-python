@@ -56,7 +56,7 @@ if six.PY3:
 class PrimitiveTypeSpec(TypeSpec):
     """TypeSpec for primitive types."""
 
-    __slots__ = ('name', 'code', 'value_cls', 'surface')
+    __slots__ = ('name', 'code', 'value_cls', 'surface', 'cast')
 
     def __init__(self, name, code, value_cls, surface, cast=None):
         """
