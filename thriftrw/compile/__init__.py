@@ -20,14 +20,10 @@
 """
 .. autoclass:: thriftrw.compile.Compiler
     :members:
-
-.. autoclass:: thriftrw.compile.ThriftCompilerError
-    :members:
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .compiler import Compiler
-from ..errors import ThriftCompilerError
 
 
-__all__ = ['Compiler', 'ThriftCompilerError']
+__all__ = ['Compiler']

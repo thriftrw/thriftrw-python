@@ -443,7 +443,7 @@ class Parser(ParserSpec):
 
         :param input:
             String containing the text to be parsed.
-        :raises ThriftParserError:
+        :raises thriftrw.errors.ThriftParserError:
             For parsing errors.
         """
         return self._parser.parse(input, lexer=self._lexer, **kwargs)

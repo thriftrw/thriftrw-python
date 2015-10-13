@@ -29,8 +29,6 @@ Adapted from ``thriftpy.parser``.
 .. autoclass:: Parser
     :members:
 
-.. autoclass:: ThriftParserError
-
 AST
 ---
 
@@ -90,17 +88,9 @@ Annotations
 ~~~~~~~~~~~
 
 .. autoclass:: Annotation
-
-Exceptions
-----------
-
-.. autoclass:: ThriftParserError
-    :members:
-
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from ..errors import ThriftParserError
 from .parser import Parser
 from .ast import (
     Program,
@@ -155,7 +145,4 @@ __all__ = [
     'ConstPrimitiveValue',
     'ConstReference',
     'Annotation',
-
-    # Exceptions
-    'ThriftParserError',
 ]

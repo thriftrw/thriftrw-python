@@ -22,7 +22,16 @@
 .. autoclass:: ThriftError
     :members:
 
-.. autoclass:: UnknownExceptionError
+.. autoclass:: ThriftParserError
+    :members:
+
+.. autoclass:: ThriftCompilerError
+    :members:
+
+.. autoclass:: ThriftProtocolError
+    :members:
+
+.. autoclass:: EndOfInputError
     :members:
 """
 from __future__ import absolute_import, unicode_literals, print_function

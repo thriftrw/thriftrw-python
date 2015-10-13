@@ -90,7 +90,7 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
         Type of object being deserialized.
     :param bytes payload:
         Bytes containing the serialized representation of a ``cls`` object
-    :raises thriftrw.protocol.ThriftProtocolError:
+    :raises thriftrw.errors.ThriftProtocolError:
         If ``payload`` was an invalid Thrift Binary Protocol payload.
     :raises TypeError, ValueError:
         If the payload was a vaild Thrift Binary Protocol payload but did not

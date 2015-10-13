@@ -36,3 +36,8 @@ API Reference
 ----------------
 
 .. automodule:: thriftrw.idl
+
+``thriftrw.errors``
+-------------------
+
+.. automodule:: thriftrw.errors
