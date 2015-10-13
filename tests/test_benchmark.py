@@ -14,7 +14,7 @@ def struct(loads):
     return Struct(
         strings=['foo'] * 100,
         ints=set([256] * 100),
-        mapped={n: 'bar' for n in xrange(100)},
+        mapped={n: 'bar' for n in range(100)},
     )
 
 
