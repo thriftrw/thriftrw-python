@@ -1,3 +1,4 @@
 doubles
 pytest==2.7.3
 pytest-cov==2.1.0
+pytest-benchmark[histogram]==3.0.0b1
