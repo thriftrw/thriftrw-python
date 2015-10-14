@@ -289,7 +289,24 @@ def test_fails_on_absent_return_value(loads):
     assert 'did not receive any values' in str(exc_info)
 
 
-def test_unrecognized_exception(loads):
+
+@pytest.mark.parametrize('method, raw, wire_value', [
+    ('something', [
+        0x0C,        # typeid:1 = struct
+        0x7e, 0xff,  # id:2 = 32511
+        0x00,        # value = empty struct
+        0x00,        # stop
+    ], vstruct((32511, TType.STRUCT, vstruct()))),
+    ('nothing', [
+        0x0C,        # typeid:1 = struct
+        0x01, 0xff,  # id:2 = 511
+        0x00,        # value = empty struct
+        0x00,        # stop
+    ], vstruct((511, TType.STRUCT, vstruct()))),
+], ids=['returns-i32', 'returns-void'])
+def test_unrecognized_exception(loads, method, raw, wire_value):
+    raw = bytearray(raw)
+
     m = loads('''
         exception GreatSadness {
             1: optional string reason
@@ -303,44 +320,12 @@ def test_unrecognized_exception(loads):
                 throws (32767: GreatSadness err);
         }
     ''')
-    S = m.S
-
-    # something:
 
     with pytest.raises(UnknownExceptionError) as exc_info:
-        m.loads(S.something.response, bytearray([
-            0x0C,        # typeid:1 = struct
-            0x7e, 0xff,  # id:2 = 32511
-            0x00,        # value = empty struct
-            0x00,        # stop
-        ]))
+        m.loads(getattr(m.S, method).response, raw)
 
     assert (
-        '"S_something_response" received an unrecognized exception'
+        ('"S_%s_response" received an unrecognized exception' % method)
         in str(exc_info)
     )
-
-    exc = exc_info.value
-    assert exc.thrift_response == vstruct(
-        (32511, TType.STRUCT, vstruct()),
-    )
-
-    # nothing:
-
-    with pytest.raises(UnknownExceptionError) as exc_info:
-        m.loads(S.nothing.response, bytearray([
-            0x0C,        # typeid:1 = struct
-            0x01, 0xff,  # id:2 = 511
-            0x00,        # value = empty struct
-            0x00,        # stop
-        ]))
-
-    assert (
-        '"S_nothing_response" received an unrecognized exception'
-        in str(exc_info)
-    )
-
-    exc = exc_info.value
-    assert exc.thrift_response == vstruct(
-        (511, TType.STRUCT, vstruct()),
-    )
+    assert exc_info.value.thrift_response == wire_value
