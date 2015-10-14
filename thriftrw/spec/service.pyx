@@ -22,10 +22,12 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
+from . import check
 from .spec_mapper import type_spec_or_ref
 from .struct import StructTypeSpec, FieldSpec
 from .union import UnionTypeSpec
 from ..errors import ThriftCompilerError
+from ..errors import UnknownExceptionError
 
 __all__ = [
     'ServiceSpec', 'FunctionSpec', 'ServiceFunction', 'FunctionResultSpec'
@@ -74,9 +76,16 @@ class FunctionResultSpec(UnionTypeSpec):
 
         Expose the class and add the ``return_spec`` and ``exception_specs``
         attributes.
+
+    .. versionchanged:: 0.5
+
+        When deserializing, if an unrecognized exception is found, a
+        :py:class:`thriftrw.errors.UnknownExceptionError` is raised.
     """
 
-    __slots__ = UnionTypeSpec.__slots__ + ('return_spec', 'exception_specs')
+    __slots__ = UnionTypeSpec.__slots__ + (
+        'return_spec', 'exception_specs', 'exception_ids'
+    )
 
     def __init__(self, name, return_spec, exceptions):
         #: :py:class:`thriftrw.spec.TypeSpec` of the return type or None if
@@ -98,11 +107,33 @@ class FunctionResultSpec(UnionTypeSpec):
                     default_value=None
                 )
             )
+
         result_specs.extend(exceptions)
+
+        #: Set of field IDs for exceptions recognized by this result. If the
+        #: system tries to read a field with an unrecognized exception ID, an
+        #: ``UnknownExceptionError`` will be raised.
+        self.exception_ids = frozenset([f.id for f in exceptions])
 
         super(FunctionResultSpec, self).__init__(
             name, result_specs, allow_empty=(return_spec is None)
         )
+
+    def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
+
+        for field in wire_value.fields:
+            if field.id != 0 and field.id not in self.exception_ids:
+                raise UnknownExceptionError(
+                    (
+                        '"%s" received an unrecognized exception. '
+                        'Make sure your Thrift IDL is up-to-date with '
+                        'what the remote host is using.'
+                    ) % self.name,
+                    wire_value,
+                )
+
+        return super(FunctionResultSpec, self).from_wire(wire_value)
 
     def link(self, scope):
         if self.return_spec is not None:

@@ -24,6 +24,7 @@ import pytest
 
 from thriftrw.spec import primitive as prim_spec
 from thriftrw.errors import ThriftCompilerError
+from thriftrw.errors import UnknownExceptionError
 from thriftrw.spec.reference import TypeReference
 from thriftrw.spec.service import ServiceSpec
 from thriftrw.spec.struct import FieldSpec
@@ -38,12 +39,14 @@ def parse():
     return Parser(start='service', silent=True).parse
 
 
-def to_wire(s):
-    return s.__class__.type_spec.to_wire(s)
+def assert_round_trip(instance, value):
+    cls = instance.__class__
+    spec = cls.type_spec
 
+    assert spec.to_wire(instance) == value
+    assert spec.from_wire(value) == instance
 
-def from_wire(t, s):
-    return t.type_spec.from_wire(s)
+    assert spec.from_primitive(spec.to_primitive(instance)) == instance
 
 
 def test_compile_oneway_with_return_type(parse):
@@ -286,6 +289,42 @@ def test_fails_on_absent_return_value(loads):
     assert 'did not receive any values' in str(exc_info)
 
 
-def assert_round_trip(instance, value):
-    assert to_wire(instance) == value
-    assert from_wire(instance.__class__, value) == instance
+@pytest.mark.parametrize('method, raw, wire_value', [
+    ('something', [
+        0x0C,        # typeid:1 = struct
+        0x7e, 0xff,  # id:2 = 32511
+        0x00,        # value = empty struct
+        0x00,        # stop
+    ], vstruct((32511, TType.STRUCT, vstruct()))),
+    ('nothing', [
+        0x0C,        # typeid:1 = struct
+        0x01, 0xff,  # id:2 = 511
+        0x00,        # value = empty struct
+        0x00,        # stop
+    ], vstruct((511, TType.STRUCT, vstruct()))),
+], ids=['returns-i32', 'returns-void'])
+def test_unrecognized_exception(loads, method, raw, wire_value):
+    raw = bytearray(raw)
+
+    m = loads('''
+        exception GreatSadness {
+            1: optional string reason
+        }
+
+        service S {
+            void nothing()
+                throws (128: GreatSadness err);
+
+            i32 something()
+                throws (32767: GreatSadness err);
+        }
+    ''')
+
+    with pytest.raises(UnknownExceptionError) as exc_info:
+        m.loads(getattr(m.S, method).response, raw)
+
+    assert (
+        ('"S_%s_response" received an unrecognized exception' % method)
+        in str(exc_info)
+    )
+    assert exc_info.value.thrift_response == wire_value
