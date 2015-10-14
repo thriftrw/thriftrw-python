@@ -33,6 +33,9 @@
 
 .. autoclass:: EndOfInputError
     :members:
+
+.. autoclass:: UnknownExceptionError
+    :members:
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
@@ -57,3 +60,19 @@ class ThriftProtocolError(ThriftError):
 
 class EndOfInputError(ThriftProtocolError):
     """The input was shorter than expected."""
+
+
+class UnknownExceptionError(ThriftError):
+    """We parsed an unknown exception in a function response."""
+
+    def __init__(self, message, thrift_response):
+        super(UnknownExceptionError, self).__init__(message)
+        self.thrift_response = thrift_response
+
+    def __str__(self):
+        return 'UnknownExceptionError(%s, thrift_response=%r)' % (
+            super(UnknownExceptionError, self).__str__(),
+            self.thrift_response,
+        )
+
+    __repr__ = __str__
