@@ -289,7 +289,6 @@ def test_fails_on_absent_return_value(loads):
     assert 'did not receive any values' in str(exc_info)
 
 
-
 @pytest.mark.parametrize('method, raw, wire_value', [
     ('something', [
         0x0C,        # typeid:1 = struct
