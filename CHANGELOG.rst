@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.5.0 (unreleased)
+0.5.0 (2015-10-14)
 ------------------
 
 - Core modules have been cythonized for additional performance improvements.

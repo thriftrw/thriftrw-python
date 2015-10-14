@@ -46,7 +46,7 @@ with open('README.rst') as f:
 
 setup(
     name='thriftrw',
-    version='0.4.3.dev0',
+    version='0.5.0',
     description=(
         'A library to serialize and deserialize Thrift values.'
     ),
