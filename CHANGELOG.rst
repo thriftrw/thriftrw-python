@@ -13,7 +13,7 @@ Releases
 - Fix a bug in the parser that prevented starting identifier names with
   ``true`` or ``false``.
 - Allow passing 0 and 1 as default values for ``bool``. These will
-  automatically be casted to boolean.
+  automatically be cast to boolean.
 
 
 0.5.0 (2015-10-14)
