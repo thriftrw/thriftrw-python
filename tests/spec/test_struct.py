@@ -405,7 +405,7 @@ def test_self_referential(loads):
     'struct Foo { 1: optional list<string> foo = {} }',
     'struct Bar { 1: optional list<string> foo = [42] }',
     'struct Baz { 1: optional list<i32> foo = ["a", "b"] }',
-    'struct Foo { 1: required bool bar = 0 }',
+    'struct Foo { 1: required bool bar = "c" }',
 ])
 def test_default_value_type_mismatches(loads, expr):
     with pytest.raises(ThriftCompilerError) as exc_info:

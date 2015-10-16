@@ -56,6 +56,8 @@ THRIFT_KEYWORDS = (
     'const',
     'required',
     'optional',
+    'true',
+    'false',
 )
 
 
@@ -67,7 +69,6 @@ class LexerSpec(object):
     literals = ':;,=*{}()<>[]'
 
     tokens = (
-        'BOOLCONSTANT',
         'INTCONSTANT',
         'DUBCONSTANT',
         'LITERAL',
@@ -102,11 +103,6 @@ class LexerSpec(object):
 
     def t_ignore_COMMENT(self, t):
         r'\/\/[^\n]*'
-
-    def t_BOOLCONSTANT(self, t):
-        r'true|false'
-        t.value = t.value == 'true'
-        return t
 
     def t_DUBCONSTANT(self, t):
         r'-?\d+\.\d*(e-?\d+)?'
