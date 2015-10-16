@@ -99,6 +99,11 @@ class ParserSpec(object):
         '''
         p[0] = p[1]
 
+    def p_const_bool(self, p):
+        '''const_bool : TRUE
+                      | FALSE'''
+        p[0] = p[1] == 'true'
+
     def p_const(self, p):
         '''const : CONST field_type IDENTIFIER '=' const_value
                  | CONST field_type IDENTIFIER '=' const_value sep'''
@@ -124,7 +129,7 @@ class ParserSpec(object):
         '''const_value_primitive : INTCONSTANT
                                  | DUBCONSTANT
                                  | LITERAL
-                                 | BOOLCONSTANT'''
+                                 | const_bool'''
         p[0] = ast.ConstPrimitiveValue(p[1], lineno=p.lineno(1))
 
     def p_const_list(self, p):
