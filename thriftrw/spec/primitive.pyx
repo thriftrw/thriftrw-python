@@ -176,8 +176,36 @@ class _BinaryTypeSpec(_TextualTypeSpec):
         return prim_value
 
 
+class _BoolTypeSpec(TypeSpec):
+
+    __slots__ = ()
+
+    name = 'bool'
+    surface = bool
+    ttype_code = TType.BOOL
+
+    def to_wire(self, value):
+        return BoolValue(bool(value))
+
+    def to_primitive(self, value):
+        return bool(value)
+
+    def from_wire(self, wire_value):
+        check.type_code_matches(self, wire_value)
+        return wire_value.value
+
+    def from_primitive(self, prim_value):
+        return bool(prim_value)
+
+    def link(self, scope):
+        return self
+
+    def validate(self, instance):
+        check.instanceof_class(self, (bool, int), instance)
+
+
 #: TypeSpec for boolean values.
-BoolTypeSpec = PrimitiveTypeSpec('bool', TType.BOOL, BoolValue, bool)
+BoolTypeSpec = _BoolTypeSpec()
 
 #: TypeSpec for single-byte integers.
 ByteTypeSpec = PrimitiveTypeSpec(

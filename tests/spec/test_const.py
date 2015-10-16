@@ -27,13 +27,13 @@ from thriftrw.errors import ThriftCompilerError
 
 @pytest.mark.parametrize('expr', [
     'const i32 foo = "hello"',
-    'const bool b = 1',
+    'const bool b = "foo"',
     'const string foo = 42',
     'const binary foo = 42',
     'const list<string> foo = [1, 2, 3]',
     'const list<string> foo = {"foo": "bar"}',
     'const map<string, i32> foo = {"foo": "bar"}',
-    'const list<bool> foo = [x]; const i32 x = 42',
+    'const list<bool> foo = [x]; const string x = "bar"',
 ])
 def test_type_mismatch(expr, loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
@@ -59,6 +59,9 @@ def test_link(loads):
         const i32 foo = 42;
         const i32 foo2 = 0x2a;
 
+        const bool true_from_num = 1;
+        const bool false_from_num = 0;
+
         const string baz = bar;
         const string bar = "hello";
         const string qux = "world";
@@ -83,6 +86,9 @@ def test_link(loads):
 
     assert mod.a
     assert not mod.b
+
+    assert mod.true_from_num
+    assert not mod.false_from_num
 
     assert mod.aSet == set(["hello", "world"])
     assert mod.aList == ['hello', 'hello', 'world']
