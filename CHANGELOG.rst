@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.5.1 (unreleased)
+0.5.1 (2015-10-16)
 ------------------
 
 - Fix a bug in the parser that prevented starting identifier names with
