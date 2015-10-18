@@ -47,11 +47,11 @@ from thriftrw.wire import TType
 
     # Map
     (value.MapValue(TType.BINARY, TType.I16, [
-        (value.BinaryValue('Hello'), value.I16Value(1)),
-        (value.BinaryValue('World'), value.I16Value(2)),
+        value.MapItem(value.BinaryValue(b'Hello'), value.I16Value(1)),
+        value.MapItem(value.BinaryValue(b'World'), value.I16Value(2)),
     ]), 'visit_map', (TType.BINARY, TType.I16, [
-        (value.BinaryValue('Hello'), value.I16Value(1)),
-        (value.BinaryValue('World'), value.I16Value(2)),
+        value.MapItem(value.BinaryValue(b'Hello'), value.I16Value(1)),
+        value.MapItem(value.BinaryValue(b'World'), value.I16Value(2)),
     ])),
 
     # Set
@@ -96,8 +96,8 @@ def test_struct_get():
         value.FieldValue(3, TType.LIST, value.ListValue(
             TType.BINARY,
             [
-                value.BinaryValue('Hello'),
-                value.BinaryValue('World'),
+                value.BinaryValue(b'Hello'),
+                value.BinaryValue(b'World'),
             ]
         )),
     ])
@@ -105,8 +105,8 @@ def test_struct_get():
     assert struct.get(1, TType.BOOL).value
     assert value.ByteValue(42) == struct.get(2, TType.BYTE).value
     assert value.ListValue(TType.BINARY, [
-        value.BinaryValue('Hello'),
-        value.BinaryValue('World'),
+        value.BinaryValue(b'Hello'),
+        value.BinaryValue(b'World'),
     ]) == struct.get(3, TType.LIST).value
 
     assert not struct.get(1, TType.BINARY)

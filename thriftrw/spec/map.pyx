@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import collections
 
 from thriftrw.wire import TType
-from thriftrw.wire.value import MapValue
+from thriftrw.wire.value import MapItem, MapValue
 
 from . import check
 from .base import TypeSpec
@@ -71,7 +71,7 @@ class MapTypeSpec(TypeSpec):
             key_ttype=self.kspec.ttype_code,
             value_ttype=self.vspec.ttype_code,
             pairs=[
-                (self.kspec.to_wire(k), self.vspec.to_wire(v))
+                MapItem(self.kspec.to_wire(k), self.vspec.to_wire(v))
                 for k, v in value.items()
             ]
         )
@@ -85,8 +85,8 @@ class MapTypeSpec(TypeSpec):
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return {
-            self.kspec.from_wire(k): self.vspec.from_wire(v)
-            for k, v in wire_value.pairs
+            self.kspec.from_wire(i.key): self.vspec.from_wire(i.value)
+            for i in wire_value.pairs
         }
 
     def from_primitive(self, prim_value):

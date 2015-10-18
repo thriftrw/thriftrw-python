@@ -57,6 +57,8 @@ Value Types
 
 .. autoclass:: thriftrw.wire.MapValue
 
+.. autoclass:: thriftrw.wire.MapItem
+
 .. autoclass:: thriftrw.wire.SetValue
 
 .. autoclass:: thriftrw.wire.ListValue

@@ -22,6 +22,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+from itertools import permutations
 
 from thriftrw import spec
 from thriftrw.wire import TType
@@ -85,7 +86,11 @@ def test_map_wire_conversion(t_spec, pairs, obj):
     value = t_spec.to_wire(obj)
     assert ktype == value.key_ttype
     assert vtype == value.value_ttype
-    assert set(pairs) == set(value.pairs)
+    assert any(
+        left == right
+        for left in permutations(pairs)
+        for right in permutations(pairs)
+    )
 
 
 def test_map_from_wire_duplicate_keys():
