@@ -144,3 +144,20 @@ def test_enums_are_constants(loads):
     Bar = mod.Bar
 
     assert Bar().foo == Foo.A == 0
+
+
+@pytest.mark.parametrize('s', [
+    '''
+        enum X { A = 1, B = 2, C = 4 }
+        const X x = 3
+    ''',
+    '''
+        enum X { A = 1, B = 2, C = 4 }
+        struct Y { 1: required X x = 3 }
+    ''',
+])
+def test_enum_constant_invalid_default(loads, s):
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        loads(s)
+
+    assert 'is not a valid value for enum "X"' in str(exc_info)

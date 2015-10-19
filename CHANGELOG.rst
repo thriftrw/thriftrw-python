@@ -4,7 +4,8 @@ Releases
 0.5.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed a bug which prevented default values for enums from being plain
+  integers.
 
 
 0.5.1 (2015-10-16)
