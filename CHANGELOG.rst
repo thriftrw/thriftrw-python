@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.5.2 (unreleased)
+0.5.2 (2015-10-19)
 ------------------
 
 - Fixed a bug which prevented default values for enums from being plain
