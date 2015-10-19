@@ -258,6 +258,7 @@ class FieldSpec(object):
     def link(self, scope):
         if not self.linked:
             self.linked = True
+            self.spec = self.spec.link(scope)
             if self.default_value is not None:
                 try:
                     self.default_value = self.default_value.link(
@@ -275,7 +276,6 @@ class FieldSpec(object):
                         'Default value for field "%s" is not valid: %s'
                         % (self.name, e)
                     )
-            self.spec = self.spec.link(scope)
         return self
 
     @property

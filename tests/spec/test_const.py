@@ -99,6 +99,26 @@ def test_link(loads):
     }
 
 
+def test_enum_const_from_integer(loads):
+    mod = loads('''
+        enum Role {
+            Disabled = 0,
+            User = 1,
+            Moderator = 2,
+            SuperUser = 4,
+        }
+
+        struct User {
+            1: required Role role = 1
+        }
+
+        const Role DISABLED = 0
+    ''')
+
+    assert mod.DISABLED == mod.Role.Disabled
+    assert mod.User().role == mod.Role.User
+
+
 def test_undefined_constant(loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
         loads('const string baz = bar')
