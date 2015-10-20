@@ -18,7 +18,7 @@ ensure_license() {
 	# This is ugly but it basically executes the uber-license tool, parses the
 	# output to figure out which files were changed, and stages them into the
 	# commit.
-	("$LICENSE_EXEC" --file '*.py' || exit 1) \
+	("$LICENSE_EXEC" --file '*.{py,pyx,pxd}' || exit 1) \
 		| grep '^fixed file ' |  perl -F"'" -ane 'print "$F[1]\n"' \
 		| while read fileName; do
 			echo "License added to $cwd/$fileName"
