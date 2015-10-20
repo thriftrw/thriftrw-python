@@ -156,3 +156,90 @@ def test_set_is_transformed(loads):
             "foo": [1, 1, 2, 3, 2, 3, 3]
         };
     ''').some_const == {'foo': set([1, 2, 3])}
+
+
+def test_structs_can_be_constants_and_defaults(loads):
+    m = loads('''
+        const Node x = {'value': 1, 'next': {'value': 2}};
+
+        struct Node {
+            1: required i32 value
+            2: optional Node next
+        }
+
+        struct Foo {
+            1: required Node node = {'value': 3, 'next': x}
+        }
+    ''')
+    assert m.x == m.Node(value=1, next=m.Node(value=2))
+    assert m.Foo().node == m.Node(value=3, next=m.x)
+
+
+def test_unions_can_be_constants(loads):
+    m = loads('''
+        const Value stringValue = {'stringValue': 'hello world'}
+        const Value intValue = {'intValue': 42}
+
+        const Value itemValue = {
+            'itemValue': {
+                'key': 'foo',
+                'value': intValue
+            }
+        }
+
+        const Value listValue = {'listValue': [itemValue, stringValue]}
+
+        struct Item {
+            1: required string key
+            2: required Value value
+        }
+
+        union Value {
+            1: string stringValue
+            2: i32 intValue
+            3: Item itemValue
+            4: list<Value> listValue
+        }
+    ''')
+
+    assert m.stringValue == m.Value(stringValue='hello world')
+    assert m.intValue == m.Value(intValue=42)
+
+    assert (
+        m.itemValue == m.Value(itemValue=m.Item('foo', m.Value(intValue=42)))
+    )
+    assert m.itemValue.itemValue.value is m.intValue
+
+    assert m.listValue == m.Value(listValue=[m.itemValue, m.stringValue])
+
+
+@pytest.mark.parametrize('s', [
+    '''
+        struct Item { 1: required string key, 2: required string value }
+        const Item i = {'key': 'foo'}
+    ''',
+    '''
+        union X { 1: string a, 2: i32 b }
+        const X y = {'a': 42}
+    ''',
+    '''
+        union X { 1: string a, 2: i32 b }
+        const X y = {'a': 'foo', 'b': 42}
+    ''',
+    '''
+        struct A { 1: required string key }
+
+        struct B {
+            1: optional A a = {}
+        }
+    ''',
+])
+def test_invalid_constant_structs_or_unions(loads, s):
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        loads(s)
+
+    assert (
+        'Value for constant' in str(exc_info) or
+        'Default value for field' in str(exc_info)
+    )
+    assert 'does not match' in str(exc_info)

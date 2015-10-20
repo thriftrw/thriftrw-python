@@ -265,6 +265,20 @@ Constants are made available as-is in the generated module::
 
     LAST_UPDATED = '2015-08-28'
 
+Constants and default values may be structs or unions if represented as maps
+with string keys in the Thrift file::
+
+    struct Item { 1: required string key, 2: required i32 value }
+
+    const Item ZERO_ITEM = {'key': '', 'value': 0}
+
+The generated module will include a ``ZERO_ITEM`` definition equivalent to,
+
+.. code-block:: python
+
+    ZERO_ITEM = Item(key=u'', value=0)
+
+
 Primitive representations
 -------------------------
 
