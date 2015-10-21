@@ -111,7 +111,7 @@ cdef class Value(object):
     they are sent and received over the wire.
     """
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         """Apply the value to the given visitor.
 
         The appropriate `visit_*` method will be called and its result
@@ -122,7 +122,7 @@ cdef class Value(object):
         :returns:
             Value returned by the corresponding ``visit_*`` method.
         """
-        pass
+        raise NotImplementedError
 
 
 cdef class BoolValue(Value):
@@ -142,7 +142,7 @@ cdef class BoolValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_bool(self.value)
 
 
@@ -163,7 +163,7 @@ cdef class ByteValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_byte(self.value)
 
 
@@ -184,7 +184,7 @@ cdef class DoubleValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_double(self.value)
 
 
@@ -205,7 +205,7 @@ cdef class I16Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_i16(self.value)
 
 
@@ -226,7 +226,7 @@ cdef class I32Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_i32(self.value)
 
 
@@ -247,7 +247,7 @@ cdef class I64Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_i64(self.value)
 
 
@@ -272,7 +272,7 @@ cdef class BinaryValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_binary(self.value)
 
 
@@ -292,7 +292,7 @@ cdef class FieldValue(object):
         Value for this field.
     """
 
-    def __cinit__(self, int16_t id, int8_t ttype, Value value):
+    def __cinit__(self, int16_t id, int8_t ttype, value):
         self.id = id
         self.ttype = ttype
         self.value = value
@@ -329,7 +329,7 @@ cdef class StructValue(Value):
         for field in fields:
             self._index[(field.id, field.ttype)] = field
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_struct(self.fields)
 
     def get(self, field_id, field_ttype):
@@ -370,7 +370,7 @@ cdef class MapItem(object):
         Value associated with the key
     """
 
-    def __cinit__(self, Value key, Value value):
+    def __cinit__(self, key, value):
         self.key = key
         self.value = value
 
@@ -425,7 +425,7 @@ cdef class MapValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_map(self.key_ttype, self.value_ttype, self.pairs)
 
 
@@ -459,7 +459,7 @@ cdef class SetValue(Value):
             (self.values, other.values),
         ])
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_set(self.value_ttype, self.values)
 
 
@@ -493,7 +493,7 @@ cdef class ListValue(Value):
             (self.values, other.values),
         ])
 
-    cpdef object apply(self, ValueVisitor visitor):
+    cpdef object apply(self, visitor):
         return visitor.visit_list(self.value_ttype, self.values)
 
 
@@ -515,7 +515,7 @@ cdef class ValueVisitor(object):
         :param bool value:
             True or False
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_byte(self, int8_t value):
         """Visits 8-bit integers.
@@ -523,7 +523,7 @@ cdef class ValueVisitor(object):
         :param int value:
             8-bit integer
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_double(self, double value):
         """Visits double values.
@@ -531,7 +531,7 @@ cdef class ValueVisitor(object):
         :param float value:
             Floating point number
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_i16(self, int16_t value):
         """Visits 16-bit integers.
@@ -539,7 +539,7 @@ cdef class ValueVisitor(object):
         :param int value:
             16-bit integer
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_i32(self, int32_t value):
         """Visits 32-bit integers.
@@ -547,7 +547,7 @@ cdef class ValueVisitor(object):
         :param int value:
             32-bit integer
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_i64(self, int64_t value):
         """Visits 64-bit integers.
@@ -555,7 +555,7 @@ cdef class ValueVisitor(object):
         :param int value:
             64-bit integer
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_binary(self, bytes value):
         """Visits binary blobs.
@@ -563,7 +563,7 @@ cdef class ValueVisitor(object):
         :param bytes value:
             Binary blob
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_struct(self, list fields):
         """Visits structs.
@@ -571,7 +571,7 @@ cdef class ValueVisitor(object):
         :param fields:
             Collection of :py:class:`FieldValue` objects.
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_map(
         self, int8_t key_ttype, int8_t value_ttype, list pairs
@@ -585,7 +585,7 @@ cdef class ValueVisitor(object):
         :param pairs:
             Collection of key-value pairs.
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_set(self, int8_t value_ttype, list values):
         """Visits sets.
@@ -595,7 +595,7 @@ cdef class ValueVisitor(object):
         :param values:
             Collection of values in the set.
         """
-        pass
+        raise NotImplementedError
 
     cpdef object visit_list(self, int8_t value_ttype, list values):
         """Visits lists.
@@ -605,4 +605,4 @@ cdef class ValueVisitor(object):
         :param values:
             Collection of values in the list.
         """
-        pass
+        raise NotImplementedError

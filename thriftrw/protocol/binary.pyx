@@ -241,7 +241,7 @@ cdef class BinaryProtocolWriter(ValueVisitor):
         """
         self.writer = writer
 
-    cpdef write(self, Value value):
+    cpdef write(self, value):
         """Writes the given value.
 
         :param value:

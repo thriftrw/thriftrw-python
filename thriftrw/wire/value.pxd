@@ -55,52 +55,68 @@ cdef class ValueVisitor(object):
 
 cdef class Value(object):
 
-    cpdef object apply(self, ValueVisitor visitor)
+    cpdef object apply(self, visitor)
 
 
 cdef class BoolValue(Value):
     cdef readonly bint value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class ByteValue(Value):
     cdef readonly int8_t value
+
+    cpdef object apply(self, visitor)
 
 
 cdef class DoubleValue(Value):
     cdef readonly double value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class I16Value(Value):
     cdef readonly int16_t value
+
+    cpdef object apply(self, visitor)
 
 
 cdef class I32Value(Value):
     cdef readonly int32_t value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class I64Value(Value):
     cdef readonly int64_t value
+
+    cpdef object apply(self, visitor)
 
 
 cdef class BinaryValue(Value):
     cdef readonly bytes value
     # TODO change to char* once BinaryProtocol knows how to write that.
 
+    cpdef object apply(self, visitor)
+
 
 cdef class FieldValue(object):
     cdef readonly int16_t id
     cdef readonly int8_t ttype
-    cdef readonly Value value
+    cdef readonly object value
 
 
 cdef class StructValue(Value):
     cdef readonly list fields
     cdef readonly dict _index
 
+    cpdef object apply(self, visitor)
+
 
 cdef class MapItem(object):
-    cdef readonly Value key
-    cdef readonly Value value
+    cdef readonly object key
+    cdef readonly object value
 
 
 cdef class MapValue(Value):
@@ -108,12 +124,18 @@ cdef class MapValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list pairs
 
+    cpdef object apply(self, visitor)
+
 
 cdef class SetValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list values
 
+    cpdef object apply(self, visitor)
+
 
 cdef class ListValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list values
+
+    cpdef object apply(self, visitor)
