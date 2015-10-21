@@ -28,8 +28,34 @@ from libc.stdint cimport (
 )
 
 
+cdef class ValueVisitor(object):
+
+    cpdef object visit_bool(self, bint value)
+
+    cpdef object visit_byte(self, int8_t value)
+
+    cpdef object visit_double(self, double value)
+
+    cpdef object visit_i16(self, int16_t value)
+
+    cpdef object visit_i32(self, int32_t value)
+
+    cpdef object visit_i64(self, int64_t value)
+
+    cpdef object visit_binary(self, bytes value)
+
+    cpdef object visit_struct(self, list fields)
+
+    cpdef object visit_map(self, int8_t key_ttype, int8_t value_ttype, list pairs)
+
+    cpdef object visit_set(self, int8_t value_ttype, list values)
+
+    cpdef object visit_list(self, int8_t value_ttype, list values)
+
+
 cdef class Value(object):
-    pass
+
+    cpdef object apply(self, ValueVisitor visitor)
 
 
 cdef class BoolValue(Value):
@@ -57,11 +83,8 @@ cdef class I64Value(Value):
 
 
 cdef class BinaryValue(Value):
-    cdef readonly char* value
-
-    # a reference to the Python object must be maintained to ensure that the
-    # char* doesn't get free-ed
-    cdef bytes _value
+    cdef readonly bytes value
+    # TODO change to char* once BinaryProtocol knows how to write that.
 
 
 cdef class FieldValue(object):
