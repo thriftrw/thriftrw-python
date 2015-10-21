@@ -32,6 +32,7 @@ from libc.stdint cimport (
 )
 
 from thriftrw.wire import TType
+from thriftrw._buffer cimport ReadBuffer
 from thriftrw._buffer cimport WriteBuffer
 from thriftrw.wire.value cimport (
     ValueVisitor,
@@ -52,19 +53,26 @@ from thriftrw.wire.value cimport (
 )
 
 from .core import Protocol
-from ._endian cimport htobe16, htobe32, htobe64
 from ..errors import EndOfInputError
 from ..errors import ThriftProtocolError
+from ._endian cimport (
+    htobe16,
+    htobe32,
+    htobe64,
+    be16toh,
+    be32toh,
+    be64toh,
+)
 
 
 STRUCT_END = 0
 
-class BinaryProtocolReader(object):
+cdef class BinaryProtocolReader(object):
     """Parser for the binary protocol."""
 
-    __slots__ = ('reader',)
+    cdef ReadBuffer reader
 
-    def __init__(self, reader):
+    def __cinit__(self, ReadBuffer reader):
         """Initialize the reader.
 
         :param reader:
@@ -73,72 +81,98 @@ class BinaryProtocolReader(object):
         """
         self.reader = reader
 
-    def read(self, typ):
+    cdef object _reader(self, int8_t typ):
+        if typ == TType.BOOL:
+            return self.read_bool
+        elif typ == TType.BYTE:
+            return self.read_byte
+        elif typ == TType.DOUBLE:
+            return self.read_double
+        elif typ == TType.I16:
+            return self.read_i16
+        elif typ == TType.I32:
+            return self.read_i32
+        elif typ == TType.I64:
+            return self.read_i64
+        elif typ == TType.BINARY:
+            return self.read_binary
+        elif typ == TType.STRUCT:
+            return self.read_struct
+        elif typ == TType.MAP:
+            return self.read_map
+        elif typ == TType.SET:
+            return self.read_set
+        elif typ == TType.LIST:
+            return self.read_list
+        else:
+            raise ThriftProtocolError('Unknown TType "%r"' % typ)
+
+    cpdef object read(self, int8_t typ):
         return self._reader(typ)(self)
 
-    def _read(self, num_bytes):
-        chunk = self.reader.read(num_bytes)
-        if len(chunk) != num_bytes:
-            raise EndOfInputError(
-                'Expected %d bytes but got %d bytes.' %
-                (num_bytes, len(chunk))
-            )
-        return chunk
+    cdef void _read(self, char* data, int count) except *:
+        self.reader.read(data, count)
 
-    def _unpack(self, num_bytes, spec):
-        """Unpack a single value using the given format and return it.
+    cdef int8_t _byte(self) except *:
+        cdef char c
+        self._read(&c, 1)
+        return <int8_t>c
 
-        :param num_bytes:
-            Number of bytes to read.
-        :param spec:
-            Spec for ``struct.unpack``
-        """
-        (result,) = struct.unpack(spec, self._read(num_bytes))
-        return result
+    cdef int16_t _i16(self) except *:
+        cdef char data[2]
+        self._read(data, 2)
+        return be16toh((<int16_t*>data)[0])
 
-    def _byte(self):
-        return self._unpack(1, b'!b')
+    cdef int32_t _i32(self) except *:
+        cdef char data[4]
+        self._read(data, 4)
+        return be32toh((<int32_t*>data)[0])
 
-    def _i16(self):
-        return self._unpack(2, b'!h')
+    cdef int64_t _i64(self) except *:
+        cdef char data[8]
+        self._read(data, 8)
+        return be64toh((<int64_t*>data)[0])
 
-    def _i32(self):
-        return self._unpack(4, b'!i')
+    cdef double _double(self) except *:
+        cdef int64_t value = self._i64()
+        return (<double*>(&value))[0]
 
-    def read_bool(self):
+    cdef BoolValue read_bool(self):
         """Reads a boolean."""
         return BoolValue(self._byte() == 1)
 
-    def read_byte(self):
+    cdef ByteValue read_byte(self):
         """Reads a byte."""
         return ByteValue(self._byte())
 
-    def read_double(self):
+    cdef DoubleValue read_double(self):
         """Reads a double."""
-        return DoubleValue(self._unpack(8, b'!d'))
+        return DoubleValue(self._double())
 
-    def read_i16(self):
+    cdef I16Value read_i16(self):
         """Reads a 16-bit integer."""
         return I16Value(self._i16())
 
-    def read_i32(self):
+    cdef I32Value read_i32(self):
         """Reads a 32-bit integer."""
         return I32Value(self._i32())
 
-    def read_i64(self):
+    cdef I64Value read_i64(self):
         """Reads a 64-bit integer."""
-        return I64Value(self._unpack(8, b'!q'))
+        return I64Value(self._i64())
 
-    def read_binary(self):
+    cdef BinaryValue read_binary(self):
         """Reads a binary blob."""
-        length = self._i32()
-        return BinaryValue(self._read(length))
+        cdef int32_t length = self._i32()
+        return BinaryValue(self.reader.take(length))
 
-    def read_struct(self):
+    cdef StructValue read_struct(self):
         """Reads an arbitrary Thrift struct."""
         fields = []
 
-        field_type = self._byte()
+        cdef int8_t field_type = self._byte()
+        cdef int16_t field_id
+
         while field_type != STRUCT_END:
             field_id = self._i16()
             field_value = self.read(field_type)
@@ -153,19 +187,19 @@ class BinaryProtocolReader(object):
             field_type = self._byte()
         return StructValue(fields)
 
-    def read_map(self):
+    cdef MapValue read_map(self):
         """Reads a map."""
-        key_ttype = self._byte()
-        value_ttype = self._byte()
-        length = self._i32()
+        cdef int8_t key_ttype = self._byte()
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
 
-        key_reader = self._reader(key_ttype)
-        value_reader = self._reader(value_ttype)
+        kreader = self._reader(key_ttype)
+        vreader = self._reader(value_ttype)
 
         pairs = []
         for i in range(length):
-            k = key_reader(self)
-            v = value_reader(self)
+            k = kreader(self)
+            v = vreader(self)
             pairs.append(MapItem(k, v))
 
         return MapValue(
@@ -174,64 +208,45 @@ class BinaryProtocolReader(object):
             pairs=pairs,
         )
 
-    def read_set(self):
+    cdef SetValue read_set(self):
         """Reads a set."""
-        value_ttype = self._byte()
-        length = self._i32()
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
 
-        value_reader = self._reader(value_ttype)
+        vreader = self._reader(value_ttype)
+
         values = []
 
         for i in range(length):
-            values.append(value_reader(self))
+            values.append(vreader(self))
 
         return SetValue(
             value_ttype=value_ttype,
             values=values
         )
 
-    def read_list(self):
+    cdef ListValue read_list(self):
         """Reads a list."""
-        value_ttype = self._byte()
-        length = self._i32()
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
 
-        value_reader = self._reader(value_ttype)
+        vreader = self._reader(value_ttype)
+
         values = []
 
         for i in range(length):
-            values.append(value_reader(self))
+            values.append(vreader(self))
 
         return ListValue(
             value_ttype=value_ttype,
             values=values
         )
 
-    def _reader(self, typ):
-        reader = self._readers.get(typ)
-        if reader is None:
-            raise ThriftProtocolError('Unknown TType "%r"' % typ)
-        return reader
-
-    # Mapping of TType to function that can read it.
-    _readers = {
-        TType.BOOL: read_bool,
-        TType.BYTE: read_byte,
-        TType.DOUBLE: read_double,
-        TType.I16: read_i16,
-        TType.I32: read_i32,
-        TType.I64: read_i64,
-        TType.BINARY: read_binary,
-        TType.STRUCT: read_struct,
-        TType.MAP: read_map,
-        TType.SET: read_set,
-        TType.LIST: read_list,
-    }
-
 
 cdef class BinaryProtocolWriter(ValueVisitor):
     """Serializes values using the Thrift Binary protocol."""
 
-    cdef WriteBuffer writer  # TODO should be a typed buffer
+    cdef WriteBuffer writer
 
     def __cinit__(self, WriteBuffer writer):
         """Initialize the writer.
@@ -334,7 +349,7 @@ class BinaryProtocol(Protocol):
         return buff.value
 
     def deserialize_value(self, typ, s):
-        buff = BytesIO(s)
+        buff = ReadBuffer(s)
         reader = self.reader_class(buff)
         return reader.read(typ)
 
