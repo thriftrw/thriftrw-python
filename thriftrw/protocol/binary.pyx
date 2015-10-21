@@ -142,7 +142,7 @@ class BinaryProtocolReader(object):
         for i in range(length):
             k = key_reader(self)
             v = value_reader(self)
-            pairs.append((k, v))
+            pairs.append(V.MapItem(k, v))
 
         return V.MapValue(
             key_ttype=key_ttype,
@@ -265,15 +265,15 @@ class BinaryProtocolWriter(V.ValueVisitor):
             self.write(field.value)
         self.visit_byte(STRUCT_END)
 
-    def visit_map(self, key_ttype, value_ttype, pairs):
+    def visit_map(self, key_ttype, value_ttype, items):
         # key_type:1 value_type:1 count:4 (key:* value:*){count}
         self.visit_byte(key_ttype)
         self.visit_byte(value_ttype)
-        self.visit_i32(len(pairs))
+        self.visit_i32(len(items))
 
-        for k, v in pairs:
-            self.write(k)
-            self.write(v)
+        for item in items:
+            self.write(item.key)
+            self.write(item.value)
 
     def visit_set(self, value_ttype, values):
         # value_type:1 count:4 (item:*){count}

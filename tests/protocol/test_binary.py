@@ -238,7 +238,7 @@ def reader_writer_ids(x):
     ], vset(TType.BOOL, vbool(True), vbool(False), vbool(True))),
 
     # list = vtype:1 count:4 (value){count}
-    (TType.LIST, [0x0C, 0x00, 0x00, 0x00, 0x00], vset(TType.STRUCT)),
+    (TType.LIST, [0x0C, 0x00, 0x00, 0x00, 0x00], vlist(TType.STRUCT)),
     (TType.LIST, [
         0x0C,                       # vtype:1 = struct
         0x00, 0x00, 0x00, 0x02,     # count:4 = 2

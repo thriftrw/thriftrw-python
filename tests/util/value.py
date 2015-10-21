@@ -47,7 +47,9 @@ def vlist(typ, *items):
 
 
 def vmap(ktype, vtype, *items):
-    return value.MapValue(ktype, vtype, list(items))
+    return value.MapValue(
+        ktype, vtype, [value.MapItem(k, v) for k, v in items]
+    )
 
 
 def vset(vtype, *items):
