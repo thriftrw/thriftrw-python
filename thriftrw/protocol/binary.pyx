@@ -24,8 +24,31 @@ import struct
 from io import BytesIO
 from six.moves import range
 
-from thriftrw.wire import value as V
+from libc.stdint cimport (
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+)
+
 from thriftrw.wire import TType
+from thriftrw.wire.value cimport (
+    ValueVisitor,
+    Value,
+    BoolValue,
+    ByteValue,
+    DoubleValue,
+    I16Value,
+    I32Value,
+    I64Value,
+    BinaryValue,
+    FieldValue,
+    StructValue,
+    MapValue,
+    MapItem,
+    SetValue,
+    ListValue,
+)
 
 from .core import Protocol
 from ..errors import EndOfInputError
@@ -33,7 +56,6 @@ from ..errors import ThriftProtocolError
 
 
 STRUCT_END = 0
-
 
 class BinaryProtocolReader(object):
     """Parser for the binary protocol."""
@@ -83,32 +105,32 @@ class BinaryProtocolReader(object):
 
     def read_bool(self):
         """Reads a boolean."""
-        return V.BoolValue(self._byte() == 1)
+        return BoolValue(self._byte() == 1)
 
     def read_byte(self):
         """Reads a byte."""
-        return V.ByteValue(self._byte())
+        return ByteValue(self._byte())
 
     def read_double(self):
         """Reads a double."""
-        return V.DoubleValue(self._unpack(8, b'!d'))
+        return DoubleValue(self._unpack(8, b'!d'))
 
     def read_i16(self):
         """Reads a 16-bit integer."""
-        return V.I16Value(self._i16())
+        return I16Value(self._i16())
 
     def read_i32(self):
         """Reads a 32-bit integer."""
-        return V.I32Value(self._i32())
+        return I32Value(self._i32())
 
     def read_i64(self):
         """Reads a 64-bit integer."""
-        return V.I64Value(self._unpack(8, b'!q'))
+        return I64Value(self._unpack(8, b'!q'))
 
     def read_binary(self):
         """Reads a binary blob."""
         length = self._i32()
-        return V.BinaryValue(self._read(length))
+        return BinaryValue(self._read(length))
 
     def read_struct(self):
         """Reads an arbitrary Thrift struct."""
@@ -119,7 +141,7 @@ class BinaryProtocolReader(object):
             field_id = self._i16()
             field_value = self.read(field_type)
             fields.append(
-                V.FieldValue(
+                FieldValue(
                     id=field_id,
                     ttype=field_type,
                     value=field_value,
@@ -127,7 +149,7 @@ class BinaryProtocolReader(object):
             )
 
             field_type = self._byte()
-        return V.StructValue(fields)
+        return StructValue(fields)
 
     def read_map(self):
         """Reads a map."""
@@ -142,9 +164,9 @@ class BinaryProtocolReader(object):
         for i in range(length):
             k = key_reader(self)
             v = value_reader(self)
-            pairs.append(V.MapItem(k, v))
+            pairs.append(MapItem(k, v))
 
-        return V.MapValue(
+        return MapValue(
             key_ttype=key_ttype,
             value_ttype=value_ttype,
             pairs=pairs,
@@ -161,7 +183,7 @@ class BinaryProtocolReader(object):
         for i in range(length):
             values.append(value_reader(self))
 
-        return V.SetValue(
+        return SetValue(
             value_ttype=value_ttype,
             values=values
         )
@@ -177,7 +199,7 @@ class BinaryProtocolReader(object):
         for i in range(length):
             values.append(value_reader(self))
 
-        return V.ListValue(
+        return ListValue(
             value_ttype=value_ttype,
             values=values
         )
@@ -204,10 +226,12 @@ class BinaryProtocolReader(object):
     }
 
 
-class BinaryProtocolWriter(V.ValueVisitor):
+cdef class BinaryProtocolWriter(ValueVisitor):
     """Serializes values using the Thrift Binary protocol."""
 
     __slots__ = ('writer',)
+
+    cdef object writer  # TODO should be a typed buffer
 
     def __init__(self, writer):
         """Initialize the writer.
@@ -217,7 +241,7 @@ class BinaryProtocolWriter(V.ValueVisitor):
         """
         self.writer = writer
 
-    def write(self, value):
+    cpdef write(self, value):
         """Writes the given value.
 
         :param value:
@@ -235,29 +259,29 @@ class BinaryProtocolWriter(V.ValueVisitor):
         """
         self.writer.write(struct.pack(spec, value))
 
-    def visit_bool(self, value):  # bool:1
+    cpdef object visit_bool(self, bint value):  # bool:1
         self.visit_byte(1 if value else 0)
 
-    def visit_byte(self, value):  # byte:1
+    cpdef object visit_byte(self, int8_t value):  # byte:1
         self._pack(b'!b', value)
 
-    def visit_double(self, value):  # double:8
+    cpdef object visit_double(self, double value):  # double:8
         self._pack(b'!d', value)
 
-    def visit_i16(self, value):  # i16:2
+    cpdef object visit_i16(self, int16_t value):  # i16:2
         self._pack(b'!h', value)
 
-    def visit_i32(self, value):  # i32:4
+    cpdef object visit_i32(self, int32_t value):  # i32:4
         self._pack(b'!i', value)
 
-    def visit_i64(self, value):  # i64:8
+    cpdef object visit_i64(self, int64_t value):  # i64:8
         self._pack(b'!q', value)
 
-    def visit_binary(self, value):  # len:4 str:len
+    cpdef object visit_binary(self, bytes value):  # len:4 str:len
         self.visit_i32(len(value))
         self.writer.write(value)
 
-    def visit_struct(self, fields):
+    cpdef object visit_struct(self, list fields):
         # ( type:1 id:2 value:* ){fields} '0'
         for field in fields:
             self.visit_byte(field.ttype)
@@ -265,17 +289,19 @@ class BinaryProtocolWriter(V.ValueVisitor):
             self.write(field.value)
         self.visit_byte(STRUCT_END)
 
-    def visit_map(self, key_ttype, value_ttype, items):
+    cpdef object visit_map(
+        self, int8_t key_ttype, int8_t value_ttype, list pairs
+    ):
         # key_type:1 value_type:1 count:4 (key:* value:*){count}
         self.visit_byte(key_ttype)
         self.visit_byte(value_ttype)
-        self.visit_i32(len(items))
+        self.visit_i32(len(pairs))
 
-        for item in items:
+        for item in pairs:
             self.write(item.key)
             self.write(item.value)
 
-    def visit_set(self, value_ttype, values):
+    cpdef object visit_set(self, int8_t value_ttype, list values):
         # value_type:1 count:4 (item:*){count}
         self.visit_byte(value_ttype)
         self.visit_i32(len(values))
@@ -283,7 +309,7 @@ class BinaryProtocolWriter(V.ValueVisitor):
         for v in values:
             self.write(v)
 
-    def visit_list(self, value_ttype, values):
+    cpdef object visit_list(self, int8_t value_ttype, list values):
         # value_type:1 count:4 (item:*){count}
         self.visit_byte(value_ttype)
         self.visit_i32(len(values))
