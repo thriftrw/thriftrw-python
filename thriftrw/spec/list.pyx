@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import collections
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import ListValue
 
 from . import check
@@ -36,7 +36,7 @@ class ListTypeSpec(TypeSpec):
 
     __slots__ = ('vspec', 'linked')
 
-    ttype_code = TType.LIST
+    ttype_code = ttype.LIST
     surface = list
 
     def __init__(self, vspec):

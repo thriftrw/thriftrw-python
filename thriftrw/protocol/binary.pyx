@@ -31,7 +31,7 @@ from libc.stdint cimport (
     int64_t,
 )
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw._buffer cimport ReadBuffer
 from thriftrw._buffer cimport WriteBuffer
 from thriftrw.wire.value cimport (
@@ -82,27 +82,27 @@ cdef class BinaryProtocolReader(object):
         self.reader = reader
 
     cdef object _reader(self, int8_t typ):
-        if typ == TType.BOOL:
+        if typ == ttype.BOOL:
             return self.read_bool
-        elif typ == TType.BYTE:
+        elif typ == ttype.BYTE:
             return self.read_byte
-        elif typ == TType.DOUBLE:
+        elif typ == ttype.DOUBLE:
             return self.read_double
-        elif typ == TType.I16:
+        elif typ == ttype.I16:
             return self.read_i16
-        elif typ == TType.I32:
+        elif typ == ttype.I32:
             return self.read_i32
-        elif typ == TType.I64:
+        elif typ == ttype.I64:
             return self.read_i64
-        elif typ == TType.BINARY:
+        elif typ == ttype.BINARY:
             return self.read_binary
-        elif typ == TType.STRUCT:
+        elif typ == ttype.STRUCT:
             return self.read_struct
-        elif typ == TType.MAP:
+        elif typ == ttype.MAP:
             return self.read_map
-        elif typ == TType.SET:
+        elif typ == ttype.SET:
             return self.read_set
-        elif typ == TType.LIST:
+        elif typ == ttype.LIST:
             return self.read_list
         else:
             raise ThriftProtocolError('Unknown TType "%r"' % typ)

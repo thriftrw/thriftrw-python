@@ -6,6 +6,8 @@ Releases
 
 - ``MapValue`` now contains ``MapItem`` objects instead of key-value tuple
   pairs.
+- **Breaking** Removed ``thriftrw.wire.TType`` in favor of the
+  ``thriftrw.wire.ttype`` module.
 
 
 0.5.2 (2015-10-19)

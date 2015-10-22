@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import six
 import numbers
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import (
     BoolValue,
     ByteValue,
@@ -114,7 +114,7 @@ class PrimitiveTypeSpec(TypeSpec):
 
 class _TextualTypeSpec(TypeSpec):
 
-    ttype_code = TType.BINARY
+    ttype_code = ttype.BINARY
 
     def link(self, scope):
         return self
@@ -182,7 +182,7 @@ class _BoolTypeSpec(TypeSpec):
 
     name = 'bool'
     surface = bool
-    ttype_code = TType.BOOL
+    ttype_code = ttype.BOOL
 
     def to_wire(self, value):
         return BoolValue(bool(value))
@@ -209,27 +209,27 @@ BoolTypeSpec = _BoolTypeSpec()
 
 #: TypeSpec for single-byte integers.
 ByteTypeSpec = PrimitiveTypeSpec(
-    'byte', TType.BYTE, ByteValue, numbers.Integral, int
+    'byte', ttype.BYTE, ByteValue, numbers.Integral, int
 )
 
 #: TypeSpec for floating point numbers with 64 bits of precision.
 DoubleTypeSpec = PrimitiveTypeSpec(
-    'double', TType.DOUBLE, DoubleValue, numbers.Number, float
+    'double', ttype.DOUBLE, DoubleValue, numbers.Number, float
 )
 
 #: TypeSpec for 16-bit integers.
 I16TypeSpec = PrimitiveTypeSpec(
-    'i16', TType.I16, I16Value, numbers.Integral, int
+    'i16', ttype.I16, I16Value, numbers.Integral, int
 )
 
 #: TypeSpec for 32-bit integers.
 I32TypeSpec = PrimitiveTypeSpec(
-    'i32', TType.I32, I32Value, numbers.Integral, int
+    'i32', ttype.I32, I32Value, numbers.Integral, int
 )
 
 #: TypeSpec for 64-bit integers.
 I64TypeSpec = PrimitiveTypeSpec(
-    'i64', TType.I64, I64Value, numbers.Integral, long
+    'i64', ttype.I64, I64Value, numbers.Integral, long
 )
 
 #: TypeSpec for binary blobs.

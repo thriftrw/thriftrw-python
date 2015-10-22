@@ -29,7 +29,7 @@ from thriftrw.spec.struct import FieldSpec
 from thriftrw.idl import Parser
 from thriftrw.spec import primitive as prim_spec
 from thriftrw.spec.reference import TypeReference
-from thriftrw.wire.ttype import TType
+from thriftrw.wire import ttype
 
 from ..util.value import vstruct, vbinary, vi64, vi32
 
@@ -181,14 +181,14 @@ def test_simple_convert(loads):
         (
             SimpleStruct('hello', b'world'),
             vstruct(
-                (1, TType.BINARY, vbinary(b'hello')),
-                (2, TType.BINARY, vbinary(b'world')),
+                (1, ttype.BINARY, vbinary(b'hello')),
+                (2, ttype.BINARY, vbinary(b'world')),
             ),
             {'a': 'hello', 'b': b'world'},
         ),
         (
             SimpleStruct('hello'),
-            vstruct((1, TType.BINARY, vbinary(b'hello'))),
+            vstruct((1, ttype.BINARY, vbinary(b'hello'))),
             {'a': 'hello'},
         ),
     ]
@@ -258,9 +258,9 @@ def test_default_values(loads):
         (
             Struct('hello'),
             vstruct(
-                (2, TType.I64, vi64(42)),
-                (3, TType.BINARY, vbinary(b'')),
-                (4, TType.BINARY, vbinary(b'hello')),
+                (2, ttype.I64, vi64(42)),
+                (3, ttype.BINARY, vbinary(b'')),
+                (4, ttype.BINARY, vbinary(b'hello')),
             ),
             {
                 'optionalFieldWithDefault': 42,
@@ -271,10 +271,10 @@ def test_default_values(loads):
         (
             Struct('hello', 10, 100, u'world'),
             vstruct(
-                (1, TType.I32, vi32(10)),
-                (2, TType.I64, vi64(100)),
-                (3, TType.BINARY, vbinary(b'world')),
-                (4, TType.BINARY, vbinary(b'hello')),
+                (1, ttype.I32, vi32(10)),
+                (2, ttype.I64, vi64(100)),
+                (3, ttype.BINARY, vbinary(b'world')),
+                (4, ttype.BINARY, vbinary(b'hello')),
             ),
             {
                 'optionalField': 10,
@@ -368,15 +368,15 @@ def test_self_referential(loads):
     c = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5)))))
 
     assert spec.to_wire(c) == vstruct(
-        (1, TType.I32, vi32(1)),
-        (2, TType.STRUCT, vstruct(
-            (1, TType.I32, vi32(2)),
-            (2, TType.STRUCT, vstruct(
-                (1, TType.I32, vi32(3)),
-                (2, TType.STRUCT, vstruct(
-                    (1, TType.I32, vi32(4)),
-                    (2, TType.STRUCT, vstruct(
-                        (1, TType.I32, vi32(5)),
+        (1, ttype.I32, vi32(1)),
+        (2, ttype.STRUCT, vstruct(
+            (1, ttype.I32, vi32(2)),
+            (2, ttype.STRUCT, vstruct(
+                (1, ttype.I32, vi32(3)),
+                (2, ttype.STRUCT, vstruct(
+                    (1, ttype.I32, vi32(4)),
+                    (2, ttype.STRUCT, vstruct(
+                        (1, ttype.I32, vi32(5)),
                     )),
                 )),
             )),

@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import StructValue
 
 from . import check
@@ -89,7 +89,7 @@ class UnionTypeSpec(TypeSpec):
 
     __slots__ = ('name', 'fields', 'linked', 'surface', 'allow_empty')
 
-    ttype_code = TType.STRUCT
+    ttype_code = ttype.STRUCT
 
     def __init__(self, name, fields, allow_empty=None):
         self.name = name

@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import abc
 
-from thriftrw.wire import TType
+from thriftrw.wire import ttype
 
 
 __all__ = ['Protocol']
@@ -47,7 +47,7 @@ class Protocol(object):
     def deserialize_value(self, typ, s):
         """Parse a ``Value`` of the given type.
 
-        :param ~thriftrw.wire.TType typ:
+        :param typ:
             Type code of the value to parse.
         :param s:
             Bytes to decode.
@@ -82,7 +82,7 @@ class Protocol(object):
         :raises thriftrw.errors.ThriftProtocolError:
             If the object failed to deserialize.
         """
-        value = self.deserialize_value(TType.STRUCT, s)
+        value = self.deserialize_value(ttype.STRUCT, s)
         return obj_cls.type_spec.from_wire(value)
 
     # TODO do we care about Message envelopes?

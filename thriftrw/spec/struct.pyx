@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import StructValue, FieldValue
 
 from . import check
@@ -97,7 +97,7 @@ class StructTypeSpec(TypeSpec):
         'name', 'fields', 'linked', 'surface', 'base_cls',
     )
 
-    ttype_code = TType.STRUCT
+    ttype_code = ttype.STRUCT
 
     def __init__(self, name, fields, base_cls=None):
         """Initialize a new StructTypeSpec.

@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from thriftrw.wire import TType
+from thriftrw.wire import ttype
 
 from .spec_mapper import type_spec_or_ref
 from ..errors import ThriftCompilerError
@@ -51,7 +51,7 @@ class ContsValueMap(object):
         self.surface = None
 
     def link(self, scope, type_spec):
-        if type_spec.ttype_code != TType.MAP:
+        if type_spec.ttype_code != ttype.MAP:
             raise TypeError('Expected a %s but got a map.' % type_spec.name)
         if not self.linked:
             self.linked = True
@@ -82,7 +82,7 @@ class ConstValueList(object):
         self.surface = None
 
     def link(self, scope, type_spec):
-        if type_spec.ttype_code not in (TType.LIST, TType.SET):
+        if type_spec.ttype_code not in (ttype.LIST, ttype.SET):
             raise TypeError('Expected a %s but got a list.' % type_spec.name)
         if not self.linked:
             self.linked = True

@@ -29,7 +29,7 @@ from thriftrw.spec.reference import TypeReference
 from thriftrw.spec.service import ServiceSpec
 from thriftrw.spec.struct import FieldSpec
 from thriftrw.idl import Parser
-from thriftrw.wire.ttype import TType
+from thriftrw.wire import ttype
 
 from ..util.value import vstruct, vbinary, vmap, vbool
 
@@ -223,13 +223,13 @@ def test_load(loads):
             keyvalue.Item({'a': keyvalue.Value(stringValue=u'world')}),
         ),
         vstruct(
-            (1, TType.BINARY, vbinary(b'hello')),
-            (2, TType.STRUCT, vstruct(
-                (1, TType.MAP, vmap(
-                    TType.BINARY, TType.STRUCT,
+            (1, ttype.BINARY, vbinary(b'hello')),
+            (2, ttype.STRUCT, vstruct(
+                (1, ttype.MAP, vmap(
+                    ttype.BINARY, ttype.STRUCT,
                     (
                         vbinary(b'a'),
-                        vstruct((1, TType.BINARY, vbinary(b'world'))),
+                        vstruct((1, ttype.BINARY, vbinary(b'world'))),
                     )
                 )),
             )),
@@ -243,15 +243,15 @@ def test_load(loads):
             alreadyExists=keyvalue.ItemAlreadyExists('hello')
         ),
         vstruct(
-            (1, TType.STRUCT, vstruct(
-                (1, TType.BINARY, vbinary(b'hello'))
+            (1, ttype.STRUCT, vstruct(
+                (1, ttype.BINARY, vbinary(b'hello'))
             )),
         )
     )
 
     assert_round_trip(
         KeyValue.getItem.request('somekey'),
-        vstruct((1, TType.BINARY, vbinary(b'somekey')))
+        vstruct((1, ttype.BINARY, vbinary(b'somekey')))
     )
 
     assert_round_trip(KeyValue.noop.request(), vstruct())
@@ -264,7 +264,7 @@ def test_load(loads):
 
     assert_round_trip(
         KeyValue.healthy.response(success=True),
-        vstruct((0, TType.BOOL, vbool(True))),
+        vstruct((0, ttype.BOOL, vbool(True))),
     )
 
     assert keyvalue.dumps(
@@ -295,13 +295,13 @@ def test_fails_on_absent_return_value(loads):
         0x7e, 0xff,  # id:2 = 32511
         0x00,        # value = empty struct
         0x00,        # stop
-    ], vstruct((32511, TType.STRUCT, vstruct()))),
+    ], vstruct((32511, ttype.STRUCT, vstruct()))),
     ('nothing', [
         0x0C,        # typeid:1 = struct
         0x01, 0xff,  # id:2 = 511
         0x00,        # value = empty struct
         0x00,        # stop
-    ], vstruct((511, TType.STRUCT, vstruct()))),
+    ], vstruct((511, ttype.STRUCT, vstruct()))),
 ], ids=['returns-i32', 'returns-void'])
 def test_unrecognized_exception(loads, method, raw, wire_value):
     raw = bytes(bytearray(raw))

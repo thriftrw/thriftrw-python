@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import collections
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import SetValue
 
 from . import check
@@ -39,7 +39,7 @@ class SetTypeSpec(TypeSpec):
 
     __slots__ = ('vspec', 'linked')
 
-    ttype_code = TType.SET
+    ttype_code = ttype.SET
 
     def __init__(self, vspec):
         self.vspec = vspec

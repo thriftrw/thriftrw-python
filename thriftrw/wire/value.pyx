@@ -26,7 +26,7 @@ from libc.stdint cimport (
     int64_t,
 )
 
-from .ttype import TType
+from . cimport ttype
 
 __all__ = [
     'Value',
@@ -128,7 +128,7 @@ cdef class Value(object):
 cdef class BoolValue(Value):
     """Wrapper for boolean values."""
 
-    ttype_code = TType.BOOL
+    ttype_code = ttype.BOOL
 
     def __cinit__(self, bint value):
         self.value = value
@@ -149,7 +149,7 @@ cdef class BoolValue(Value):
 cdef class ByteValue(Value):
     """Wrapper for byte values."""
 
-    ttype_code = TType.BYTE
+    ttype_code = ttype.BYTE
 
     def __cinit__(self, int8_t value):
         self.value = value
@@ -170,7 +170,7 @@ cdef class ByteValue(Value):
 cdef class DoubleValue(Value):
     """Wrapper for double values."""
 
-    ttype_code = TType.DOUBLE
+    ttype_code = ttype.DOUBLE
 
     def __cinit__(self, double value):
         self.value = value
@@ -191,7 +191,7 @@ cdef class DoubleValue(Value):
 cdef class I16Value(Value):
     """Wrapper for 16-bit integer values."""
 
-    ttype_code = TType.I16
+    ttype_code = ttype.I16
 
     def __cinit__(self, int16_t value):
         self.value = value
@@ -212,7 +212,7 @@ cdef class I16Value(Value):
 cdef class I32Value(Value):
     """Wrapper for 32-bit integer values."""
 
-    ttype_code = TType.I32
+    ttype_code = ttype.I32
 
     def __cinit__(self, int value):
         self.value = value
@@ -233,7 +233,7 @@ cdef class I32Value(Value):
 cdef class I64Value(Value):
     """Wrapper for 64-bit integer values."""
 
-    ttype_code = TType.I64
+    ttype_code = ttype.I64
 
     def __cinit__(self, long value):
         self.value = value
@@ -258,7 +258,7 @@ cdef class BinaryValue(Value):
     the wire. UTF-8 text should be encoded/decoded manually.
     """
 
-    ttype_code = TType.BINARY
+    ttype_code = ttype.BINARY
 
     def __cinit__(self, bytes value):
         self.value = value
@@ -319,7 +319,7 @@ cdef class StructValue(Value):
         Collection of :py:class:`FieldValue` objects.
     """
 
-    ttype_code = TType.STRUCT
+    ttype_code = ttype.STRUCT
 
     def __cinit__(self, list fields):
         self.fields = fields
@@ -405,7 +405,7 @@ cdef class MapValue(Value):
         Collection of :py:class:`MapItem` objects.
     """
 
-    ttype_code = TType.MAP
+    ttype_code = ttype.MAP
 
     def __cinit__(self, int8_t key_ttype, int8_t value_ttype, list pairs):
         self.key_ttype = key_ttype
@@ -441,7 +441,7 @@ cdef class SetValue(Value):
         Collection of the values.
     """
 
-    ttype_code = TType.SET
+    ttype_code = ttype.SET
 
     def __cinit__(self, int8_t value_ttype, list values):
         self.value_ttype = value_ttype
@@ -475,7 +475,7 @@ cdef class ListValue(Value):
         Collection of the values.
     """
 
-    ttype_code = TType.LIST
+    ttype_code = ttype.LIST
 
     def __cinit__(self, int8_t value_ttype, list values):
         self.value_ttype = value_ttype
