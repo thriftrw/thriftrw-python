@@ -20,7 +20,11 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from libc.stdlib cimport malloc, realloc, free
+from cpython.mem cimport (
+    PyMem_Malloc,
+    PyMem_Realloc,
+    PyMem_Free,
+)
 from libc.string cimport memcpy
 
 
@@ -43,13 +47,13 @@ cdef class WriteBuffer(object):
         """
         init_capacity = init_capacity or DEFAULT_CAPACITY
 
-        self.data = <char*>malloc(init_capacity)
+        self.data = <char*>PyMem_Malloc(init_capacity)
         self.length = 0
         self.capacity = init_capacity
 
     def __dealloc__(self):
         if self.data != NULL:
-            free(self.data)
+            PyMem_Free(self.data)
             self.data = NULL
 
     cpdef void clear(self):
@@ -94,7 +98,7 @@ cdef class WriteBuffer(object):
             # add just enough room on top.
             new_total_length += min_bytes
 
-        self.data = <char*>realloc(self.data, new_total_length)
+        self.data = <char*>PyMem_Realloc(self.data, new_total_length)
         self.capacity = new_total_length - self.length
 
     property value:
