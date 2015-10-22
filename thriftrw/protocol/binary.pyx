@@ -32,6 +32,7 @@ from libc.stdint cimport (
 )
 
 from thriftrw.wire import TType
+from thriftrw._buffer cimport WriteBuffer
 from thriftrw.wire.value cimport (
     ValueVisitor,
     Value,
@@ -51,6 +52,7 @@ from thriftrw.wire.value cimport (
 )
 
 from .core import Protocol
+from ._endian cimport htobe16, htobe32, htobe64
 from ..errors import EndOfInputError
 from ..errors import ThriftProtocolError
 
@@ -229,15 +231,13 @@ class BinaryProtocolReader(object):
 cdef class BinaryProtocolWriter(ValueVisitor):
     """Serializes values using the Thrift Binary protocol."""
 
-    __slots__ = ('writer',)
+    cdef WriteBuffer writer  # TODO should be a typed buffer
 
-    cdef object writer  # TODO should be a typed buffer
-
-    def __init__(self, writer):
+    def __cinit__(self, WriteBuffer writer):
         """Initialize the writer.
 
         :param writer:
-            File-like object with ``write`` method.
+            WriteBuffer to which requests will be written.
         """
         self.writer = writer
 
@@ -249,37 +249,39 @@ cdef class BinaryProtocolWriter(ValueVisitor):
         """
         value.apply(self)
 
-    def _pack(self, spec, value):
-        """Pack the given value using ``struct.pack`` and write it.
-
-        :param spec:
-            Spec to pass to ``struct.pack``.
-        :param value:
-            Value to pack.
-        """
-        self.writer.write(struct.pack(spec, value))
+    cdef _write(self, char* data, int length):
+        self.writer.write(data, length)
 
     cpdef object visit_bool(self, bint value):  # bool:1
-        self.visit_byte(1 if value else 0)
+        self.visit_byte(value)
 
     cpdef object visit_byte(self, int8_t value):  # byte:1
-        self._pack(b'!b', value)
+        cdef char c = <char>value
+        self._write(&c, 1)
 
     cpdef object visit_double(self, double value):  # double:8
-        self._pack(b'!d', value)
+        # If confused:
+        #
+        #   <typ*>(&value)[0]
+        #
+        # Is just "interpret the in-memory representation of value as typ"
+        self.visit_i64((<int64_t*>(&value))[0])
 
     cpdef object visit_i16(self, int16_t value):  # i16:2
-        self._pack(b'!h', value)
+        value = htobe16(value)
+        self._write(<char*>(&value), 2)
 
     cpdef object visit_i32(self, int32_t value):  # i32:4
-        self._pack(b'!i', value)
+        value = htobe32(value)
+        self._write(<char*>(&value), 4)
 
     cpdef object visit_i64(self, int64_t value):  # i64:8
-        self._pack(b'!q', value)
+        value = htobe64(value)
+        self._write(<char*>(&value), 8)
 
     cpdef object visit_binary(self, bytes value):  # len:4 str:len
         self.visit_i32(len(value))
-        self.writer.write(value)
+        self.writer.write_bytes(value)
 
     cpdef object visit_struct(self, list fields):
         # ( type:1 id:2 value:* ){fields} '0'
@@ -327,10 +329,9 @@ class BinaryProtocol(Protocol):
     reader_class = BinaryProtocolReader
 
     def serialize_value(self, value):
-        buff = BytesIO()
-        writer = self.writer_class(buff)
-        writer.write(value)
-        return buff.getvalue()
+        buff = WriteBuffer()
+        self.writer_class(buff).write(value)
+        return buff.value
 
     def deserialize_value(self, typ, s):
         buff = BytesIO(s)

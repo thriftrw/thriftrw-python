@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import glob
+from itertools import chain
+
 from setuptools import setup
 from setuptools import find_packages
 from setuptools.extension import Extension
@@ -20,7 +22,9 @@ try:
 except ImportError:
     extension_filetype = '.c'
 
-for compiled_module in glob.glob('thriftrw/*/*.pyx'):
+for compiled_module in chain(
+    glob.glob('thriftrw/*.pyx'), glob.glob('thriftrw/*/*.pyx')
+):
     ext_modules.extend([
         Extension(
             compiled_module.replace('/', '.')[:-4],
@@ -33,7 +37,8 @@ class sdist(_sdist):
     def run(self):
         try:
             from Cython.Build import cythonize
-            cythonize(['thriftrw/*/*.pyx'])
+            # TODO list Cython modules explicitly
+            cythonize(['thriftrw/*.pyx', 'thriftrw/*/*.pyx'])
         except ImportError:
             pass
         _sdist.run(self)
