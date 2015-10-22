@@ -18,6 +18,44 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+"""
+Different TType codes supported by Thrift.
+
+.. py:data:: BOOL
+    :annotation: = 2
+
+.. py:data:: BYTE
+    :annotation: = 3
+
+.. py:data:: DOUBLE
+    :annotation: = 4
+
+.. py:data:: I16
+    :annotation: = 6
+
+.. py:data:: I32
+    :annotation: = 8
+
+.. py:data:: I64
+    :annotation: = 10
+
+.. py:data:: BINARY
+    :annotation: = 11
+
+.. py:data:: STRUCT
+    :annotation: = 12
+
+.. py:data:: MAP
+    :annotation: = 13
+
+.. py:data:: SET
+    :annotation: = 14
+
+.. py:data:: LIST
+    :annotation: = 15
+
+"""
+
 from __future__ import absolute_import, unicode_literals, print_function
 
 

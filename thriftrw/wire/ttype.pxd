@@ -18,33 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""
-Different TType codes supported by Thrift.
-
-.. autodata:: BOOL
-
-.. autodata:: BYTE
-
-.. autodata:: DOUBLE
-
-.. autodata:: I16
-
-.. autodata:: I32
-
-.. autodata:: I64
-
-.. autodata:: BINARY
-
-.. autodata:: STRUCT
-
-.. autodata:: MAP
-
-.. autodata:: SET
-
-.. autodata:: LIST
-
-"""
-
 from __future__ import absolute_import, unicode_literals, print_function
 
 

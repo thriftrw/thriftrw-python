@@ -402,7 +402,7 @@ cdef class MapValue(Value):
 
     .. py:attribute:: pairs
 
-        Collection of :py:class:`MapItem` objects.
+        Collection of :py:class:`thriftrw.wire.MapItem` objects.
     """
 
     ttype_code = ttype.MAP
