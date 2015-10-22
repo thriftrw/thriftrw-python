@@ -28,56 +28,95 @@ from libc.stdint cimport (
 )
 
 
+cdef class ValueVisitor(object):
+
+    cpdef object visit_bool(self, bint value)
+
+    cpdef object visit_byte(self, int8_t value)
+
+    cpdef object visit_double(self, double value)
+
+    cpdef object visit_i16(self, int16_t value)
+
+    cpdef object visit_i32(self, int32_t value)
+
+    cpdef object visit_i64(self, int64_t value)
+
+    cpdef object visit_binary(self, bytes value)
+
+    cpdef object visit_struct(self, list fields)
+
+    cpdef object visit_map(self, int8_t key_ttype, int8_t value_ttype, list pairs)
+
+    cpdef object visit_set(self, int8_t value_ttype, list values)
+
+    cpdef object visit_list(self, int8_t value_ttype, list values)
+
+
 cdef class Value(object):
-    pass
+
+    cpdef object apply(self, visitor)
 
 
 cdef class BoolValue(Value):
     cdef readonly bint value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class ByteValue(Value):
     cdef readonly int8_t value
+
+    cpdef object apply(self, visitor)
 
 
 cdef class DoubleValue(Value):
     cdef readonly double value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class I16Value(Value):
     cdef readonly int16_t value
+
+    cpdef object apply(self, visitor)
 
 
 cdef class I32Value(Value):
     cdef readonly int32_t value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class I64Value(Value):
     cdef readonly int64_t value
 
+    cpdef object apply(self, visitor)
+
 
 cdef class BinaryValue(Value):
-    cdef readonly char* value
+    cdef readonly bytes value
+    # TODO change to char* once BinaryProtocol knows how to write that.
 
-    # a reference to the Python object must be maintained to ensure that the
-    # char* doesn't get free-ed
-    cdef bytes _value
+    cpdef object apply(self, visitor)
 
 
 cdef class FieldValue(object):
     cdef readonly int16_t id
     cdef readonly int8_t ttype
-    cdef readonly Value value
+    cdef readonly object value
 
 
 cdef class StructValue(Value):
     cdef readonly list fields
     cdef readonly dict _index
 
+    cpdef object apply(self, visitor)
+
 
 cdef class MapItem(object):
-    cdef readonly Value key
-    cdef readonly Value value
+    cdef readonly object key
+    cdef readonly object value
 
 
 cdef class MapValue(Value):
@@ -85,12 +124,18 @@ cdef class MapValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list pairs
 
+    cpdef object apply(self, visitor)
+
 
 cdef class SetValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list values
 
+    cpdef object apply(self, visitor)
+
 
 cdef class ListValue(Value):
     cdef readonly int8_t value_ttype
     cdef readonly list values
+
+    cpdef object apply(self, visitor)
