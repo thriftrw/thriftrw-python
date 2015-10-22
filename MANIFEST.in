@@ -2,3 +2,4 @@ include README.rst
 include LICENSE
 recursive-include thriftrw *.py
 recursive-include thriftrw *.c
+recursive-include thriftrw *.h
