@@ -27,6 +27,7 @@ from cpython.mem cimport (
 )
 from libc.string cimport memcpy
 
+from .errors import EndOfInputError
 
 cdef int DEFAULT_CAPACITY = 4096  # 4k
 
@@ -71,7 +72,7 @@ cdef class WriteBuffer(object):
         """
         self.write(data, len(data))
 
-    cdef void write(self, char *data, int count):
+    cdef void write(self, char* data, int count):
         """Writes bytes from the given memory block to the buffer.
 
         :param int data:
@@ -107,3 +108,67 @@ cdef class WriteBuffer(object):
         def __get__(self):
             cdef bytes out = self.data[:self.length]
             return out
+
+
+cdef class ReadBuffer(object):
+    """A read-only in-memory buffer."""
+
+    def __cinit__(self, bytes data):
+        """Initialize a ReadBuffer that reads from the given ``bytes``.
+
+        :param bytes data:
+            Block of data that this read buffer will yield.
+        """
+        self._data = data
+        self.data = data
+
+        self.offset = 0
+        self.length = len(data)
+
+    cpdef void read(self, char* dest, int count) except *:
+        """Reads ``count`` bytes into ``dest``.
+
+        :param dest:
+            Memory block to which the bytes will be written.
+        :param int count:
+            Number of bytes to read.
+        :raises EndOfInputError:
+            If the number of bytes available in the buffer is less than
+            ``count``.
+        """
+        if count > self.length - self.offset:
+            raise EndOfInputError(
+                'Expected %d bytes but got %d bytes.' %
+                (count, self.available)
+            )
+
+        memcpy(dest, self.data + self.offset, count)
+        self.offset += count
+
+    cpdef bytes take(self, int count):
+        """Read the next ``count`` bytes from the buffer.
+
+        :param int count:
+            Number of bytes to read.
+        :returns:
+            ``bytes`` object containing exactly ``count`` bytes.
+        :raises Exception:
+            If the number of bytes available in the buffer is less than
+            ``count``. TODO more specific exception
+        """
+        if count > self.length - self.offset:
+            raise EndOfInputError(
+                'Expected %d bytes but got %d bytes.' %
+                (count, self.available)
+            )
+
+        cdef bytes result = self.data[self.offset:self.offset + count]
+        self.offset += count
+
+        return result
+
+    property available:
+        """Number of bytes available in the buffer."""
+
+        def __get__(self):
+            return self.length - self.offset

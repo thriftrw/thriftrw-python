@@ -304,7 +304,7 @@ def test_fails_on_absent_return_value(loads):
     ], vstruct((511, TType.STRUCT, vstruct()))),
 ], ids=['returns-i32', 'returns-void'])
 def test_unrecognized_exception(loads, method, raw, wire_value):
-    raw = bytearray(raw)
+    raw = bytes(bytearray(raw))
 
     m = loads('''
         exception GreatSadness {

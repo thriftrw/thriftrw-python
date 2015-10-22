@@ -20,14 +20,26 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import pytest
+
+from thriftrw._buffer import ReadBuffer
 from thriftrw._buffer import WriteBuffer
+from thriftrw.errors import EndOfInputError
 
 
-def test_empty_buffer():
+def test_empty_write_buffer():
     buff = WriteBuffer(10)
     assert buff.length == 0
     assert buff.capacity == 10
     assert buff.value == b''
+
+
+def test_empty_read_buffer():
+    buff = ReadBuffer(b'')
+    assert buff.take(0) == b''
+
+    with pytest.raises(EndOfInputError):
+        buff.take(1)
 
 
 def test_simple_write():
@@ -37,6 +49,18 @@ def test_simple_write():
 
     assert buff.value == b'hello world'
     assert buff.length == 11
+
+
+def test_simple_read():
+    buff = ReadBuffer(b'abcd')
+
+    assert buff.take(1) == b'a'
+    assert buff.take(2) == b'bc'
+
+    with pytest.raises(EndOfInputError):
+        buff.take(2)
+
+    assert buff.take(1) == b'd'
 
 
 def test_write_clear():

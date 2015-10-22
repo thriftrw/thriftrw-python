@@ -21,6 +21,19 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 
+cdef class ReadBuffer(object):
+    cdef char* data
+    cdef int offset, length
+
+    cdef bytes _data
+    # a reference to the original PyObject is required to ensure that the
+    # underlying char* doesn't go away.
+
+    cpdef void read(self, char* dest, int count) except *
+
+    cpdef bytes take(self, int count)
+
+
 cdef class WriteBuffer(object):
     cdef char* data
     cdef readonly int length, capacity
@@ -29,6 +42,6 @@ cdef class WriteBuffer(object):
 
     cpdef void write_bytes(self, bytes data)
 
-    cdef void write(self, char *data, int count)
+    cdef void write(self, char* data, int count)
 
     cdef void ensure_capacity(self, int min_bytes)

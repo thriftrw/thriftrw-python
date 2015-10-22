@@ -21,11 +21,9 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
-from six import BytesIO
 
 from thriftrw.errors import ThriftProtocolError
 from thriftrw.errors import EndOfInputError
-from thriftrw.protocol.binary import BinaryProtocolReader
 from thriftrw.protocol.binary import BinaryProtocol
 from thriftrw.wire import TType
 from thriftrw.wire import value
@@ -51,7 +49,7 @@ def reader_writer_ids(x):
     }[x]
 
 
-@pytest.mark.parametrize('typ, bytes, value', [
+@pytest.mark.parametrize('typ, bs, value', [
     # bool
     (TType.BOOL, [0x01], vbool(True)),
     (TType.BOOL, [0x00], vbool(False)),
@@ -271,20 +269,20 @@ def reader_writer_ids(x):
         vstruct((1, TType.I16, vi16(3)), (2, TType.I32, vi32(4))),
     )),
 ], ids=reader_writer_ids)
-def test_reader_and_writer(typ, bytes, value):
+def test_reader_and_writer(typ, bs, value):
     """Test serialization and deserialization of all samples."""
-    bytes = bytearray(bytes)
+    bs = bytes(bytearray(bs))
 
     protocol = BinaryProtocol()
 
-    result = protocol.deserialize_value(typ, bytes)
+    result = protocol.deserialize_value(typ, bs)
     assert value == result
 
     result = protocol.serialize_value(value)
-    assert bytes == result
+    assert bs == result
 
 
-@pytest.mark.parametrize('typ, bytes', [
+@pytest.mark.parametrize('typ, bs', [
     (TType.BOOL, []),
     (TType.BYTE, []),
     (TType.DOUBLE, [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]),
@@ -330,17 +328,19 @@ def test_reader_and_writer(typ, bytes, value):
         0x01,                    # True
     ]),
 ], ids=reader_writer_ids)
-def test_input_too_short(typ, bytes):
+def test_input_too_short(typ, bs):
     """Test that EndOfInputError is raised when not enough bytes are
     available."""
 
-    reader = BinaryProtocolReader(BytesIO(bytearray(bytes)))
+    protocol = BinaryProtocol()
+
     with pytest.raises(EndOfInputError) as exc_info:
-        reader.read(typ)
+        protocol.deserialize_value(typ, bytes(bytearray(bs)))
+
     assert 'bytes but got' in str(exc_info)
 
 
-@pytest.mark.parametrize('typ, bytes', [
+@pytest.mark.parametrize('typ, bs', [
     (0x00, []),
     (TType.STRUCT, [
         0x01,
@@ -359,8 +359,10 @@ def test_input_too_short(typ, bytes):
         0x00, 0x00, 0x00, 0x00,
     ]),
 ], ids=reader_writer_ids)
-def test_unknown_type_id(typ, bytes):
-    reader = BinaryProtocolReader(BytesIO(bytearray(bytes)))
+def test_unknown_type_id(typ, bs):
+    protocol = BinaryProtocol()
+
     with pytest.raises(ThriftProtocolError) as exc_info:
-        reader.read(typ)
+        protocol.deserialize_value(typ, bytes(bytearray(bs)))
+
     assert 'Unknown TType' in str(exc_info)
