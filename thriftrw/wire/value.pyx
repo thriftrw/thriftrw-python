@@ -28,6 +28,8 @@ from libc.stdint cimport (
 
 from . cimport ttype
 
+from thriftrw._cython cimport richcompare
+
 __all__ = [
     'Value',
     'BoolValue',
@@ -45,63 +47,6 @@ __all__ = [
     'ListValue',
     'ValueVisitor',
 ]
-
-
-cdef bint richcompare_op(int op, int compare):
-    # op    operation
-    # 0     <
-    # 1     <=
-    # 2     ==
-    # 3     !=
-    # 4     >
-    # 5     >=
-
-    if op == 2:
-        return compare == 0
-    elif op == 3:
-        return compare != 0
-    elif op == 4:
-        return compare > 0
-    elif op == 5:
-        return compare >= 0
-    elif op == 0:
-        return compare < 0
-    elif op == 1:
-        return compare <= 0
-    else:
-        assert False, 'Invalid comparison operator "%d"' % (op,)
-
-
-cdef bint richcompare(int op, list pairs):
-    """Utility function to make ``richcmp`` easier to write.
-
-    It takes a list of attribute pairs. Attributes are compared in the order
-    they appear and the result is returned based on the ``op``.
-
-    .. code-block:: python
-
-        def __richcmp__(self, other, op):
-            return richcompare(
-                op,
-                [
-                    (self.attr1, other.attr1),
-                    (self.attr2, other.attr2),
-                    # ...
-                ]
-            )
-    """
-
-    cdef int compare = 0
-
-    for (left, right) in pairs:
-        if left > right:
-            compare = 1
-            break
-        elif left < right:
-            compare = -1
-            break
-
-    return richcompare_op(op, compare)
 
 
 cdef class Value(object):

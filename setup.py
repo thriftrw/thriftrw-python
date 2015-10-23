@@ -12,6 +12,7 @@ ext_modules = []
 
 cython_modules = [
     'thriftrw._buffer',
+    'thriftrw._cython',
     'thriftrw.protocol.binary',
     'thriftrw.spec.base',
     'thriftrw.spec.common',
