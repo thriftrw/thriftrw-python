@@ -25,7 +25,7 @@ import pytest
 from itertools import permutations
 
 from thriftrw import spec
-from thriftrw.wire import TType
+from thriftrw.wire import ttype
 
 from ..util.value import *  # noqa
 
@@ -45,9 +45,9 @@ from ..util.value import *  # noqa
 
     (spec.TextTypeSpec, vbinary(b'\xe2\x98\x83'), u'☃'),
 
-    (spec.ListTypeSpec(spec.I16TypeSpec), vlist(TType.I16), []),
+    (spec.ListTypeSpec(spec.I16TypeSpec), vlist(ttype.I16), []),
     (spec.ListTypeSpec(spec.ByteTypeSpec),
-     vlist(TType.BYTE, vbyte(1), vbyte(2), vbyte(3)),
+     vlist(ttype.BYTE, vbyte(1), vbyte(2), vbyte(3)),
      [1, 2, 3]),
 ])
 def test_primitive_wire_conversion(args):
@@ -96,7 +96,7 @@ def test_map_wire_conversion(t_spec, pairs, obj):
 def test_map_from_wire_duplicate_keys():
     mspec = spec.MapTypeSpec(spec.I16TypeSpec, spec.I32TypeSpec)
     result = mspec.from_wire(vmap(
-        TType.I16, TType.I32,
+        ttype.I16, ttype.I32,
         (vi16(0), vi32(1)),
         (vi16(2), vi32(3)),
         (vi16(4), vi32(5)),

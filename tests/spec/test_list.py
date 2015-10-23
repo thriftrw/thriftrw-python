@@ -27,7 +27,7 @@ from thriftrw.spec import primitive as prim_spec
 from thriftrw.spec.list import ListTypeSpec
 from thriftrw.spec.typedef import TypedefTypeSpec
 from thriftrw.spec.spec_mapper import type_spec_or_ref
-from thriftrw.wire.ttype import TType
+from thriftrw.wire import ttype
 
 from ..util.value import vbinary, vlist
 
@@ -56,7 +56,7 @@ def test_link(parse, scope):
 
     value = [u'foo', u'bar']
     assert spec.to_wire(value) == vlist(
-        TType.BINARY, vbinary(b'foo'), vbinary(b'bar')
+        ttype.BINARY, vbinary(b'foo'), vbinary(b'bar')
     )
     assert value == spec.from_wire(spec.to_wire(value))
 

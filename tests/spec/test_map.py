@@ -27,7 +27,7 @@ from thriftrw.spec import primitive as prim_spec
 from thriftrw.spec.map import MapTypeSpec
 from thriftrw.spec.typedef import TypedefTypeSpec
 from thriftrw.spec.spec_mapper import type_spec_or_ref
-from thriftrw.wire.ttype import TType
+from thriftrw.wire import ttype
 
 from ..util.value import vi32, vmap, vbinary
 
@@ -57,13 +57,13 @@ def test_link(parse, scope):
     value = {u'foo': 1, u'bar': 2}
     assert (
         spec.to_wire(value) == vmap(
-            TType.BINARY, TType.I32,
+            ttype.BINARY, ttype.I32,
             (vbinary(b'foo'), vi32(1)),
             (vbinary(b'bar'), vi32(2)),
         )
     ) or (
         spec.to_wire(value) == vmap(
-            TType.BINARY, TType.I32,
+            ttype.BINARY, ttype.I32,
             (vbinary(b'bar'), vi32(2)),
             (vbinary(b'foo'), vi32(1)),
         )

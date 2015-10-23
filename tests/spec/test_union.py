@@ -29,7 +29,7 @@ from thriftrw.spec.reference import TypeReference
 from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec import primitive as prim_spec
 from thriftrw.spec.list import ListTypeSpec
-from thriftrw.wire.ttype import TType
+from thriftrw.wire import ttype
 
 from ..util.value import vstruct, vbinary, vlist, vi32
 
@@ -136,27 +136,27 @@ def test_load(loads):
     cases = [
         (
             bfoo,
-            vstruct((1, TType.BINARY, vbinary(b'foo'))),
+            vstruct((1, ttype.BINARY, vbinary(b'foo'))),
             {'b': b'foo'}
         ),
         (
             sfoo,
-            vstruct((2, TType.BINARY, vbinary(b'bar'))),
+            vstruct((2, ttype.BINARY, vbinary(b'bar'))),
             {'s': u'bar'},
         ),
         (
             ifoo,
-            vstruct((3, TType.I32, vi32(42))),
+            vstruct((3, ttype.I32, vi32(42))),
             {'i': 42},
         ),
         (
             lfoo,
             vstruct(
-                (4, TType.LIST, vlist(
-                    TType.STRUCT,
-                    vstruct((1, TType.BINARY, vbinary(b'foo'))),
-                    vstruct((2, TType.BINARY, vbinary(b'bar'))),
-                    vstruct((3, TType.I32, vi32(42))),
+                (4, ttype.LIST, vlist(
+                    ttype.STRUCT,
+                    vstruct((1, ttype.BINARY, vbinary(b'foo'))),
+                    vstruct((2, ttype.BINARY, vbinary(b'bar'))),
+                    vstruct((3, ttype.I32, vi32(42))),
                 ))
             ),
             {'l': [

@@ -22,7 +22,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import collections
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import MapItem, MapValue
 
 from . import check
@@ -36,7 +36,7 @@ class MapTypeSpec(TypeSpec):
 
     __slots__ = ('kspec', 'vspec', 'linked')
 
-    ttype_code = TType.MAP
+    ttype_code = ttype.MAP
     surface = dict
 
     def __init__(self, kspec, vspec):

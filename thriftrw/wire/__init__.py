@@ -22,8 +22,7 @@
 Types
 -----
 
-.. autodata:: thriftrw.wire.TType
-    :annotation:
+.. automodule:: thriftrw.wire.ttype
 
 Value
 -----
@@ -65,8 +64,6 @@ Value Types
 """
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .ttype import TType
-
 from .value import (
     Value,
     BoolValue,
@@ -79,13 +76,14 @@ from .value import (
     FieldValue,
     StructValue,
     MapValue,
+    MapItem,
     SetValue,
     ListValue,
     ValueVisitor,
 )
 
 __all__ = [
-    'TType',
+    'ttype',
 
     # Value
     'Value',
@@ -99,6 +97,7 @@ __all__ = [
     'FieldValue',
     'StructValue',
     'MapValue',
+    'MapItem',
     'SetValue',
     'ListValue',
     'ValueVisitor',

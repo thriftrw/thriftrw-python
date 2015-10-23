@@ -20,7 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from thriftrw.wire import TType
+from thriftrw.wire cimport ttype
 from thriftrw.wire.value import I32Value
 
 from . import check
@@ -85,7 +85,7 @@ class EnumTypeSpec(TypeSpec):
 
     __slots__ = ('name', 'items', 'values_to_names', 'linked', 'surface')
 
-    ttype_code = TType.I32
+    ttype_code = ttype.I32
 
     def __init__(self, name, items):
         assert name

@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 
 from thriftrw.wire import value
-from thriftrw.wire import TType
+from thriftrw.wire import ttype
 from thriftrw.wire.value import ValueVisitor
 
 
@@ -39,36 +39,36 @@ from thriftrw.wire.value import ValueVisitor
 
     # Struct
     (value.StructValue([
-        value.FieldValue(1, TType.BOOL, value.BoolValue(True)),
-        value.FieldValue(2, TType.BYTE, value.ByteValue(42)),
+        value.FieldValue(1, ttype.BOOL, value.BoolValue(True)),
+        value.FieldValue(2, ttype.BYTE, value.ByteValue(42)),
     ]), 'visit_struct', ([
-        value.FieldValue(1, TType.BOOL, value.BoolValue(True)),
-        value.FieldValue(2, TType.BYTE, value.ByteValue(42)),
+        value.FieldValue(1, ttype.BOOL, value.BoolValue(True)),
+        value.FieldValue(2, ttype.BYTE, value.ByteValue(42)),
     ],)),
 
     # Map
-    (value.MapValue(TType.BINARY, TType.I16, [
+    (value.MapValue(ttype.BINARY, ttype.I16, [
         value.MapItem(value.BinaryValue(b'Hello'), value.I16Value(1)),
         value.MapItem(value.BinaryValue(b'World'), value.I16Value(2)),
-    ]), 'visit_map', (TType.BINARY, TType.I16, [
+    ]), 'visit_map', (ttype.BINARY, ttype.I16, [
         value.MapItem(value.BinaryValue(b'Hello'), value.I16Value(1)),
         value.MapItem(value.BinaryValue(b'World'), value.I16Value(2)),
     ])),
 
     # Set
-    (value.SetValue(TType.I32, [
+    (value.SetValue(ttype.I32, [
         value.I32Value(1234),
         value.I32Value(4567),
-    ]), 'visit_set', (TType.I32, [
+    ]), 'visit_set', (ttype.I32, [
         value.I32Value(1234),
         value.I32Value(4567),
     ])),
 
     # List
-    (value.ListValue(TType.I64, [
+    (value.ListValue(ttype.I64, [
         value.I64Value(1380),
         value.I64Value(1479),
-    ]), 'visit_list', (TType.I64, [
+    ]), 'visit_list', (ttype.I64, [
         value.I64Value(1380),
         value.I64Value(1479),
     ])),
@@ -92,10 +92,10 @@ def test_visitors(value, visit_name, visit_args):
 
 def test_struct_get():
     struct = value.StructValue([
-        value.FieldValue(1, TType.BOOL, value.BoolValue(True)),
-        value.FieldValue(2, TType.BYTE, value.ByteValue(42)),
-        value.FieldValue(3, TType.LIST, value.ListValue(
-            TType.BINARY,
+        value.FieldValue(1, ttype.BOOL, value.BoolValue(True)),
+        value.FieldValue(2, ttype.BYTE, value.ByteValue(42)),
+        value.FieldValue(3, ttype.LIST, value.ListValue(
+            ttype.BINARY,
             [
                 value.BinaryValue(b'Hello'),
                 value.BinaryValue(b'World'),
@@ -103,11 +103,11 @@ def test_struct_get():
         )),
     ])
 
-    assert struct.get(1, TType.BOOL).value
-    assert value.ByteValue(42) == struct.get(2, TType.BYTE).value
-    assert value.ListValue(TType.BINARY, [
+    assert struct.get(1, ttype.BOOL).value
+    assert value.ByteValue(42) == struct.get(2, ttype.BYTE).value
+    assert value.ListValue(ttype.BINARY, [
         value.BinaryValue(b'Hello'),
         value.BinaryValue(b'World'),
-    ]) == struct.get(3, TType.LIST).value
+    ]) == struct.get(3, ttype.LIST).value
 
-    assert not struct.get(1, TType.BINARY)
+    assert not struct.get(1, ttype.BINARY)
