@@ -22,22 +22,26 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire import ttype
 
+from .primitive import TextTypeSpec
 from .spec_mapper import type_spec_or_ref
 from ..errors import ThriftCompilerError
 
 
 class ConstValuePrimitive(object):
 
-    __slots__ = ('surface',)
+    __slots__ = ('surface', 'linked')
 
     def __init__(self, value):
         self.surface = value
+        self.linked = False
 
     def link(self, scope, type_spec):
-        type_spec.validate(self.surface)
-        self.surface = type_spec.from_primitive(
-            type_spec.to_primitive(self.surface)
-        )
+        if not self.linked:
+            self.linked = True
+            type_spec.validate(self.surface)
+            self.surface = type_spec.from_primitive(
+                type_spec.to_primitive(self.surface)
+            )
         return self
 
 
@@ -51,24 +55,47 @@ class ContsValueMap(object):
         self.surface = None
 
     def link(self, scope, type_spec):
-        if type_spec.ttype_code != ttype.MAP:
+        if type_spec.ttype_code not in (ttype.MAP, ttype.STRUCT):
             raise TypeError('Expected a %s but got a map.' % type_spec.name)
-        if not self.linked:
-            self.linked = True
 
-            self.surface = {
-                k.link(
-                    scope,
-                    type_spec.kspec
-                ).surface: v.link(scope, type_spec.vspec).surface
-                for k, v in self.items.items()
-            }
+        if self.linked:
+            return self
 
-            # Validate it and cast it into whatever the type_spec expects.
-            type_spec.validate(self.surface)
-            self.surface = type_spec.from_primitive(
-                type_spec.to_primitive(self.surface)
-            )
+        self.linked = True
+        if type_spec.ttype_code == ttype.STRUCT:
+            return self._link_struct(scope, type_spec)
+        else:
+            return self._link_map(scope, type_spec)
+
+    def _link_map(self, scope, type_spec):
+        data = {
+            k.link(
+                scope,
+                type_spec.kspec
+            ).surface: v.link(scope, type_spec.vspec).surface
+            for k, v in self.items.items()
+        }
+
+        # Validate it and cast it into whatever the type_spec expects.
+        type_spec.validate(data)
+        self.surface = type_spec.from_primitive(type_spec.to_primitive(data))
+        return self
+
+    def _link_struct(self, scope, type_spec):
+        # Resolve keys to strings.
+        field_values = {
+            k.link(scope, TextTypeSpec).surface: v
+            for k, v in self.items.items()
+        }
+        data = {}
+
+        for field in type_spec.fields:
+            attr_name = field.name
+            if attr_name in field_values:
+                const_value = field_values[attr_name]
+                data[attr_name] = const_value.link(scope, field.spec).surface
+
+        self.surface = type_spec.surface(**data)
         return self
 
 

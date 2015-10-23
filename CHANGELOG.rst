@@ -4,6 +4,8 @@ Releases
 0.6.0 (unreleased)
 ------------------
 
+- Constant and default values may now be structs or unions, represented in the
+  thrift file as maps with string keys.
 - ``MapValue`` now contains ``MapItem`` objects instead of key-value tuple
   pairs.
 - **Breaking** Removed ``thriftrw.wire.TType`` in favor of the

@@ -51,7 +51,7 @@ class Scope(object):
 
     def __str__(self):
         return "Scope(%r)" % {
-            'const_values': self.const_values,
+            'const_specs': self.const_specs,
             'type_specs': self.type_specs,
             'service_specs': self.service_specs,
             'module': self.module,
