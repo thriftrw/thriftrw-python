@@ -8,8 +8,7 @@ Releases
   pairs.
 - **Breaking** Removed ``thriftrw.wire.TType`` in favor of the
   ``thriftrw.wire.ttype`` module.
-- Performance improvements to ``BinaryProtocol`` serialization and
-  deserialization logic.
+- Performance improvements to ``BinaryProtocol`` implementation.
 
 
 0.5.2 (2015-10-19)
