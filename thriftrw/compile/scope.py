@@ -35,7 +35,7 @@ class Scope(object):
     reference to the final generated module.
     """
 
-    __slots__ = ('const_specs', 'type_specs', 'module', 'service_specs')
+    __slots__ = ('const_specs', 'type_specs', 'module', 'service_specs', 'include_scopes')
 
     def __init__(self, name):
         """Initialize the scope.
@@ -46,8 +46,10 @@ class Scope(object):
         self.type_specs = {}
         self.const_specs = {}
         self.service_specs = {}
+        self.include_scopes = {}
 
         self.module = types.ModuleType(str(name))
+        self.module.scope = self
 
     def __str__(self):
         return "Scope(%r)" % {
@@ -59,21 +61,27 @@ class Scope(object):
 
     __repr__ = __str__
 
+    def _resolve_nested(self, name, lineno, specs_name, type_name):
+        if '.' in name:
+            include, spec_name = name.split('.', 1)
+            if include in self.include_scopes:
+                scope = self.include_scopes[include]
+                return scope._resolve_nested(spec_name, lineno, specs_name, type_name).link(self)
+
+        specs = getattr(self, specs_name)
+        if name not in specs:
+            raise ThriftCompilerError(
+                'Unknown %s "%s" referenced at line %d' % (type_name, name, lineno)
+            )
+        return specs[name].link(self)
+
     def resolve_const_spec(self, name, lineno):
         """Finds and links the ConstSpec with the given name."""
-        if name not in self.const_specs:
-            raise ThriftCompilerError(
-                'Unknown constant "%s" referenced at line %d' % (name, lineno)
-            )
-        return self.const_specs[name].link(self)
+        return self._resolve_nested(name, lineno, 'const_specs', 'constant')
 
     def resolve_type_spec(self, name, lineno):
         """Finds and links the TypeSpec with the given name."""
-        if name not in self.type_specs:
-            raise ThriftCompilerError(
-                'Unknown type "%s" referenced at line %d' % (name, lineno)
-            )
-        return self.type_specs[name].link(self)
+        return self._resolve_nested(name, lineno, 'type_specs', 'type')
 
     def add_service_spec(self, service_spec):
         """Registers the given ``ServiceSpec`` into the scope.
@@ -151,3 +159,24 @@ class Scope(object):
             )
 
         self.type_specs[name] = spec
+
+    def add_include_scope(self, scope):
+        """"""
+
+        assert scope is not None
+
+        scope_name = scope.module.__name__
+
+        if hasattr(self.module, scope_name):
+            raise ThriftCompilerError(
+                'Cannot define include "%s". The name has already been used.' % scope_name
+            )
+
+        if scope_name in self.include_scopes:
+            raise ThriftCompilerError(
+                'Cannot define include "%s". That name is already taken.'
+                % scope_name
+            )
+
+        self.include_scopes[scope_name] = scope
+        setattr(self.module, scope_name, scope.module)

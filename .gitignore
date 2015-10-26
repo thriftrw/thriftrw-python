@@ -9,3 +9,7 @@ env/
 _build
 *.swp
 node_modules
+*.c
+*.so
+.benchmarks/
+.coverage
