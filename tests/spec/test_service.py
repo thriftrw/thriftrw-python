@@ -379,3 +379,16 @@ def test_args_and_results_know_function_spec(loads):
         m.S.functionRaisingException.spec is
         m.S.functionRaisingException.response.type_spec.function
     )
+
+
+def test_service_spec_lookup(loads):
+    m = loads('''service S {
+        void foo();
+        void bar();
+    }''')
+
+    service_spec = m.S.service_spec
+
+    assert service_spec.lookup('foo') is m.S.foo.spec
+    assert service_spec.lookup('bar') is m.S.bar.spec
+    assert service_spec.lookup('baz') is None

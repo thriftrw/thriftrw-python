@@ -312,7 +312,10 @@ class ServiceSpec(object):
     function defined in the service.
     """
 
-    __slots__ = ('name', 'functions', 'parent', 'linked', 'surface')
+    __slots__ = (
+        'name', 'functions', 'parent', 'linked', 'surface',
+        '_functions',
+    )
 
     def __init__(self, name, functions, parent):
         #: Name of the service.
@@ -325,6 +328,8 @@ class ServiceSpec(object):
         #: inherit from anything.
         self.parent = parent
 
+        # For quick function lookups.
+        self._functions = None
         self.linked = False
         self.surface = None
 
@@ -360,9 +365,19 @@ class ServiceSpec(object):
                 self.parent = scope.service_specs[self.parent].link(scope)
 
             self.functions = [func.link(scope) for func in self.functions]
+            self._functions = {f.name: f for f in self.functions}
             self.surface = service_cls(self, scope)
 
         return self
+
+    def lookup(self, name):
+        """Look up a function with the given name.
+
+        Returns the function spec or None if no such function exists.
+
+        .. versionadded:: 0.6
+        """
+        return self._functions.get(name, None)
 
     def __str__(self):
         return 'ServiceSpec(name=%r, functions=%r, parent=%r)' % (
