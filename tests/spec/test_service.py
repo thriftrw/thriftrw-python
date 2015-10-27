@@ -328,3 +328,54 @@ def test_unrecognized_exception(loads, method, raw, wire_value):
         in str(exc_info)
     )
     assert exc_info.value.thrift_response == wire_value
+
+
+def test_args_and_results_know_function_spec(loads):
+    m = loads('''
+        exception GreatSadness {
+            1: optional string reason
+        }
+
+        service S {
+            oneway void someOneWayFunction(1: string a);
+
+            void functionReturningVoid(1: i32 a, 2: i64 b);
+
+            string functionReturningNonVoid();
+
+            void functionRaisingException() throws (42: GreatSadness err);
+        }
+    ''')
+
+    assert (
+        m.S.someOneWayFunction.spec is
+        m.S.someOneWayFunction.request.type_spec.function
+    )
+    assert m.S.someOneWayFunction.response is None
+
+    assert (
+        m.S.functionReturningVoid.spec is
+        m.S.functionReturningVoid.request.type_spec.function
+    )
+    assert (
+        m.S.functionReturningVoid.spec is
+        m.S.functionReturningVoid.response.type_spec.function
+    )
+
+    assert (
+        m.S.functionReturningNonVoid.spec is
+        m.S.functionReturningNonVoid.request.type_spec.function
+    )
+    assert (
+        m.S.functionReturningNonVoid.spec is
+        m.S.functionReturningNonVoid.response.type_spec.function
+    )
+
+    assert (
+        m.S.functionRaisingException.spec is
+        m.S.functionRaisingException.request.type_spec.function
+    )
+    assert (
+        m.S.functionRaisingException.spec is
+        m.S.functionRaisingException.response.type_spec.function
+    )

@@ -39,7 +39,20 @@ class FunctionArgsSpec(StructTypeSpec):
 
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
+
+    .. versionchanged:: 0.6
+
+        Added the ``function`` attribute.
     """
+
+    __slots__ = StructTypeSpec.__slots__ + ('function',)
+
+    def __init__(self, name, params):
+        super(FunctionArgsSpec, self).__init__(name, params)
+
+        #: A reference to the function whose arguments this spec represents.
+        #: This value is available only after the spec has been linked.
+        self.function = None
 
     @classmethod
     def compile(cls, parameters, service_name, function_name):
@@ -64,6 +77,10 @@ class FunctionArgsSpec(StructTypeSpec):
 
         return cls(args_name, param_specs)
 
+    def link(self, scope, function):
+        self.function = function
+        return super(FunctionArgsSpec, self).link(scope)
+
 
 class FunctionResultSpec(UnionTypeSpec):
     """Represents the result of a service function.
@@ -81,10 +98,14 @@ class FunctionResultSpec(UnionTypeSpec):
 
         When deserializing, if an unrecognized exception is found, a
         :py:class:`thriftrw.errors.UnknownExceptionError` is raised.
+
+    .. versionchanged:: 0.6
+
+        Added the ``function`` attribute.
     """
 
     __slots__ = UnionTypeSpec.__slots__ + (
-        'return_spec', 'exception_specs', 'exception_ids'
+        'return_spec', 'exception_specs', 'exception_ids', 'function'
     )
 
     def __init__(self, name, return_spec, exceptions):
@@ -95,6 +116,10 @@ class FunctionResultSpec(UnionTypeSpec):
         #: Collection of :py:class:`thriftrw.spec.FieldSpec` objects defining
         #: the exceptions that this function can raise.
         self.exception_specs = exceptions
+
+        #: A reference to the function whose result type this spec represents.
+        #: This value is available only after the spec has been linked.
+        self.function = None
 
         result_specs = []
         if return_spec is not None:
@@ -135,7 +160,8 @@ class FunctionResultSpec(UnionTypeSpec):
 
         return super(FunctionResultSpec, self).from_wire(wire_value)
 
-    def link(self, scope):
+    def link(self, scope, function):
+        self.function = function
         if self.return_spec is not None:
             self.return_spec = self.return_spec.link(scope)
         self.exception_specs = [e.link(scope) for e in self.exception_specs]
@@ -249,9 +275,9 @@ class FunctionSpec(object):
     def link(self, scope):
         if not self.linked:
             self.linked = True
-            self.args_spec = self.args_spec.link(scope)
+            self.args_spec = self.args_spec.link(scope, self)
             if self.result_spec:
-                self.result_spec = self.result_spec.link(scope)
+                self.result_spec = self.result_spec.link(scope, self)
                 result_spec_surface = self.result_spec.surface
             else:
                 result_spec_surface = None
