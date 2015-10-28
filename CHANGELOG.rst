@@ -4,19 +4,21 @@ Releases
 0.6.0 (unreleased)
 ------------------
 
+- Added support for message envelopes. This makes it possible to talk with
+  standard Apache Thrift services and clients. For more information, see
+  :ref:`calling-apache-thrift`.
 - Constant and default values may now be structs or unions, represented in the
-  thrift file as maps with string keys.
+  Thrift file as maps with string keys.
+- Significant performance improvements to the ``BinaryProtocol``
+  implementation.
+- Removed ``thriftrw.wire.TType`` in favor of the ``thriftrw.wire.ttype``
+  module.
 - ``MapValue`` now contains ``MapItem`` objects instead of key-value tuple
   pairs.
-- **Breaking** Removed ``thriftrw.wire.TType`` in favor of the
-  ``thriftrw.wire.ttype`` module.
-- Performance improvements to ``BinaryProtocol`` implementation.
-- TypeSpecs for function arguments and results now have a reference back to the
-  function spec itself.
-- ServiceSpec now provides a ``lookup`` method to look up the specs for
-  functions defined under that service.
-- Added ``Message`` wrapper for Thrift payloads. This may be used to make
-  requests to and receive responses from existing services using Apache Thrift.
+- Request and response ``TypeSpecs`` now have a reference back to the
+  ``FunctionSpec``.
+- ``ServiceSpec`` now provides a ``lookup`` method to look up ``FunctionSpecs``
+  by name.
 
 
 0.5.2 (2015-10-19)
