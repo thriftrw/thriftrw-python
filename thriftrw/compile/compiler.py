@@ -20,6 +20,8 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import os.path
+
 from .generate import Generator
 from .link import TypeSpecLinker
 from .link import ConstSpecLinker
@@ -36,7 +38,7 @@ class Compiler(object):
 
     LINKERS = [ConstSpecLinker, TypeSpecLinker, ServiceSpecLinker]
 
-    __slots__ = ('protocol', 'strict')
+    __slots__ = ('protocol', 'strict', 'scope', 'path')
 
     def __init__(self, protocol, strict=True):
         """Initialize the compiler.
@@ -47,7 +49,7 @@ class Compiler(object):
         self.protocol = protocol
         self.strict = strict
 
-    def compile(self, name, program):
+    def compile(self, name, program, path=''):
         """Compile the given parsed Thrift document into a Python module.
 
         The generated module contains,
@@ -95,30 +97,37 @@ class Compiler(object):
         :returns:
             The generated module.
         """
-        scope = Scope(name)
+        self.scope = Scope(name)
+        self.path = path
 
         for header in program.headers:
             header.apply(self)
 
-        generator = Generator(scope, strict=self.strict)
+        generator = Generator(self.scope, strict=self.strict)
         for definition in program.definitions:
             generator.process(definition)
 
         # TODO Linker can probably just be a callable.
         for linker in self.LINKERS:
-            linker(scope).link()
+            linker(self.scope).link()
 
-        scope.add_function('loads', self.protocol.loads)
-        scope.add_function('dumps', self.protocol.dumps)
+        self.scope.add_function('loads', self.protocol.loads)
+        self.scope.add_function('dumps', self.protocol.dumps)
 
-        return scope.module
+        return self.scope.module
 
     def visit_include(self, include):
-        raise ThriftCompilerError(
-            'Include of "%s" found on line %d. '
-            'thriftrw does not support including other Thrift files.'
-            % (include.path, include.lineno)
+        from thriftrw.loader import Loader
+        loader = Loader(self.protocol, self.strict)
+
+        include_module = loader.load(
+            os.path.join(
+                os.path.dirname(self.path),
+                include.path,
+            )
         )
+        self.scope.add_include_scope(include_module.scope)
+
 
     def visit_namespace(self, namespace):
         pass  # nothing to do

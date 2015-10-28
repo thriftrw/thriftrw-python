@@ -44,18 +44,6 @@ def loads(parse, compile):
     return (lambda s: compile(parse(s)))
 
 
-def test_include_disallowed(loads):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads('''
-            namespace py foo
-            namespace js bar
-
-            include "foo.thrift"
-        ''')
-
-    assert 'thriftrw does not support including' in str(exc_info)
-
-
 def test_unknown_type(loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
         loads('''

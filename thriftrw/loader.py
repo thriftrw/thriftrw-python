@@ -57,7 +57,7 @@ class Loader(object):
         # cache the result of calling load() multiple times on the same file.
         self.compiled_modules = {}
 
-    def loads(self, name, document):
+    def loads(self, name, document, path=''):
         """Parse and compile the given Thrift document.
 
         :param str name:
@@ -66,7 +66,7 @@ class Loader(object):
             The Thrift IDL as a string.
         """
         program = self.parser.parse(document)
-        return self.compiler.compile(name, program)
+        return self.compiler.compile(name, program, path)
 
     def load(self, path, name=None, force=False):
         """Load and compile the given Thrift file.
@@ -94,7 +94,7 @@ class Loader(object):
             name = os.path.splitext(os.path.basename(path))[0]
         with open(path, 'r') as f:
             document = f.read()
-        module = self.loads(name, document)
+        module = self.loads(name, document, path)
         self.compiled_modules[path] = module
         return module
 

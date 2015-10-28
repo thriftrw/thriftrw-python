@@ -28,6 +28,25 @@ from thriftrw.errors import ThriftCompilerError
 from thriftrw.loader import Loader
 
 
+def test_imports(tmpdir):
+    tmpdir.join('my_service.thrift').write('''
+        include "bar.thrift"
+        struct Foo {
+            1: required bar.Bar a
+            2: optional string b
+        }
+    ''')
+    tmpdir.join('bar.thrift').write('''
+        struct Bar {
+            1: required string a
+            2: optional string b
+        }
+    ''')
+
+    my_service = Loader().load(str(tmpdir.join('my_service.thrift')))
+    my_service.Foo(a=my_service.bar.Bar(a='a', b='b'), b='b')
+
+
 def test_load_from_file(tmpdir):
     tmpdir.join('my_service.thrift').write('''
         struct Foo {
