@@ -11,6 +11,10 @@ Releases
 - **Breaking** Removed ``thriftrw.wire.TType`` in favor of the
   ``thriftrw.wire.ttype`` module.
 - Performance improvements to ``BinaryProtocol`` implementation.
+- TypeSpecs for function arguments and results now have a reference back to the
+  function spec itself.
+- ServiceSpec now provides a ``lookup`` method to look up the specs for
+  functions defined under that service.
 
 
 0.5.2 (2015-10-19)

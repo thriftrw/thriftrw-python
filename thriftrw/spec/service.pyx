@@ -39,7 +39,20 @@ class FunctionArgsSpec(StructTypeSpec):
 
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
+
+    .. versionchanged:: 0.6
+
+        Added the ``function`` attribute.
     """
+
+    __slots__ = StructTypeSpec.__slots__ + ('function',)
+
+    def __init__(self, name, params):
+        super(FunctionArgsSpec, self).__init__(name, params)
+
+        #: A reference to the function whose arguments this spec represents.
+        #: This value is available only after the spec has been linked.
+        self.function = None
 
     @classmethod
     def compile(cls, parameters, service_name, function_name):
@@ -64,6 +77,10 @@ class FunctionArgsSpec(StructTypeSpec):
 
         return cls(args_name, param_specs)
 
+    def link(self, scope, function):
+        self.function = function
+        return super(FunctionArgsSpec, self).link(scope)
+
 
 class FunctionResultSpec(UnionTypeSpec):
     """Represents the result of a service function.
@@ -81,10 +98,14 @@ class FunctionResultSpec(UnionTypeSpec):
 
         When deserializing, if an unrecognized exception is found, a
         :py:class:`thriftrw.errors.UnknownExceptionError` is raised.
+
+    .. versionchanged:: 0.6
+
+        Added the ``function`` attribute.
     """
 
     __slots__ = UnionTypeSpec.__slots__ + (
-        'return_spec', 'exception_specs', 'exception_ids'
+        'return_spec', 'exception_specs', 'exception_ids', 'function'
     )
 
     def __init__(self, name, return_spec, exceptions):
@@ -95,6 +116,10 @@ class FunctionResultSpec(UnionTypeSpec):
         #: Collection of :py:class:`thriftrw.spec.FieldSpec` objects defining
         #: the exceptions that this function can raise.
         self.exception_specs = exceptions
+
+        #: A reference to the function whose result type this spec represents.
+        #: This value is available only after the spec has been linked.
+        self.function = None
 
         result_specs = []
         if return_spec is not None:
@@ -135,7 +160,8 @@ class FunctionResultSpec(UnionTypeSpec):
 
         return super(FunctionResultSpec, self).from_wire(wire_value)
 
-    def link(self, scope):
+    def link(self, scope, function):
+        self.function = function
         if self.return_spec is not None:
             self.return_spec = self.return_spec.link(scope)
         self.exception_specs = [e.link(scope) for e in self.exception_specs]
@@ -249,9 +275,9 @@ class FunctionSpec(object):
     def link(self, scope):
         if not self.linked:
             self.linked = True
-            self.args_spec = self.args_spec.link(scope)
+            self.args_spec = self.args_spec.link(scope, self)
             if self.result_spec:
-                self.result_spec = self.result_spec.link(scope)
+                self.result_spec = self.result_spec.link(scope, self)
                 result_spec_surface = self.result_spec.surface
             else:
                 result_spec_surface = None
@@ -286,7 +312,10 @@ class ServiceSpec(object):
     function defined in the service.
     """
 
-    __slots__ = ('name', 'functions', 'parent', 'linked', 'surface')
+    __slots__ = (
+        'name', 'functions', 'parent', 'linked', 'surface',
+        '_functions',
+    )
 
     def __init__(self, name, functions, parent):
         #: Name of the service.
@@ -299,6 +328,8 @@ class ServiceSpec(object):
         #: inherit from anything.
         self.parent = parent
 
+        # For quick function lookups.
+        self._functions = None
         self.linked = False
         self.surface = None
 
@@ -334,9 +365,19 @@ class ServiceSpec(object):
                 self.parent = scope.service_specs[self.parent].link(scope)
 
             self.functions = [func.link(scope) for func in self.functions]
+            self._functions = {f.name: f for f in self.functions}
             self.surface = service_cls(self, scope)
 
         return self
+
+    def lookup(self, name):
+        """Look up a function with the given name.
+
+        Returns the function spec or None if no such function exists.
+
+        .. versionadded:: 0.6
+        """
+        return self._functions.get(name, None)
 
     def __str__(self):
         return 'ServiceSpec(name=%r, functions=%r, parent=%r)' % (
