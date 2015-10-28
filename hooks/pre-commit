@@ -22,7 +22,6 @@ ensure_license() {
 		| grep '^fixed file ' |  perl -F"'" -ane 'print "$F[1]\n"' \
 		| while read fileName; do
 			echo "License added to $cwd/$fileName"
-			git add "$fileName"
 		  done
 }
 
