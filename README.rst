@@ -112,6 +112,9 @@ You can use the library to send and receive requests and responses like so,
 
         return blog.dumps(response)
 
+Message Envelopes
+~~~~~~~~~~~~~~~~~
+
 Note that this example sends and receives just the request/response payload. It
 does not wrap the payload in a message envelope as expected by Apache Thrift.
 If you want to send or receive standard Apache Thrift requests to talk to other
