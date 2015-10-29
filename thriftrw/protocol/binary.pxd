@@ -18,44 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import pytest
+from __future__ import absolute_import, unicode_literals, print_function
+
+from thriftrw.protocol.core cimport Protocol
+from thriftrw.wire.message cimport Message
+from thriftrw.wire.value cimport Value
 
 
-@pytest.fixture
-def module(loads):
-    return loads('''struct Struct {
-        1: required list<string> strings;
-        2: required set<i32> ints;
-        3: required map<i32, string> mapped;
-    }''')
-
-
-@pytest.fixture
-def struct(module):
-    Struct = module.Struct
-
-    return Struct(
-        strings=['foo'] * 100,
-        ints=set([256] * 100),
-        mapped={n: 'bar' for n in range(100)},
-    )
-
-
-def test_binary_dumps(benchmark, module, struct):
-    benchmark(lambda: module.dumps(struct))
-
-
-def test_binary_loads(benchmark, module, struct):
-    serialized = module.dumps(struct)
-
-    benchmark(lambda: module.loads(struct.__class__, serialized))
-
-
-def test_to_primitive(benchmark, struct):
-    benchmark(struct.to_primitive)
-
-
-def test_from_primitive(benchmark, struct):
-    primitive = struct.to_primitive()
-
-    benchmark(lambda: struct.type_spec.from_primitive(primitive))
+cdef class BinaryProtocol(Protocol):
+    pass

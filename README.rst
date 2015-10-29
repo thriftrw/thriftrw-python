@@ -112,12 +112,65 @@ You can use the library to send and receive requests and responses like so,
 
         return blog.dumps(response)
 
+Message Envelopes
+~~~~~~~~~~~~~~~~~
+
+Note that this example sends and receives just the request/response payload. It
+does not wrap the payload in a message envelope as expected by Apache Thrift.
+If you want to send or receive standard Apache Thrift requests to talk to other
+Apache Thrift services, you have to use the ``loads.message`` and
+``dumps.message`` APIs. For example,
+
+.. code-block:: python
+
+    # client.py
+
+    def new_post():
+        post = blog.PostDetails(...)
+        request = BlogService.newPost.request(post)
+        payload = blog.dumps.message(request)
+        # ^ Instead of using blog.dumps, we use blog.dumps.message to indicate
+        # that we want the request wrapped in a message envelope.
+
+
+        response_payload = send_to_server(payload)
+
+        # Similarly, instead of using blog.loads, we use blog.loads.message to
+        # indicate that we want to parse a response stored inside a message.
+        response_message = blog.loads.message(BlogService, response_payload)
+        response = response_message.body
+
+        if response.unauthorized is not None:
+            raise response.unauthorized
+        else:
+            return response.success
+
+
+.. code-block:: python
+
+    # server.py
+
+    def handle_request(request_payload):
+        message = blog.loads.message(BlogService, request_payload)
+        if message.name == 'newPost':
+            request = message.body
+            # ...
+            response = BlogService.newPost.response(success=post_uuid)
+            return blog.dumps.message(response, seqid=message.seqid)
+            # As before, we use blog.dumps.message instead of blog.dumps.
+            # It is important that the server use the same seqid in the
+            # response as what was used in the request, otherwise the client
+            # will not be able to process out-of-order responses.
+        else:
+            raise Exception('Unknown method %s' % message.name)
+
+For more information, see `Overview
+<http://thriftrw.readthedocs.org/en/latest/overview.html>`_.
+
 Caveats
 -------
 
 * Only the Thrift Binary protocol is supported at this time.
-* Message wrappers for Thrift calls and responses are not supported at this
-  time.
 
 Related
 -------

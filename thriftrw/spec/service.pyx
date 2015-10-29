@@ -365,8 +365,16 @@ class ServiceSpec(object):
                 self.parent = scope.service_specs[self.parent].link(scope)
 
             self.functions = [func.link(scope) for func in self.functions]
-            self._functions = {f.name: f for f in self.functions}
             self.surface = service_cls(self, scope)
+
+            # Build index for lookup. Normalize type of names to bytes since
+            # it may be bytes or unicode.
+            self._functions = {}
+            for f in self.functions:
+                name = f.name
+                if not isinstance(name, bytes):
+                    name = name.encode('utf-8')
+                self._functions[name] = f
 
         return self
 
@@ -377,6 +385,8 @@ class ServiceSpec(object):
 
         .. versionadded:: 0.6
         """
+        if not isinstance(name, bytes):
+            name = name.encode('utf-8')
         return self._functions.get(name, None)
 
     def __str__(self):

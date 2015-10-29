@@ -23,6 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import pytest
 
 from thriftrw.errors import ThriftCompilerError
+from thriftrw.errors import ThriftParserError
 
 
 @pytest.mark.parametrize('expr', [
@@ -61,6 +62,7 @@ def test_link(loads):
 
         const bool true_from_num = 1;
         const bool false_from_num = 0;
+        const double dub = 1.8317419137;
 
         const string baz = bar;
         const string bar = "hello";
@@ -80,6 +82,7 @@ def test_link(loads):
     assert mod.bar == 'hello'
     assert mod.baz == 'hello'
     assert mod.qux == 'world'
+    assert mod.dub == 1.8317419137
 
     assert mod.Level.LOW == mod.lo
     assert mod.Level.HIGH == mod.hi
@@ -117,6 +120,25 @@ def test_enum_const_from_integer(loads):
 
     assert mod.DISABLED == mod.Role.Disabled
     assert mod.User().role == mod.Role.User
+
+
+def test_string_escaping(loads):
+    mod = loads(r'''
+        const string a = "foo\"bar"
+        const string b = 'foo\'bar'
+        const string c = 'a\nb'
+    ''')
+
+    assert mod.a == 'foo"bar'
+    assert mod.b == "foo'bar"
+    assert mod.c == "a\nb"
+
+
+def test_inescapable(loads):
+    with pytest.raises(ThriftParserError) as exc_info:
+        loads(r'const string foo = "a\bc"')
+
+    assert 'Cannot escape' in str(exc_info)
 
 
 def test_undefined_constant(loads):

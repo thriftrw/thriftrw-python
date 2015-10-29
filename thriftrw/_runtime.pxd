@@ -18,44 +18,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import pytest
+from __future__ import absolute_import, unicode_literals, print_function
+
+from libc.stdint cimport int32_t
+
+from thriftrw.wire.message cimport Message
+from thriftrw.protocol.core cimport Protocol
 
 
-@pytest.fixture
-def module(loads):
-    return loads('''struct Struct {
-        1: required list<string> strings;
-        2: required set<i32> ints;
-        3: required map<i32, string> mapped;
-    }''')
+cdef class Serializer(object):
+    cdef Protocol protocol
+
+    cpdef bytes dumps(self, obj)
+
+    cpdef bytes message(self, obj, int32_t seqid=*)
 
 
-@pytest.fixture
-def struct(module):
-    Struct = module.Struct
+cdef class Deserializer(object):
+    cdef Protocol protocol
 
-    return Struct(
-        strings=['foo'] * 100,
-        ints=set([256] * 100),
-        mapped={n: 'bar' for n in range(100)},
-    )
+    cpdef object loads(self, obj_cls, bytes s)
 
-
-def test_binary_dumps(benchmark, module, struct):
-    benchmark(lambda: module.dumps(struct))
-
-
-def test_binary_loads(benchmark, module, struct):
-    serialized = module.dumps(struct)
-
-    benchmark(lambda: module.loads(struct.__class__, serialized))
-
-
-def test_to_primitive(benchmark, struct):
-    benchmark(struct.to_primitive)
-
-
-def test_from_primitive(benchmark, struct):
-    primitive = struct.to_primitive()
-
-    benchmark(lambda: struct.type_spec.from_primitive(primitive))
+    cpdef Message message(self, service, bytes s)
