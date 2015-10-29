@@ -155,20 +155,49 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
         If the method name was not recognized or any other payload parsing
         errors.
 
-.. py:attribute:: services
+.. py:attribute:: __services__
 
     Collection of all classes generated for all services defined in the source
     thrift file.
 
-.. py:attribute:: types
+    .. versionchanged:: 0.6
+
+        Renamed from ``services`` to ``__services__``.
+
+.. py:attribute:: __types__
 
     Collection of all classes generated for all types defined in the source
     thrift file.
 
-.. py:attribute:: constants
+    .. versionchanged:: 0.6
+
+        Renamed from ``types`` to ``__types__``.
+
+.. py:attribute:: __includes__
+
+    Collection of modules which were referenced via ``include`` statements in
+    the generated module.
+
+    .. versionadded:: 0.6
+
+.. py:attribute:: __constants__
 
     Mapping of constant name to value for all constants defined in the source
     thrift file.
+
+    .. versionchanged:: 0.6
+
+        Renamed from ``constants`` to ``__constants__``.
+
+Includes
+~~~~~~~~
+
+For an include::
+
+    include "shared.thrift"
+
+The generated module will include a top-level attribute ``shared`` which
+references the generated module for ``shared.thrift``.
 
 Structs
 ~~~~~~~
@@ -412,6 +441,56 @@ Thrift Type     Primitive Type
 ``union``       ``dict``
 ``exception``   ``dict``
 =============   ==============
+
+.. _including-modules:
+
+Including other Thrift files
+----------------------------
+
+Types, services, and constants defined in different Thrift files may be
+referenced by using ``include`` statements. Included modules will automatically
+be compiled along with the module that included them, and they will be made
+available in the generated module with the base name of the included file.
+
+For example, given::
+
+    // shared/types.thrift
+
+    struct UUID {
+        1: required i64 high
+        2: required i64 low
+    }
+
+And::
+
+    // service.thrift
+
+    include "shared/types.thrift"
+
+    struct User {
+        1: required types.UUID uuid
+    }
+
+You can do the following
+
+.. code-block:: python
+
+    service = thriftrw.load('service.thrift')
+
+    user_uuid = service.shared.UUID(...)
+    user = service.User(uuid=user_uuid)
+
+    # ...
+
+Also note that you can ``load()`` Thrift files that have already been loaded
+without extra cost because the result is cached by the system.
+
+.. code-block:: python
+
+    service = thriftrw.load('service.thrift')
+    types = thriftrw.load('shared/types.thrift')
+
+    assert service.types is types
 
 .. _calling-apache-thrift:
 

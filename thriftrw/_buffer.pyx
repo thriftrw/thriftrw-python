@@ -152,9 +152,9 @@ cdef class ReadBuffer(object):
             Number of bytes to read.
         :returns:
             ``bytes`` object containing exactly ``count`` bytes.
-        :raises Exception:
+        :raises EndOfInputError:
             If the number of bytes available in the buffer is less than
-            ``count``. TODO more specific exception
+            ``count``.
         """
         if count > self.length - self.offset:
             raise EndOfInputError(

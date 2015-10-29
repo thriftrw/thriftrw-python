@@ -60,6 +60,8 @@ Definitions
 
 .. autoclass:: Service
 
+.. autoclass:: ServiceReference
+
 .. autoclass:: Function
 
 .. autoclass:: Field
@@ -104,6 +106,7 @@ from .ast import (
     Union,
     Exc,
     Service,
+    ServiceReference,
     Function,
     Field,
     PrimitiveType,
@@ -134,6 +137,7 @@ __all__ = [
     'Union',
     'Exc',
     'Service',
+    'ServiceReference',
     'Function',
     'Field',
     'PrimitiveType',

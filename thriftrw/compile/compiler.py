@@ -20,25 +20,113 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import os.path
+
+from .scope import Scope
 from .generate import Generator
 from .link import TypeSpecLinker
 from .link import ConstSpecLinker
 from .link import ServiceSpecLinker
-from .scope import Scope
 from ..errors import ThriftCompilerError
 
+from thriftrw.idl import Parser
 from thriftrw._runtime import Serializer, Deserializer
 
 
 __all__ = ['Compiler']
 
+LINKERS = [ConstSpecLinker, TypeSpecLinker, ServiceSpecLinker]
+
+
+class ModuleSpec(object):
+    """Specification for a single module."""
+
+    __slots__ = (
+        'name', 'path', 'scope', 'surface', 'includes', 'protocol', 'linked'
+    )
+
+    def __init__(self, name, protocol, path=None):
+        """
+        :param name:
+            Name of the module.
+        :param path:
+            Path to the Thrift file from which this module was compiled. This
+            may be omitted if the module was compiled from an inline string
+            (using the ``loads()`` API, for example).
+        """
+
+        self.name = name
+        self.path = path
+        self.protocol = protocol
+        self.linked = False
+        self.scope = Scope(name, path)
+        self.surface = self.scope.module
+
+        # Mapping of names of inculded modules to their corresponding specs.
+        self.includes = {}
+
+        # TODO Scope can probably be eventually folded into this class.
+
+    @property
+    def can_include(self):
+        """Whether this module is allowed to include other modules.
+
+        This is allowed only if the module was compiled from a file since
+        include paths are relative to the file in which they are mentioned.
+        """
+        return self.path is not None
+
+    def add_include(self, module_spec):
+        """Adds a module as an included module.
+
+        :param module_spec:
+            ModuleSpec of the included module.
+        """
+        assert self.can_include
+
+        if module_spec.name in self.includes:
+            raise ThriftCompilerError(
+                'Cannot include module "%s" in "%s". '
+                'The name is already taken.'
+                % (module_spec.name, self.path)
+            )
+
+        self.includes[module_spec.name] = module_spec
+        self.scope.add_include(
+            module_spec.name,
+            module_spec.scope,
+            module_spec.surface,
+        )
+
+    def link(self):
+        """Link all the types in this module and all included modules."""
+        if self.linked:
+            return self
+
+        self.linked = True
+
+        included_modules = []
+
+        # Link includes
+        for include in self.includes.values():
+            included_modules.append(include.link().surface)
+
+        self.scope.add_surface('__includes__', tuple(included_modules))
+
+        # Link self
+        for linker in LINKERS:
+            linker(self.scope).link()
+
+        self.scope.add_surface('loads', Deserializer(self.protocol))
+        self.scope.add_surface('dumps', Serializer(self.protocol))
+
+        return self
+
 
 class Compiler(object):
     """Compiles IDLs into Python modules."""
 
-    LINKERS = [ConstSpecLinker, TypeSpecLinker, ServiceSpecLinker]
-
-    __slots__ = ('protocol', 'strict')
+    __slots__ = ('protocol', 'strict', 'parser', '_module_specs')
 
     def __init__(self, protocol, strict=True):
         """Initialize the compiler.
@@ -49,25 +137,48 @@ class Compiler(object):
         self.protocol = protocol
         self.strict = strict
 
-    def compile(self, name, program):
-        """Compile the given parsed Thrift document into a Python module.
+        self.parser = Parser()
+
+        # Mapping from absolute file path to ModuleSpec for all modules.
+        self._module_specs = {}
+
+    def compile(self, name, contents, path=None):
+        """Compile the given Thrift document into a Python module.
 
         The generated module contains,
 
-        .. py:attribute:: services
+        .. py:attribute:: __services__
 
             A collection of generated classes for all services defined in the
             thrift file.
 
-        .. py:attribute:: types
+            .. versionchanged:: 0.6
+
+                Renamed from ``services`` to ``__services__``.
+
+        .. py:attribute:: __types__
 
             A collection of generated types for all types defined in the
             thrift file.
 
-        .. py:attribute:: constants
+            .. versionchanged:: 0.6
+
+                Renamed from ``types`` to ``__types__``.
+
+        .. py:attribute:: __includes__
+
+            A collection of modules included by this module.
+
+            .. versionadded:: 0.6
+
+        .. py:attribute:: __constants__
 
             A mapping of constant name to value for all constants defined in
             the thrift file.
+
+            .. versionchanged:: 0.6
+
+                Renamed from ``constants`` to ``__constants__``.
 
         .. py:function:: dumps(obj)
 
@@ -107,41 +218,79 @@ class Compiler(object):
         :py:class:`thriftrw.spec.ServiceFunction` objects for each method
         defined in the service.
 
-        .. versionadded:: 0.2
-           The ``constants`` attribute in generated modules.
-
         :param str name:
             Name of the Thrift document. This will be the name of the
             generated module.
-        :param thriftrw.idl.Program program:
-            AST of the parsted Thrift document.
+        :param str contents:
+            Thrift document to compile
+        :param str path:
+            Path to the Thrift file being compiled. If not specified, imports
+            from within the Thrift file will be disallowed.
         :returns:
-            The generated module.
+            ModuleSpec of the generated module.
         """
-        scope = Scope(name)
+        assert name
 
+        if path:
+            path = os.path.abspath(path)
+            if path in self._module_specs:
+                return self._module_specs[path]
+
+        module_spec = ModuleSpec(name, self.protocol, path)
+        if path:
+            self._module_specs[path] = module_spec
+
+        program = self.parser.parse(contents)
+
+        header_processor = HeaderProcessor(self, module_spec)
         for header in program.headers:
-            header.apply(self)
+            header.apply(header_processor)
 
-        generator = Generator(scope, strict=self.strict)
+        generator = Generator(module_spec.scope, strict=self.strict)
         for definition in program.definitions:
             generator.process(definition)
 
-        # TODO Linker can probably just be a callable.
-        for linker in self.LINKERS:
-            linker(scope).link()
+        return module_spec
 
-        scope.add_surface('loads', Deserializer(self.protocol))
-        scope.add_surface('dumps', Serializer(self.protocol))
 
-        return scope.module
+class HeaderProcessor(object):
+    """Processes headers found in the Thrift file."""
+
+    __slots__ = ('compiler', 'module_spec')
+
+    def __init__(self, compiler, module_spec):
+        self.compiler = compiler
+        self.module_spec = module_spec
 
     def visit_include(self, include):
-        raise ThriftCompilerError(
-            'Include of "%s" found on line %d. '
-            'thriftrw does not support including other Thrift files.'
-            % (include.path, include.lineno)
+
+        if not self.module_spec.can_include:
+            raise ThriftCompilerError(
+                'Include of "%s" found on line %d. '
+                'Includes are not supported when using the "loads()" API.'
+                'Try loading the file using the "load()" API.'
+                % (include.path, include.lineno)
+            )
+
+        # Includes are relative to directory of the Thrift file being
+        # compiled.
+        path = os.path.join(
+            os.path.dirname(self.module_spec.path), include.path
         )
+
+        if not os.path.isfile(path):
+            raise ThriftCompilerError(
+                'Cannot include "%s" on line %d in %s. '
+                'The file "%s" does not exist.'
+                % (include.path, include.lineno, self.module_spec.path, path)
+            )
+
+        name = os.path.splitext(os.path.basename(include.path))[0]
+        with open(path, 'r') as f:
+            contents = f.read()
+
+        included_module_spec = self.compiler.compile(name, contents, path)
+        self.module_spec.add_include(included_module_spec)
 
     def visit_namespace(self, namespace):
         pass  # nothing to do

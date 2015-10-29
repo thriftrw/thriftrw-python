@@ -34,6 +34,7 @@ __all__ = [
     'Union',
     'Exc',
     'Service',
+    'ServiceReference',
     'Function',
     'Field',
     'PrimitiveType',
@@ -277,6 +278,15 @@ class Exc(namedtuple('Exc', 'name fields annotations lineno')):
 # defined by Python.
 
 
+class ServiceReference(namedtuple('ServiceReference', 'name lineno')):
+    """A reference to another service.
+
+    .. py:attribute:: name
+
+        Name of the referenced service.
+    """
+
+
 class Service(
     namedtuple('Service', 'name functions parent annotations lineno')
 ):
@@ -293,8 +303,8 @@ class Service(
 
     .. py:attribute:: parent
 
-        Name of the service that this service extends. ``None`` if this service
-        doesn't have a parent service.
+        :py:class:`ServiceReference` to the parent service or ``None`` if this
+        service dosen't have a parent service.
 
     .. py:attribute:: annotations
 

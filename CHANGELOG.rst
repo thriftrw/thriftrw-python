@@ -4,6 +4,8 @@ Releases
 0.6.0 (unreleased)
 ------------------
 
+- ``include`` statements are now supported. For more information, see
+  :ref:`including-modules`.
 - Added support for message envelopes. This makes it possible to talk with
   standard Apache Thrift services and clients. For more information, see
   :ref:`calling-apache-thrift`.
@@ -19,6 +21,9 @@ Releases
   ``FunctionSpec``.
 - ``ServiceSpec`` now provides a ``lookup`` method to look up ``FunctionSpecs``
   by name.
+- Removed the ``force`` option on ``Loader.load``.
+- In generated modules, renamed the ``types``, ``constants`` and ``services``
+  attributes to ``__types__``, ``__constants__``, and ``__services__``.
 
 
 0.5.2 (2015-10-19)
