@@ -448,9 +448,10 @@ Including other Thrift files
 ----------------------------
 
 Types, services, and constants defined in different Thrift files may be
-referenced by using ``include`` statements. Included modules will automatically
-be compiled along with the module that included them, and they will be made
-available in the generated module with the base name of the included file.
+referenced by using ``include`` statements with paths **relative to the current
+.thrift file**. Included modules will automatically be compiled along with the
+module that included them, and they will be made available in the generated
+module with the base name of the included file.
 
 For example, given::
 
@@ -463,9 +464,9 @@ For example, given::
 
 And::
 
-    // service.thrift
+    // services/user.thrift
 
-    include "shared/types.thrift"
+    include "../shared/types.thrift"
 
     struct User {
         1: required types.UUID uuid
@@ -475,7 +476,7 @@ You can do the following
 
 .. code-block:: python
 
-    service = thriftrw.load('service.thrift')
+    service = thriftrw.load('services/user.thrift')
 
     user_uuid = service.shared.UUID(...)
     user = service.User(uuid=user_uuid)
@@ -487,7 +488,7 @@ without extra cost because the result is cached by the system.
 
 .. code-block:: python
 
-    service = thriftrw.load('service.thrift')
+    service = thriftrw.load('services/user.thrift')
     types = thriftrw.load('shared/types.thrift')
 
     assert service.types is types
