@@ -4,8 +4,8 @@ import os
 
 from setuptools import setup
 from setuptools import find_packages
-from setuptools.extension import Extension
 from setuptools.command.sdist import sdist as _sdist
+from setuptools.extension import Extension as _Extension
 
 cmdclass = {}
 ext_modules = []
@@ -35,9 +35,13 @@ cython_modules = [
     'thriftrw.wire.value',
 ]
 
+extension_extras = {}
+
 # If Cython is available we will re-cythonize the pyx files, otherwise we just
 # compile the packaged C files.
 extension_filetype = '.c'
+
+Extension = None
 try:
     import Cython.Distutils
 
@@ -59,16 +63,37 @@ try:
                         % (module, path)
                     )
 
+        Extension = Cython.Distutils.Extension
         extension_filetype = '.pyx'
+
+        cython_directives = {}
+        if os.getenv('THRIFTRW_PROFILE'):
+            # Add hooks for the profiler in the generated C code.
+            cython_directives['profile'] = True
+
+        if os.getenv('THRIFTRW_COVERAGE'):
+            # Add line tracing hooks to the generated C code. The hooks aren't
+            # actually enabled unless the CYTHON_TRACE macre is also set. This
+            # affects performance negatively and should only be used during
+            # testing.
+            extension_extras['define_macros'] = [('CYTHON_TRACE', '1')]
+            cython_directives['linetrace'] = True
+
+        if cython_directives:
+            extension_extras['cython_directives'] = cython_directives
 except ImportError:
     pass
+
+if Extension is None:
+    Extension = _Extension
 
 
 for module in cython_modules:
     ext_modules.append(
         Extension(
             module,
-            [module.replace('.', '/') + extension_filetype]
+            [module.replace('.', '/') + extension_filetype],
+            **extension_extras
         )
     )
 

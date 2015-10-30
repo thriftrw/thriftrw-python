@@ -1,5 +1,6 @@
 [run]
 branch = true
+plugins = Cython.Coverage
 
 [report]
 exclude_lines =
