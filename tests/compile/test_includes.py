@@ -42,7 +42,7 @@ def test_simple_include(tmpdir, loader):
     ''')
 
     tmpdir.join('svc.thrift').write('''
-        include "types.thrift"
+        include "./types.thrift"
 
         struct BatchGetResponse {
             1: required list<types.Item> items = []
@@ -152,7 +152,7 @@ def test_include_relative(tmpdir, loader):
 
 def test_cyclic_includes(tmpdir, loader):
     tmpdir.join('node.thrift').write('''
-        include "value.thrift"
+        include "./value.thrift"
 
         struct Node {
             1: required string name
@@ -161,7 +161,7 @@ def test_cyclic_includes(tmpdir, loader):
     ''')
 
     tmpdir.join('value.thrift').write('''
-        include "node.thrift"
+        include "./node.thrift"
 
         struct Value {
             1: required list<node.Node> nodes
@@ -211,7 +211,7 @@ def test_inherit_included_service(tmpdir, loader):
     ''')
 
     tmpdir.join('keyvalue.thrift').write('''
-        include "common.thrift"
+        include "./common.thrift"
 
         service KeyValue extends common.BaseService {
             binary get(1: binary key)
@@ -235,13 +235,33 @@ def test_include_constants(tmpdir, loader):
     tmpdir.join('bar.thrift').write('const i32 some_num = 42')
 
     tmpdir.join('foo.thrift').write('''
-        include "bar.thrift"
+        include "./bar.thrift"
 
         const list<i32> nums = [1, bar.some_num, 2];
     ''')
 
     foo = loader.load(str(tmpdir.join('foo.thrift')))
     assert foo.nums == [1, 42, 2] == [1, foo.bar.some_num, 2]
+
+
+def test_include_enums(tmpdir, loader):
+    tmpdir.join('foo.thrift').write('''
+        enum Role {
+            DISABLED = 0,
+            USER = 1,
+            MOD = 2,
+            ADMIN = 3,
+        }
+    ''')
+
+    tmpdir.join('bar.thrift').write('''
+        include "./foo.thrift"
+
+        const foo.Role DEFAULT_ROLE = foo.Role.USER
+    ''')
+
+    bar = loader.load(str(tmpdir.join('bar.thrift')))
+    assert bar.DEFAULT_ROLE == bar.foo.Role.USER == 1
 
 
 def test_multi_level_cyclic_import(tmpdir, loader):
@@ -254,16 +274,16 @@ def test_multi_level_cyclic_import(tmpdir, loader):
     #         |- d.thrift
 
     tmpdir.join('a.thrift').write('''
-        include "one/b.thrift"
-        include "one/c.thrift"
+        include "./one/b.thrift"
+        include "./one/c.thrift"
     ''')
 
     tmpdir.join('one/b.thrift').ensure().write('''
-        include "two/d.thrift"
+        include "./two/d.thrift"
     ''')
 
     tmpdir.join('one/c.thrift').ensure().write('''
-        include "two/d.thrift"
+        include "./two/d.thrift"
     ''')
 
     tmpdir.join('one/two/d.thrift').ensure().write('''
@@ -291,9 +311,9 @@ def test_multi_level_cyclic_import(tmpdir, loader):
     (
         # File does not exist
         'foo.thrift',
-        [('foo.thrift', 'include "bar.thrift"')],
+        [('foo.thrift', 'include "./bar.thrift"')],
         [
-            'Cannot include "bar.thrift"',
+            'Cannot include "./bar.thrift"',
             'The file', 'does not exist'
         ]
     ),
@@ -305,8 +325,8 @@ def test_multi_level_cyclic_import(tmpdir, loader):
             ('foo/shared.thrift', 'typedef string timestamp'),
             ('bar/shared.thrift', 'typedef string UUID'),
             ('index.thrift', '''
-                include "foo/shared.thrift"
-                include "bar/shared.thrift"
+                include "./foo/shared.thrift"
+                include "./bar/shared.thrift"
             '''),
         ],
         [
@@ -319,7 +339,7 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         'foo.thrift',
         [
             ('foo.thrift', '''
-                include "bar.thrift"
+                include "./bar.thrift"
 
                 struct Foo { 1: required bar.Bar b }
             '''),
@@ -332,7 +352,7 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         'foo.thrift',
         [
             ('foo.thrift', '''
-                include "bar.thrift"
+                include "./bar.thrift"
 
                 service Foo extends bar.Bar {
                 }
@@ -346,7 +366,7 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         'foo.thrift',
         [
             ('foo.thrift', '''
-                include "bar.thrift"
+                include "./bar.thrift"
 
                 const i32 x = bar.y;
             '''),
@@ -372,6 +392,18 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         [('foo.thrift', 'const i32 x = bar.y')],
         ['Unknown constant "bar.y" referenced']
     ),
+    (
+        # Include path that doesn't start with '.'
+        'foo.thrift',
+        [
+            ('foo.thrift', 'include "bar.thrift"'),
+            ('bar.thrift', 'const i32 x = 42'),
+        ],
+        [
+            'Paths in include statements are relative',
+            'must be in the form "./foo.thrift"'
+        ]
+    ),
 ])
 def test_bad_includes(tmpdir, loader, root, data, msgs):
     for path, contents in data:
@@ -390,7 +422,7 @@ def test_include_disallowed_with_loads(loads):
             namespace py foo
             namespace js bar
 
-            include "foo.thrift"
+            include "./foo.thrift"
         ''')
 
     assert (

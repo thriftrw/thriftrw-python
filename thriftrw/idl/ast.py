@@ -87,7 +87,7 @@ class Include(namedtuple('Include', 'path lineno')):
 
     ::
 
-        include "common.thrift"
+        include "./common.thrift"
 
     .. py:attribute:: path
 

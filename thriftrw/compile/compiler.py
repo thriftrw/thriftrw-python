@@ -272,6 +272,13 @@ class HeaderProcessor(object):
                 % (include.path, include.lineno)
             )
 
+        if not any(include.path.startswith(p) for p in ('./', '../')):
+            raise ThriftCompilerError(
+                'Paths in include statements are relative to the directory '
+                'containing the Thrift file. They must be in the form '
+                '"./foo.thrift" or "../bar.thrift".'
+            )
+
         # Includes are relative to directory of the Thrift file being
         # compiled.
         path = os.path.join(

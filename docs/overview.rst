@@ -194,10 +194,14 @@ Includes
 
 For an include::
 
-    include "shared.thrift"
+    include "./shared.thrift"
 
 The generated module will include a top-level attribute ``shared`` which
 references the generated module for ``shared.thrift``.
+
+Note that paths in include statements are relative to the directory containing
+the Thrift file and they must be in the from ``./foo.thrift``,
+``./foo/bar.thrift``, ``../baz.thrift``, and so on.
 
 Structs
 ~~~~~~~
@@ -449,7 +453,10 @@ Including other Thrift files
 
 Types, services, and constants defined in different Thrift files may be
 referenced by using ``include`` statements with paths **relative to the current
-.thrift file**. Included modules will automatically be compiled along with the
+.thrift file**. The paths must be in the form ``./foo.thrift``,
+``./foo/bar.thrift``, ``../baz.thrift``, and so on.
+
+Included modules will automatically be compiled along with the
 module that included them, and they will be made available in the generated
 module with the base name of the included file.
 
