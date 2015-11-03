@@ -1,4 +1,4 @@
-.PHONY: test lint docs docsopen clean bootstrap
+.PHONY: test lint docs docsopen clean install
 
 test_args := \
 	--cov thriftrw \
@@ -30,7 +30,7 @@ clean:
 	find tests thriftrw -name \*.so -delete
 	make -C docs clean
 
-bootstrap:
+install:
 	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
 	pip install -r requirements-test.txt
