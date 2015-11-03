@@ -23,7 +23,6 @@ import sys
 import inspect
 import os.path
 
-from .idl import Parser
 from .compile import Compiler
 from .protocol import BinaryProtocol
 
@@ -31,7 +30,7 @@ from .protocol import BinaryProtocol
 class Loader(object):
     """Loads and compiles Thrift files."""
 
-    __slots__ = ('parser', 'compiler', 'compiled_modules')
+    __slots__ = ('compiler',)
 
     def __init__(self, protocol=None, strict=True):
         """Initialize a loader.
@@ -49,13 +48,7 @@ class Loader(object):
             compatibility with existing Thrift files.
         """
         protocol = protocol or BinaryProtocol()
-
-        self.parser = Parser()
         self.compiler = Compiler(protocol, strict=strict)
-
-        # Mapping of absolute file path to compiled module. This is used to
-        # cache the result of calling load() multiple times on the same file.
-        self.compiled_modules = {}
 
     def loads(self, name, document):
         """Parse and compile the given Thrift document.
@@ -65,38 +58,27 @@ class Loader(object):
         :param str document:
             The Thrift IDL as a string.
         """
-        program = self.parser.parse(document)
-        return self.compiler.compile(name, program)
+        return self.compiler.compile(name, document).link().surface
 
-    def load(self, path, name=None, force=False):
+    def load(self, path, name=None):
         """Load and compile the given Thrift file.
-
-        If the file was already compiled before, a cached copy of the compiled
-        module is returned.
 
         :param str path:
             Path to the ``.thrift`` file.
         :param str name:
             Name of the generated module. Defaults to the base name of the
             file.
-        :param bool force:
-            Whether to ignore the cache and load the file anew. Defaults to
-            False.
         :returns:
             The compiled module.
         """
-        path = os.path.abspath(path)
-        if path in self.compiled_modules and not force:
-            return self.compiled_modules[path]
-
         if name is None:
-            # TODO do we care if the file extension is .thrift?
             name = os.path.splitext(os.path.basename(path))[0]
+            # TODO do we care if the file extension is .thrift?
+
         with open(path, 'r') as f:
             document = f.read()
-        module = self.loads(name, document)
-        self.compiled_modules[path] = module
-        return module
+
+        return self.compiler.compile(name, document, path).link().surface
 
 
 _DEFAULT_LOADER = Loader(protocol=BinaryProtocol())

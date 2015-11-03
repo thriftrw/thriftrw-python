@@ -24,6 +24,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .compiler import Compiler
+from .scope import Scope
 
 
-__all__ = ['Compiler']
+__all__ = ['Compiler', 'Scope']

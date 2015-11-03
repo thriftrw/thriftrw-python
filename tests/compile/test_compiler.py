@@ -21,41 +21,11 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
-from functools import partial
 
-from thriftrw.idl import Parser
-from thriftrw.protocol import BinaryProtocol
-from thriftrw.compile import Compiler
 from thriftrw.errors import ThriftCompilerError
 
 
 @pytest.fixture
-def parse():
-    return Parser().parse
-
-
-@pytest.fixture
-def compile(request):
-    return partial(Compiler(BinaryProtocol()).compile, request.node.name)
-
-
-@pytest.fixture
-def loads(parse, compile):
-    return (lambda s: compile(parse(s)))
-
-
-def test_include_disallowed(loads):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads('''
-            namespace py foo
-            namespace js bar
-
-            include "foo.thrift"
-        ''')
-
-    assert 'thriftrw does not support including' in str(exc_info)
-
-
 def test_unknown_type(loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
         loads('''
@@ -118,14 +88,14 @@ def test_services_and_types(loads):
         'z': [m.x, m.y],
         'x': 42,
         'y': 123,
-    } == m.constants
+    } == m.__constants__
 
     assert (
-        m.types == (m.Foo, m.Bar) or
-        m.types == (m.Bar, m.Foo)
+        m.__types__ == (m.Foo, m.Bar) or
+        m.__types__ == (m.Bar, m.Foo)
     )
 
     assert (
-        m.services == (m.A, m.B) or
-        m.services == (m.B, m.A)
+        m.__services__ == (m.A, m.B) or
+        m.__services__ == (m.B, m.A)
     )

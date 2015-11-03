@@ -47,7 +47,7 @@ class TypeSpecLinker(object):
                 types.append(type_spec.surface)
 
         self.scope.type_specs = type_specs
-        self.scope.add_surface('types', tuple(types))
+        self.scope.add_surface('__types__', tuple(types))
 
 
 class ServiceSpecLinker(object):
@@ -73,7 +73,7 @@ class ServiceSpecLinker(object):
                 services.append(service_spec.surface)
 
         self.scope.service_specs = service_specs
-        self.scope.add_surface('services', tuple(services))
+        self.scope.add_surface('__services__', tuple(services))
 
 
 class ConstSpecLinker(object):
@@ -99,4 +99,4 @@ class ConstSpecLinker(object):
                 constants[const_spec.name] = const_spec.surface
 
         self.scope.const_specs = const_specs
-        self.scope.add_surface('constants', constants)
+        self.scope.add_surface('__constants__', constants)

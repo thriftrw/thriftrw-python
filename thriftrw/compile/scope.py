@@ -35,17 +35,22 @@ class Scope(object):
     reference to the final generated module.
     """
 
-    __slots__ = ('const_specs', 'type_specs', 'module', 'service_specs')
+    __slots__ = (
+        'const_specs', 'type_specs', 'module', 'service_specs',
+        'included_scopes', 'path'
+    )
 
-    def __init__(self, name):
+    def __init__(self, name, path=None):
         """Initialize the scope.
 
         :param name:
             Name of the generated module.
         """
+        self.path = path
         self.type_specs = {}
         self.const_specs = {}
         self.service_specs = {}
+        self.included_scopes = {}
 
         self.module = types.ModuleType(str(name))
 
@@ -59,21 +64,83 @@ class Scope(object):
 
     __repr__ = __str__
 
+    def __in_path(self):
+        """Helper for error messages to say "in $path" if the scope has a
+        non-none path.
+        """
+        if self.path:
+            return ' in "%s"' % self.path
+        else:
+            return ''
+
     def resolve_const_spec(self, name, lineno):
         """Finds and links the ConstSpec with the given name."""
-        if name not in self.const_specs:
-            raise ThriftCompilerError(
-                'Unknown constant "%s" referenced at line %d' % (name, lineno)
+
+        if name in self.const_specs:
+            return self.const_specs[name].link(self)
+
+        if '.' in name:
+            include_name, component = name.split('.', 1)
+            if include_name in self.included_scopes:
+                return self.included_scopes[include_name].resolve_const_spec(
+                    component, lineno
+                )
+
+        raise ThriftCompilerError(
+            'Unknown constant "%s" referenced at line %d%s' % (
+                name, lineno, self.__in_path()
             )
-        return self.const_specs[name].link(self)
+        )
 
     def resolve_type_spec(self, name, lineno):
         """Finds and links the TypeSpec with the given name."""
-        if name not in self.type_specs:
-            raise ThriftCompilerError(
-                'Unknown type "%s" referenced at line %d' % (name, lineno)
+
+        if name in self.type_specs:
+            return self.type_specs[name].link(self)
+
+        if '.' in name:
+            include_name, component = name.split('.', 1)
+            if include_name in self.included_scopes:
+                return self.included_scopes[include_name].resolve_type_spec(
+                    component, lineno
+                )
+
+        raise ThriftCompilerError(
+            'Unknown type "%s" referenced at line %d%s' % (
+                name, lineno, self.__in_path()
             )
-        return self.type_specs[name].link(self)
+        )
+
+    def resolve_service_spec(self, name, lineno):
+        """Finds and links the ServiceSpec with the given name."""
+
+        if name in self.service_specs:
+            return self.service_specs[name].link(self)
+
+        if '.' in name:
+            include_name, component = name.split('.', 2)
+            if include_name in self.included_scopes:
+                return self.included_scopes[
+                    include_name
+                ].resolve_service_spec(component, lineno)
+
+        raise ThriftCompilerError(
+            'Unknown service "%s" referenced at line %d%s' % (
+                name, lineno, self.__in_path()
+            )
+        )
+
+    def add_include(self, name, included_scope, module):
+        """Register an imported module into this scope.
+
+        Raises ``ThriftCompilerError`` if the name has already been used.
+        """
+        # The compiler already ensures this. If we still get here with a
+        # conflict, that's a bug.
+        assert name not in self.included_scopes
+
+        self.included_scopes[name] = included_scope
+        self.add_surface(name, module)
 
     def add_service_spec(self, service_spec):
         """Registers the given ``ServiceSpec`` into the scope.

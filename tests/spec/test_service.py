@@ -29,6 +29,7 @@ from thriftrw.spec.reference import TypeReference
 from thriftrw.spec.service import ServiceSpec
 from thriftrw.spec.struct import FieldSpec
 from thriftrw.idl import Parser
+from thriftrw.idl.ast import ServiceReference
 from thriftrw.wire import ttype
 
 from ..util.value import vstruct, vbinary, vmap, vbool
@@ -117,7 +118,7 @@ def test_compile(parse):
     '''))
 
     assert spec.name == 'KeyValue'
-    assert spec.parent == 'BaseService'
+    assert spec.parent == ServiceReference('BaseService', 2)
 
     put_item_spec = spec.functions[0]
     get_item_spec = spec.functions[1]
@@ -161,7 +162,7 @@ def test_link_unknown_parent(loads):
     with pytest.raises(ThriftCompilerError) as exc_info:
         loads('service A extends B {}')
 
-    assert 'Service "A" inherits from unknown service "B"' in str(exc_info)
+    assert 'Unknown service "B" referenced at line' in str(exc_info)
 
 
 def test_load(loads):
@@ -200,8 +201,8 @@ def test_load(loads):
         }
     ''')
     assert (
-        (keyvalue.KeyValue, keyvalue.BaseService) == keyvalue.services or
-        (keyvalue.BaseService, keyvalue.KeyValue) == keyvalue.services
+        (keyvalue.KeyValue, keyvalue.BaseService) == keyvalue.__services__ or
+        (keyvalue.BaseService, keyvalue.KeyValue) == keyvalue.__services__
     )
 
     KeyValue = keyvalue.KeyValue

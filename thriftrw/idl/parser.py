@@ -235,7 +235,7 @@ class ParserSpec(object):
             p[0] = ast.Service(
                 name=p[2],
                 functions=p[6],
-                parent=p[4],
+                parent=ast.ServiceReference(p[4], p.lineno(4)),
                 annotations=p[8],
                 lineno=p.lineno(2),
             )

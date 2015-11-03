@@ -357,12 +357,9 @@ class ServiceSpec(object):
             self.linked = True
 
             if self.parent is not None:
-                if self.parent not in scope.service_specs:
-                    raise ThriftCompilerError(
-                        'Service "%s" inherits from unknown service "%s"'
-                        % (self.name, self.parent)
-                    )
-                self.parent = scope.service_specs[self.parent].link(scope)
+                self.parent = scope.resolve_service_spec(
+                    self.parent.name, self.parent.lineno
+                )
 
             self.functions = [func.link(scope) for func in self.functions]
             self.surface = service_cls(self, scope)

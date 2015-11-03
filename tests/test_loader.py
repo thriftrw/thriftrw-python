@@ -82,13 +82,8 @@ def test_caching(tmpdir, monkeypatch):
     loader = Loader()
 
     mod1 = loader.load(path)
-    assert path in loader.compiled_modules
-
     mod2 = loader.load(path)
     assert mod1 is mod2
-
-    mod3 = loader.load(path, force=True)
-    assert mod3 is not mod2
 
 
 @pytest.mark.unimport('foo.bar.svc')
