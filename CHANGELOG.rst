@@ -1,7 +1,7 @@
 Releases
 ========
 
-0.6.0 (unreleased)
+1.0.0 (2015-11-06)
 ------------------
 
 - ``include`` statements are now supported. For more information, see
