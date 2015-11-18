@@ -66,7 +66,10 @@ try:
         Extension = Cython.Distutils.Extension
         extension_filetype = '.pyx'
 
-        cython_directives = {}
+        cython_directives = {
+            'embedsignature': True,
+        }
+
         if os.getenv('THRIFTRW_PROFILE'):
             # Add hooks for the profiler in the generated C code.
             cython_directives['profile'] = True
