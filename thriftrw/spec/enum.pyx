@@ -33,7 +33,23 @@ __all__ = ['EnumTypeSpec']
 class EnumTypeSpec(TypeSpec):
     """TypeSpec for enum types.
 
-    The surface for enum types is a class with the following:
+    .. py:attribute:: name
+
+        Name of the enum class.
+
+    .. py:attribute:: items
+
+        Mapping of enum item names to item values.
+
+    .. py:attribute:: values_to_names
+
+        Mapping of enum item values to their names.
+
+    .. py:attribute:: surface
+
+        The surface for this spec.
+
+    The `surface` for enum types is a class with the following:
 
     .. py:attribute:: type_spec
 
@@ -91,10 +107,7 @@ class EnumTypeSpec(TypeSpec):
         assert name
         assert items is not None
 
-        #: Name of the enum class.
         self.name = name
-
-        #: Mapping of enum item names to item values.
         self.items = items
 
         values_to_names = {}
@@ -109,11 +122,8 @@ class EnumTypeSpec(TypeSpec):
                 )
             values_to_names[value] = name
 
-        #: Mapping of enum item values to their names.
         self.values_to_names = values_to_names
         self.linked = False
-
-        #: The surface for this spec.
         self.surface = None
 
     def link(self, scope):
