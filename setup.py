@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 
 from setuptools import setup
 from setuptools import find_packages
@@ -118,12 +119,26 @@ class sdist(_sdist):
 cmdclass['sdist'] = sdist
 
 
+version = None
+with open('thriftrw/__init__.py', 'r') as f:
+    for line in f:
+        m = re.match(r'^__version__\s*=\s*(["\'])([^"\']+)\1', line)
+        if m:
+            version = m.group(2)
+            break
+
+if not version:
+    raise Exception(
+        'Could not determine version number from thriftrw/__init__.py'
+    )
+
+
 with open('README.rst') as f:
     long_description = f.read()
 
 setup(
     name='thriftrw',
-    version='1.0.1.dev0',
+    version=version,
     description=(
         'A library to serialize and deserialize Thrift values.'
     ),
