@@ -204,47 +204,28 @@ class _BoolTypeSpec(TypeSpec):
         check.instanceof_class(self, (bool, int), instance)
 
 
-#: TypeSpec for boolean values.
 BoolTypeSpec = _BoolTypeSpec()
 
-#: TypeSpec for single-byte integers.
 ByteTypeSpec = PrimitiveTypeSpec(
     'byte', ttype.BYTE, ByteValue, numbers.Integral, int
 )
 
-#: TypeSpec for floating point numbers with 64 bits of precision.
 DoubleTypeSpec = PrimitiveTypeSpec(
     'double', ttype.DOUBLE, DoubleValue, numbers.Number, float
 )
 
-#: TypeSpec for 16-bit integers.
 I16TypeSpec = PrimitiveTypeSpec(
     'i16', ttype.I16, I16Value, numbers.Integral, int
 )
 
-#: TypeSpec for 32-bit integers.
 I32TypeSpec = PrimitiveTypeSpec(
     'i32', ttype.I32, I32Value, numbers.Integral, int
 )
 
-#: TypeSpec for 64-bit integers.
 I64TypeSpec = PrimitiveTypeSpec(
     'i64', ttype.I64, I64Value, numbers.Integral, long
 )
 
-#: TypeSpec for binary blobs.
-#:
-#: .. versionchanged:: 0.4.0
-#:
-#:     Automatically coerces text values into binary.
 BinaryTypeSpec = _BinaryTypeSpec()
 
-#: TypeSpec for unicode data.
-#:
-#: Values will be decoded/encoded using UTF-8 encoding before/after being
-#: serialized/deserialized.
-#:
-#: .. versionchanged:: 0.3.1
-#:
-#:     Allows passing binary values directly.
 TextTypeSpec = _TextTypeSpec()

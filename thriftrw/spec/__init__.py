@@ -33,29 +33,48 @@ at the top-level.
 Native types
 ~~~~~~~~~~~~
 
-.. autodata:: thriftrw.spec.BoolTypeSpec
-    :annotation:
+.. data:: thriftrw.spec.BoolTypeSpec
 
-.. autodata:: thriftrw.spec.ByteTypeSpec
-    :annotation:
+    TypeSpec for boolean values.
 
-.. autodata:: thriftrw.spec.DoubleTypeSpec
-    :annotation:
+.. data:: thriftrw.spec.ByteTypeSpec
 
-.. autodata:: thriftrw.spec.I16TypeSpec
-    :annotation:
+    TypeSpec for single-byte integers.
 
-.. autodata:: thriftrw.spec.I32TypeSpec
-    :annotation:
+.. data:: thriftrw.spec.DoubleTypeSpec
 
-.. autodata:: thriftrw.spec.I64TypeSpec
-    :annotation:
+    TypeSpec for floating point numbers with 64 bits of precision.
 
-.. autodata:: thriftrw.spec.BinaryTypeSpec
-    :annotation:
+.. data:: thriftrw.spec.I16TypeSpec
 
-.. autodata:: thriftrw.spec.TextTypeSpec
-    :annotation:
+    TypeSpec for 16-bit integers.
+
+.. data:: thriftrw.spec.I32TypeSpec
+
+    TypeSpec for 32-bit integers.
+
+.. data:: thriftrw.spec.I64TypeSpec
+
+    TypeSpec for 64-bit integers.
+
+.. data:: thriftrw.spec.BinaryTypeSpec
+
+    TypeSpec for binary blobs.
+
+    .. versionchanged:: 0.4.0
+
+        Automatically coerces text values into binary.
+
+.. data:: thriftrw.spec.TextTypeSpec
+
+    TypeSpec for unicode data.
+
+    Values will be decoded/encoded using UTF-8 encoding before/after being
+    serialized/deserialized.
+
+    .. versionchanged:: 0.3.1
+
+        Allows passing binary values directly.
 
 .. autoclass:: thriftrw.spec.ListTypeSpec
     :members:
@@ -99,6 +118,9 @@ Services
 .. autoclass:: thriftrw.spec.FunctionSpec
     :members:
 
+.. autoclass:: thriftrw.spec.FunctionArgsSpec
+    :members:
+
 .. autoclass:: thriftrw.spec.FunctionResultSpec
     :members:
 
@@ -123,6 +145,7 @@ from .typedef import TypedefTypeSpec
 from .service import (
     ServiceSpec,
     FunctionSpec,
+    FunctionArgsSpec,
     FunctionResultSpec,
     ServiceFunction,
 )
@@ -170,6 +193,7 @@ __all__ = [
     # Services
     'ServiceSpec',
     'FunctionSpec',
+    'FunctionArgsSpec',
     'FunctionResultSpec',
     'ServiceFunction',
 

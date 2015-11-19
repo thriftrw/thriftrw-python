@@ -36,6 +36,15 @@ __all__ = ['StructTypeSpec', 'FieldSpec']
 class StructTypeSpec(TypeSpec):
     """A struct is a collection of named fields.
 
+    .. py:attribute:: name
+
+        Name of the struct.
+
+    .. py:attribute:: fields
+
+        Collection of :py:class:`FieldSpec` objects representing the fields of
+        this struct.
+
     The surface for struct types is a class with the following:
 
     .. py:attribute:: type_spec
@@ -110,10 +119,7 @@ class StructTypeSpec(TypeSpec):
             Base class to use for generates classes. Defaults to ``object``.
         """
 
-        #: Name of the struct.
         self.name = name
-
-        #: Collection of :py:class:`FieldSpec` objects.
         self.fields = fields
         self.linked = False
         self.surface = None
@@ -232,27 +238,35 @@ class StructTypeSpec(TypeSpec):
 class FieldSpec(object):
     """Specification for a single field on a struct.
 
-    FieldSpecs do not expose anything at the module level.
+    .. py:attribute:: id
+
+        Field identifier of this field.
+
+    .. py:attribute:: name
+
+        Name of the field.
+
+    .. py:attribute:: spec
+
+        :py:class:`TypeSpec` for the type of values accepted by this field.
+
+    .. py:attribute:: required
+
+        Whether this field is required or not.
+
+    .. py:attribute:: default_value
+
+        Default value of the field if any. None otherwise.
     """
 
     __slots__ = ('id', 'name', 'spec', 'required', 'default_value', 'linked')
 
     def __init__(self, id, name, spec, required, default_value=None):
-        #: Field identifier of the field.
         self.id = id
-
-        #: Name of the field.
         self.name = name
-
-        #: TypeSpec for the type of values accepted by the field.
         self.spec = spec
-
-        #: Whether this field is required or not.
         self.required = required
-
-        #: Default value of the field.
         self.default_value = default_value
-
         self.linked = False
 
     def link(self, scope):

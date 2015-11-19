@@ -32,7 +32,13 @@ __all__ = ['ListTypeSpec']
 
 
 class ListTypeSpec(TypeSpec):
-    """Spec for list types."""
+    """Spec for list types.
+
+    .. py:attribute:: vspec
+
+        TypeSpec for the kind of values lists conforming to this spec must
+        contain.
+    """
 
     __slots__ = ('vspec', 'linked')
 
@@ -44,9 +50,6 @@ class ListTypeSpec(TypeSpec):
         :param TypeSpec vspec:
             TypeSpec of values stored in the list.
         """
-
-        #: TypeSpec for the kind of values lists conforming to this spec can
-        #: contain.
         self.vspec = vspec
         self.linked = False
 

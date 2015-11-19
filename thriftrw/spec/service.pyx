@@ -30,12 +30,21 @@ from ..errors import ThriftCompilerError
 from ..errors import UnknownExceptionError
 
 __all__ = [
-    'ServiceSpec', 'FunctionSpec', 'ServiceFunction', 'FunctionResultSpec'
+    'ServiceSpec',
+    'FunctionSpec',
+    'ServiceFunction',
+    'FunctionArgsSpec',
+    'FunctionResultSpec',
 ]
 
 
 class FunctionArgsSpec(StructTypeSpec):
     """Represents the parameters of a service function.
+
+    .. py:attribute:: function
+
+        The :py:class:`FunctionSpec` whose arguments this spec represents.
+        This value is available only after the spec has been linked.
 
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
@@ -49,9 +58,6 @@ class FunctionArgsSpec(StructTypeSpec):
 
     def __init__(self, name, params):
         super(FunctionArgsSpec, self).__init__(name, params)
-
-        #: A reference to the function whose arguments this spec represents.
-        #: This value is available only after the spec has been linked.
         self.function = None
 
     @classmethod
@@ -85,6 +91,21 @@ class FunctionArgsSpec(StructTypeSpec):
 class FunctionResultSpec(UnionTypeSpec):
     """Represents the result of a service function.
 
+    .. py:attribute:: return_spec
+
+        :py:class:`thriftrw.spec.TypeSpec` of the return type or None if the
+        function does not return anything.
+
+    .. py:attribute:: exception_specs
+
+        Collection of :py:class:`thriftrw.spec.FieldSpec` objects defining the
+        exceptions that this function can raise.
+
+    .. py:attribute:: function
+
+        The :py:class:`FunctionSpec` whose result type this spec represents.
+        This value is available only after the spec has been linked.
+
     The return value of a function and the exceptions raised by it implicitly
     form a union which contains the return value at field ID ``0`` and the
     exceptions on the remaining field IDs.
@@ -109,16 +130,8 @@ class FunctionResultSpec(UnionTypeSpec):
     )
 
     def __init__(self, name, return_spec, exceptions):
-        #: :py:class:`thriftrw.spec.TypeSpec` of the return type or None if
-        #: the function does not return anything.
         self.return_spec = return_spec
-
-        #: Collection of :py:class:`thriftrw.spec.FieldSpec` objects defining
-        #: the exceptions that this function can raise.
         self.exception_specs = exceptions
-
-        #: A reference to the function whose result type this spec represents.
-        #: This value is available only after the spec has been linked.
         self.function = None
 
         result_specs = []
@@ -135,9 +148,9 @@ class FunctionResultSpec(UnionTypeSpec):
 
         result_specs.extend(exceptions)
 
-        #: Set of field IDs for exceptions recognized by this result. If the
-        #: system tries to read a field with an unrecognized exception ID, an
-        #: ``UnknownExceptionError`` will be raised.
+        # Set of field IDs for exceptions recognized by this result. If the
+        # system tries to read a field with an unrecognized exception ID, an
+        # ``UnknownExceptionError`` will be raised.
         self.exception_ids = frozenset([f.id for f in exceptions])
 
         super(FunctionResultSpec, self).__init__(
@@ -206,6 +219,30 @@ class FunctionResultSpec(UnionTypeSpec):
 class FunctionSpec(object):
     """Specification of a single function on a service.
 
+    .. py:attribute:: name
+
+        Name of the function.
+
+    .. py:attribute:: args_spec
+
+        :py:class:`FunctionArgsSpec` specifying the arguments accepted by this
+        function as a struct.
+
+    .. py:attribute:: result_spec
+
+        :py:class:`FunctionResultSpec` specifying the output of this
+        function as a  union of the return type and the exceptions raised
+        by this function.
+
+        The return type of the function (if any) is a field in the union
+        with field ID 0 and name 'success'.
+
+        This value is None if the function is oneway.
+
+    .. py:attribute:: oneway
+
+        Whether this function is oneway or not.
+
     The ``surface`` for a FunctionSpec is a :py:class:`ServiceFunction`
     object. Unlike the ``surface`` for other specs, a FunctionSpec's surface
     is attached to the service class as a class attribute.
@@ -219,26 +256,10 @@ class FunctionSpec(object):
                  'surface')
 
     def __init__(self, name, args_spec, result_spec, oneway):
-        #: Name of the function.
         self.name = name
-
-        #: TypeSpec specifying the arguments accepted by this function as a
-        #: struct.
         self.args_spec = args_spec
-
-        #: :py:class:`FunctionResultSpec` specifying the output of this
-        #: function as a  union of the return type and the exceptions raised
-        #: by this function.
-        #:
-        #: The return type of the function (if any) is a field in the union
-        #: with field ID 0 and name 'success'.
-        #:
-        #: This value is None if the function is oneway.
         self.result_spec = result_spec
-
-        #: Whether this function is oneway or not.
         self.oneway = oneway
-
         self.linked = False
         self.surface = None
 
@@ -301,6 +322,19 @@ class FunctionSpec(object):
 class ServiceSpec(object):
     """Spec for a single service.
 
+    .. py:attribute:: name
+
+        Name of the service.
+
+    .. py:attribute:: functions
+
+        Collection of :py:class:`FunctionSpec` objects.
+
+    .. py:attribute:: parent
+
+        ``ServiceSpec`` of the parent service or None if this service does not
+        inherit any service.
+
     The ``surface`` for a ``ServiceSpec`` is a class that has the following
     attributes:
 
@@ -318,14 +352,8 @@ class ServiceSpec(object):
     )
 
     def __init__(self, name, functions, parent):
-        #: Name of the service.
         self.name = name
-
-        #: Collection of :py:class:`FunctionSpec` objects.
         self.functions = functions
-
-        #: ServiceSpec of the parent service or None if this service does not
-        #: inherit from anything.
         self.parent = parent
 
         # For quick function lookups.

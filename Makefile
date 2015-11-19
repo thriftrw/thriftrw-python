@@ -13,7 +13,7 @@ lint:
 	flake8 thriftrw tests
 
 docs:
-	PYTHONDONTWRITEBYTECODE=1 make -C docs html
+	PYTHONDONTWRITEBYTECODE=1 make -C docs html SPHINXOPTS=-W
 
 docszip: docs
 	cd docs/_build/html; zip -r ../html.zip .

@@ -32,7 +32,16 @@ __all__ = ['MapTypeSpec']
 
 
 class MapTypeSpec(TypeSpec):
-    """Spec for map types."""
+    """Spec for map types.
+
+    .. py:attribute:: kspec
+
+        TypeSpec for the kind of keys matching maps must contain.
+
+    .. py:attribute:: vspec
+
+        TypeSpec for the kind of values matching maps must contain.
+    """
 
     __slots__ = ('kspec', 'vspec', 'linked')
 
@@ -46,13 +55,8 @@ class MapTypeSpec(TypeSpec):
         :param TypeSpec vspec:
             TypeSpec of the values in the map.
         """
-
-        #: TypeSpec for the kind of keys matching maps can contain.
         self.kspec = kspec
-
-        #: TypeSpec for the kind of values matching maps can contain.
         self.vspec = vspec
-
         self.linked = False
 
     @property
