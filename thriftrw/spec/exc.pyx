@@ -36,10 +36,3 @@ class ExceptionTypeSpec(StructTypeSpec):
     def __init__(self, *args, **kwargs):
         kwargs['base_cls'] = Exception
         super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
-
-    def __str__(self):
-        return 'ExceptionTypeSpec(name=%r, cls=%r, fields=%r)' % (
-            self.name, self.cls, self.fields
-        )
-
-    __repr__ = __str__
