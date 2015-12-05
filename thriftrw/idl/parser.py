@@ -393,8 +393,13 @@ class ParserSpec(object):
         self._parse_seq(p)
 
     def p_annotation(self, p):
-        '''annotation : IDENTIFIER '=' LITERAL '''
-        p[0] = ast.Annotation(p[1], p[3], lineno=p.lineno(1))
+        '''annotation : IDENTIFIER '=' LITERAL
+                      | IDENTIFIER'''
+
+        if len(p) == 4:
+            p[0] = ast.Annotation(p[1], p[3], lineno=p.lineno(1))
+        else:
+            p[0] = ast.Annotation(p[1], True, lineno=p.lineno(1))
 
     def _parse_seq(self, p):
         """Helper to parse sequence rules.

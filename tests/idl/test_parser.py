@@ -32,6 +32,7 @@ from thriftrw.errors import ThriftParserError
     'struct Foo { 0: string foo }',
     'service Bar {',
     'service { }',
+    'typedef i64 foo (bar = )',
 ])
 def test_parse_errors(s):
     with pytest.raises(ThriftParserError):
@@ -48,11 +49,14 @@ def test_parse_annotations():
                 ast.Annotation('baz', 'qux', lineno=3),
             ]
         ),
-        annotations=[ast.Annotation('boxed', 'true', lineno=4)],
+        annotations=[
+            ast.Annotation('boxed', 'true', lineno=4),
+            ast.Annotation('bounded', True, lineno=4),
+        ],
         lineno=4,
     ) == Parser(start='typedef', silent=True).parse(
         '''typedef i32 (
             foo = "bar";
             baz = "qux";
-        ) Integer (boxed = "true")'''
+        ) Integer (boxed = "true", bounded)'''
     )
