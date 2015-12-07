@@ -4,7 +4,8 @@ Releases
 1.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed bug where type annotations without values weren't supported by the
+  grammar.
 
 
 1.0.0 (2015-11-06)
