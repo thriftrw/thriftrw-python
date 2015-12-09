@@ -56,7 +56,7 @@ The types of messages envelopes supported by Thrift.
     ``Message.body`` is the same as a ``CALL`` message but no ``REPLY`` or
     ``EXCEPTION`` is expected in response.
 
-.. versionadded:: 0.6
+.. versionadded:: 1.0
 """
 
 from __future__ import absolute_import, unicode_literals, print_function

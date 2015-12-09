@@ -49,7 +49,7 @@ class FunctionArgsSpec(StructTypeSpec):
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Added the ``function`` attribute.
     """
@@ -120,7 +120,7 @@ class FunctionResultSpec(UnionTypeSpec):
         When deserializing, if an unrecognized exception is found, a
         :py:class:`thriftrw.errors.UnknownExceptionError` is raised.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Added the ``function`` attribute.
     """
@@ -408,7 +408,7 @@ class ServiceSpec(object):
 
         Returns the function spec or None if no such function exists.
 
-        .. versionadded:: 0.6
+        .. versionadded:: 1.0
         """
         if not isinstance(name, bytes):
             name = name.encode('utf-8')

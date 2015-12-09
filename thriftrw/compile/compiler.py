@@ -152,7 +152,7 @@ class Compiler(object):
             A collection of generated classes for all services defined in the
             thrift file.
 
-            .. versionchanged:: 0.6
+            .. versionchanged:: 1.0
 
                 Renamed from ``services`` to ``__services__``.
 
@@ -161,7 +161,7 @@ class Compiler(object):
             A collection of generated types for all types defined in the
             thrift file.
 
-            .. versionchanged:: 0.6
+            .. versionchanged:: 1.0
 
                 Renamed from ``types`` to ``__types__``.
 
@@ -169,14 +169,14 @@ class Compiler(object):
 
             A collection of modules included by this module.
 
-            .. versionadded:: 0.6
+            .. versionadded:: 1.0
 
         .. py:attribute:: __constants__
 
             A mapping of constant name to value for all constants defined in
             the thrift file.
 
-            .. versionchanged:: 0.6
+            .. versionchanged:: 1.0
 
                 Renamed from ``constants`` to ``__constants__``.
 
@@ -198,7 +198,7 @@ class Compiler(object):
 
             See :ref:`calling-apache-thrift`.
 
-            .. versionadded:: 0.6
+            .. versionadded:: 1.0
 
         .. py:function:: loads.message(service, payload)
 
@@ -209,7 +209,7 @@ class Compiler(object):
 
             See :ref:`calling-apache-thrift`.
 
-            .. versionadded:: 0.6
+            .. versionadded:: 1.0
 
         And one class each for every struct, union, exception, enum, and
         service defined in the IDL.

@@ -57,7 +57,7 @@ cdef class Message(object):
 
     See :ref:`calling-apache-thrift` for more information.
 
-    .. versionadded:: 0.6
+    .. versionadded:: 1.0
     """
 
     def __cinit__(self, name, int32_t seqid, int message_type, body):
