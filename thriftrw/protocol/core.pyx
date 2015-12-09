@@ -31,7 +31,7 @@ __all__ = ['Protocol']
 cdef class Protocol(object):
     """Base class for all protocol implementations.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Removed ``dumps`` and ``loads`` methods and added
         ``serialize_message`` and ``deserialize_message``.

@@ -160,7 +160,7 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
     Collection of all classes generated for all services defined in the source
     thrift file.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Renamed from ``services`` to ``__services__``.
 
@@ -169,7 +169,7 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
     Collection of all classes generated for all types defined in the source
     thrift file.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Renamed from ``types`` to ``__types__``.
 
@@ -178,14 +178,14 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
     Collection of modules which were referenced via ``include`` statements in
     the generated module.
 
-    .. versionadded:: 0.6
+    .. versionadded:: 1.0
 
 .. py:attribute:: __constants__
 
     Mapping of constant name to value for all constants defined in the source
     thrift file.
 
-    .. versionchanged:: 0.6
+    .. versionchanged:: 1.0
 
         Renamed from ``constants`` to ``__constants__``.
 
