@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.0.1 (unreleased)
+1.0.1 (2015-12-11)
 ------------------
 
 - Fixed bug where type annotations without values weren't supported by the
