@@ -49,9 +49,21 @@ class FunctionArgsSpec(StructTypeSpec):
     The parameters of a function implicitly form a struct which contains the
     parameters as its fields, which are optional by default.
 
+    The surface for this is the same as :py:class:`StructTypeSpec` except that
+    the generated class also includes the following class attributes.
+
+    .. py:attribute:: result_type
+
+        A reference to the class representing the result type for
+        ``function``, or None if the function was oneway.
+
     .. versionchanged:: 1.0
 
         Added the ``function`` attribute.
+
+    .. versionchanged:: 1.1
+
+        Added ``result_type`` class attribute to the surface.
     """
 
     __slots__ = StructTypeSpec.__slots__ + ('function',)
@@ -85,7 +97,15 @@ class FunctionArgsSpec(StructTypeSpec):
 
     def link(self, scope, function):
         self.function = function
-        return super(FunctionArgsSpec, self).link(scope)
+        spec = super(FunctionArgsSpec, self).link(scope)
+
+        result_type = None
+        if self.function.result_spec is not None:
+            result_spec = self.function.result_spec.link(scope, function)
+            result_type = result_spec.surface
+
+        spec.surface.result_type = result_type
+        return spec
 
 
 class FunctionResultSpec(UnionTypeSpec):
@@ -296,12 +316,12 @@ class FunctionSpec(object):
     def link(self, scope):
         if not self.linked:
             self.linked = True
-            self.args_spec = self.args_spec.link(scope, self)
             if self.result_spec:
                 self.result_spec = self.result_spec.link(scope, self)
                 result_spec_surface = self.result_spec.surface
             else:
                 result_spec_surface = None
+            self.args_spec = self.args_spec.link(scope, self)
 
             self.surface = ServiceFunction(
                 self.name,
