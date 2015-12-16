@@ -42,10 +42,17 @@ class ModuleSpec(object):
     """Specification for a single module."""
 
     __slots__ = (
-        'name', 'path', 'scope', 'surface', 'includes', 'protocol', 'linked'
+        'name',
+        'path',
+        'scope',
+        'surface',
+        'includes',
+        'protocol',
+        'linked',
+        'thrift_source',
     )
 
-    def __init__(self, name, protocol, path=None):
+    def __init__(self, name, protocol, path=None, thrift_source=None):
         """
         :param name:
             Name of the module.
@@ -53,6 +60,9 @@ class ModuleSpec(object):
             Path to the Thrift file from which this module was compiled. This
             may be omitted if the module was compiled from an inline string
             (using the ``loads()`` API, for example).
+        :param thrift_source:
+            If non-None, this is the source code of the Thrift file from which
+            this module was generated.
         """
 
         self.name = name
@@ -61,6 +71,7 @@ class ModuleSpec(object):
         self.linked = False
         self.scope = Scope(name, path)
         self.surface = self.scope.module
+        self.thrift_source = thrift_source
 
         # Mapping of names of inculded modules to their corresponding specs.
         self.includes = {}
@@ -112,6 +123,7 @@ class ModuleSpec(object):
             included_modules.append(include.link().surface)
 
         self.scope.add_surface('__includes__', tuple(included_modules))
+        self.scope.add_surface('__thrift_source__', self.thrift_source)
 
         # Link self
         for linker in LINKERS:
@@ -180,6 +192,12 @@ class Compiler(object):
 
                 Renamed from ``constants`` to ``__constants__``.
 
+        .. py:attribute:: __thrift_source__
+
+            Contents of the .thrift file from which this module was compiled.
+
+            .. versionadded:: 1.1
+
         .. py:function:: dumps(obj)
 
             Serializes the given object using the protocol the compiler was
@@ -236,7 +254,7 @@ class Compiler(object):
             if path in self._module_specs:
                 return self._module_specs[path]
 
-        module_spec = ModuleSpec(name, self.protocol, path)
+        module_spec = ModuleSpec(name, self.protocol, path, contents)
         if path:
             self._module_specs[path] = module_spec
 

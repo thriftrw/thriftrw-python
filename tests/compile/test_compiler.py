@@ -72,7 +72,7 @@ def test_service_type_conflict(loads):
 
 
 def test_services_and_types(loads):
-    m = loads('''
+    s = '''
         struct Foo {}
         union Bar {}
 
@@ -82,7 +82,8 @@ def test_services_and_types(loads):
         const list<i32> z = [x, y];
         const i32 x = 42;
         const i32 y = 123;
-    ''')
+    '''
+    m = loads(s)
 
     assert {
         'z': [m.x, m.y],
@@ -99,3 +100,5 @@ def test_services_and_types(loads):
         m.__services__ == (m.A, m.B) or
         m.__services__ == (m.B, m.A)
     )
+
+    assert m.__thrift_source__ == s
