@@ -210,6 +210,7 @@ def test_load(loads):
     assert KeyValue.clear.spec.oneway
     assert KeyValue.clear.request is not None
     assert KeyValue.clear.response is None
+    assert KeyValue.clear.request.result_type is None
 
     assert not KeyValue.putItem.spec.oneway
     assert KeyValue.putItem.response.type_spec.return_spec is None
@@ -217,6 +218,7 @@ def test_load(loads):
         KeyValue.getItem.response.type_spec.return_spec is
         keyvalue.Item.type_spec
     )
+    assert KeyValue.putItem.request.result_type is KeyValue.putItem.response
 
     assert_round_trip(
         KeyValue.putItem.request(
