@@ -127,16 +127,12 @@ class UnionTypeSpec(TypeSpec):
                 )
             ids.add(field.id)
 
-            if field.requiredness is not None:
+            required = field.requiredness
+            if required is not None and required:
                 raise ThriftCompilerError(
-                    'Field "%s" of union "%s" on line %d is "%s". '
-                    'Unions cannot specify requiredness. '
-                    % (
-                        field.name,
-                        union.name,
-                        field.lineno,
-                        'required' if field.requiredness else 'optional',
-                    )
+                    'Field "%s" of union "%s" on line %d is "required". '
+                    'Unions cannot have required fields. '
+                    % (field.name, union.name, field.lineno)
                 )
 
             if field.default is not None:

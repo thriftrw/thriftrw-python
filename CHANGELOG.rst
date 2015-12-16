@@ -7,6 +7,8 @@ Releases
 - Expose ``result_type`` on the args type for service functions.
 - Expose the contents of the Thrift file on compiled modules under the
   ``__thrift_source__`` attribute.
+- Don't fail compilation if fields in unions specify themselves as
+  ``optional``.
 
 
 1.0.1 (2015-12-11)

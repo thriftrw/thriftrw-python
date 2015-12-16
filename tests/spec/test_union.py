@@ -47,11 +47,10 @@ def test_compile_without_field_id(parse):
 
 
 def test_compile_with_optional_or_required(parse):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        UnionTypeSpec.compile(parse('union Foo { 1: optional string bar }'))
-
-    assert 'Field "bar" of union "Foo"' in str(exc_info)
-    assert 'is "optional".' in str(exc_info)
+    spec = UnionTypeSpec.compile(
+        parse('union Foo { 1: optional string bar }')
+    )
+    assert not spec.fields[0].required
 
     with pytest.raises(ThriftCompilerError) as exc_info:
         UnionTypeSpec.compile(parse('union Foo { 1: required string bar }'))
@@ -122,8 +121,8 @@ def test_load_empty(loads):
 def test_load(loads):
     Foo = loads('''union Foo {
         1: binary b
-        2: string s
-        3: i32 i
+        2: optional string s
+        3: optional i32 i
         4: list<Foo> l
     }''').Foo
     spec = Foo.type_spec
