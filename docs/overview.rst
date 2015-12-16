@@ -462,9 +462,9 @@ referenced by using ``include`` statements with paths **relative to the current
 .thrift file**. The paths must be in the form ``./foo.thrift``,
 ``./foo/bar.thrift``, ``../baz.thrift``, and so on.
 
-Included modules will automatically be compiled along with the
-module that included them, and they will be made available in the generated
-module with the base name of the included file.
+Included modules will automatically be compiled along with the module that
+included them, and they will be made available in the generated module with the
+**base name** of the included file (without the extension).
 
 For example, given::
 
@@ -496,6 +496,36 @@ You can do the following
 
     # ...
 
+As mentioned previously, imported modules are exposed under the base name of
+the included file. You can customize this by using thriftrw's custom import-as
+syntax. This feature is disabled by default because any Thrift file that uses
+it is breaking compatibility with Apache Thrift.
+
+::
+
+    // services/user.thrift
+
+    include t "../shared/types.thrift"
+
+    struct User {
+        1: required t.UUID uuid
+    }
+
+As expected, the custom name will be used in the generated module to refer to
+the imported module.
+
+.. code-block:: python
+
+    from thriftrw.loader import Loader
+
+    thriftrw = Loader(include_as=True)
+    service = thriftrw.load('services/user.thrift')
+
+    user_uuid = service.t.UUID(...)
+    user = service.User(uuid=user_uuid)
+
+    # ...
+
 Also note that you can ``load()`` Thrift files that have already been loaded
 without extra cost because the result is cached by the system.
 
@@ -504,7 +534,7 @@ without extra cost because the result is cached by the system.
     service = thriftrw.load('services/user.thrift')
     types = thriftrw.load('shared/types.thrift')
 
-    assert service.types is types
+    assert service.t is types
 
 .. _calling-apache-thrift:
 

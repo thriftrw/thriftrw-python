@@ -28,27 +28,32 @@ from .protocol import BinaryProtocol
 
 
 class Loader(object):
-    """Loads and compiles Thrift files."""
+    """Loads and compiles Thrift files.
+
+    :param thriftrw.protocol.Protocol protocol:
+        The protocol to use to serialize and deserialize types. Defaults to
+        the binary protocol.
+
+    :param bool strict:
+        When ``True`` (the default behavior) this enforces that "required" or
+        "optional" always be specified for struct elements. This is desirable
+        because Apache Thrift generates different behaviors for elements
+        without "required" or "optional" depending on the language. Setting
+        this to ``False`` is only recommended for compatibility with existing
+        Thrift files.
+
+    :param bool include_as:
+        Whether thriftrw's custom include-as syntax is supported. Defaults to
+        False.
+    """
 
     __slots__ = ('compiler',)
 
-    def __init__(self, protocol=None, strict=True):
-        """Initialize a loader.
-
-        :param thriftrw.protocol.Protocol protocol:
-            The protocol to use to serialize and deserialize types. Defaults
-            to the binary protocol.
-
-        :param strict:
-            When ``True`` (the default behavior) this enforces that "required"
-            or "optional" always be specified for struct elements. This is
-            desirable because Apache Thrift generates different behaviors for
-            elements without "required" or "optional" depending on the
-            language. Setting this to ``False`` is only recommended for
-            compatibility with existing Thrift files.
-        """
+    def __init__(self, protocol=None, strict=None, include_as=None):
         protocol = protocol or BinaryProtocol()
-        self.compiler = Compiler(protocol, strict=strict)
+        self.compiler = Compiler(
+            protocol, strict=strict, include_as=include_as
+        )
 
     def loads(self, name, document):
         """Parse and compile the given Thrift document.

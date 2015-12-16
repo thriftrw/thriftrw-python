@@ -30,7 +30,7 @@ from thriftrw.errors import ThriftCompilerError
 
 @pytest.fixture
 def loader():
-    return Loader(BinaryProtocol())
+    return Loader(BinaryProtocol(), include_as=True)
 
 
 def test_simple_include(tmpdir, loader):
@@ -118,11 +118,11 @@ def test_include_relative(tmpdir, loader):
     ''')
 
     tmpdir.join('team/myservice/myservice.thrift').ensure().write('''
-        include "../../types/shared.thrift"
+        include t "../../types/shared.thrift"
 
         service Service {
-            shared.Timestamp getCurrentTime()
-                throws (1: shared.InternalError internalError)
+            t.Timestamp getCurrentTime()
+                throws (1: t.InternalError internalError)
         }
     ''')
 
@@ -130,14 +130,14 @@ def test_include_relative(tmpdir, loader):
         str(tmpdir.join('team/myservice/myservice.thrift'))
     )
 
-    assert myservice.__includes__ == (myservice.shared,)
+    assert myservice.__includes__ == (myservice.t,)
 
     myservice.Service.getCurrentTime.response(
         success=int(time.time() * 1000)
     )
 
     myservice.Service.getCurrentTime.response(
-        internalError=myservice.shared.InternalError('great sadness')
+        internalError=myservice.t.InternalError('great sadness')
     )
 
     with pytest.raises(TypeError) as exc_info:
@@ -311,6 +311,36 @@ def test_multi_level_cyclic_import(tmpdir, loader):
     assert a.c.d.__includes__ == (a,)
 
 
+def test_include_as_nested_cyclic_same_name(tmpdir, loader):
+    tmpdir.join('a.thrift').write('include t "./b.thrift"')
+    tmpdir.join('b.thrift').write('include t "./c.thrift"')
+    tmpdir.join('c.thrift').write('include t "./d.thrift"')
+    tmpdir.join('d.thrift').write('include t "./a.thrift"')
+
+    a = loader.load(str(tmpdir.join('a.thrift')))
+    assert a.t is loader.load(str(tmpdir.join('b.thrift')))
+    assert a.t.t is loader.load(str(tmpdir.join('c.thrift')))
+    assert a.t.t.t is loader.load(str(tmpdir.join('d.thrift')))
+    assert a.t.t.t.t is a
+
+    assert a.__thrift_source__ == 'include t "./b.thrift"'
+    assert a.t.__thrift_source__ == 'include t "./c.thrift"'
+    assert a.t.t.__thrift_source__ == 'include t "./d.thrift"'
+    assert a.t.t.t.__thrift_source__ == 'include t "./a.thrift"'
+
+
+def test_include_as_disabled(tmpdir):
+    loader = Loader()
+    tmpdir.join('a.thrift').write('include t "./b.thrift"')
+    tmpdir.join('b.thrift').write('typedef string UUID')
+
+    with pytest.raises(ThriftCompilerError) as exc_info:
+        loader.load(str(tmpdir.join('a.thrift')))
+
+    assert 'Cannot include "b" as "t"' in str(exc_info)
+    assert '"include-as" syntax is currently disabled' in str(exc_info)
+
+
 @pytest.mark.parametrize('root, data, msgs', [
     (
         # File does not exist
@@ -322,8 +352,7 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         ]
     ),
     (
-        # Two modules in subdirectories with the same name. This should be
-        # resolved once we implement the "import as" syntax.
+        # Two modules in subdirectories with the same name.
         'index.thrift',
         [
             ('foo/shared.thrift', 'typedef string timestamp'),
@@ -336,6 +365,22 @@ def test_multi_level_cyclic_import(tmpdir, loader):
         [
             'Cannot include module "shared"',
             'The name is already taken'
+        ]
+    ),
+    (
+        # Conflict in include-as name.
+        'index.thrift',
+        [
+            ('foo.thrift', 'typedef i64 timestamp'),
+            ('t.thrift', 'typedef string UUID'),
+            ('index.thrift', '''
+                include "./t.thrift"
+                include t "./foo.thrift"
+            '''),
+        ],
+        [
+            'Cannot include module "foo" as "t"',
+            'The name is already taken',
         ]
     ),
     (

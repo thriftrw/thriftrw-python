@@ -82,16 +82,42 @@ class Program(namedtuple('Program', 'headers definitions')):
 # Headers
 
 
-class Include(namedtuple('Include', 'path lineno')):
+class Include(namedtuple('Include', 'name path lineno')):
     """A request to include the Thrift file at the given path.
 
     ::
 
         include "./common.thrift"
 
+        struct User {
+            1: required common.UUID uuid
+        }
+
+    thriftrw also supports a custom "include-as" syntax:
+
+    ::
+
+        include t "./types.thrift"
+
+        struct User {
+            1: required t.UUID uuid
+        }
+
+    Note that this is a custom addition to the Thrift grammar and not
+    currently supported by standard Thrift compilers.
+
+    .. py:attribute:: name
+
+        If the "include-as" form was used, this is the custom name specified
+        for the imported module.
+
     .. py:attribute:: path
 
         Path to the file to be included.
+
+    .. versionchanged:: 1.1
+
+        Added ``name`` attribute.
     """
 
     def apply(self, visitor):

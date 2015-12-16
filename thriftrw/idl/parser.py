@@ -66,8 +66,12 @@ class ParserSpec(object):
         p[0] = p[1]
 
     def p_include(self, p):
-        '''include : INCLUDE LITERAL'''
-        p[0] = ast.Include(path=p[2], lineno=p.lineno(1))
+        '''include : INCLUDE IDENTIFIER LITERAL
+                   | INCLUDE LITERAL'''
+        if len(p) == 4:
+            p[0] = ast.Include(name=p[2], path=p[3], lineno=p.lineno(1))
+        else:
+            p[0] = ast.Include(name=None, path=p[2], lineno=p.lineno(1))
 
     def p_namespace(self, p):
         '''namespace : NAMESPACE namespace_scope IDENTIFIER'''

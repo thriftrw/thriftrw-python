@@ -87,27 +87,27 @@ class ModuleSpec(object):
         """
         return self.path is not None
 
-    def add_include(self, module_spec):
+    def add_include(self, name, module_spec):
         """Adds a module as an included module.
 
+        :param name:
+            Name under which the included module should be exposed in the
+            current module.
         :param module_spec:
             ModuleSpec of the included module.
         """
+        assert name, 'name is required'
         assert self.can_include
 
-        if module_spec.name in self.includes:
+        if name in self.includes:
             raise ThriftCompilerError(
-                'Cannot include module "%s" in "%s". '
+                'Cannot include module "%s" as "%s" in "%s". '
                 'The name is already taken.'
-                % (module_spec.name, self.path)
+                % (module_spec.name, name, self.path)
             )
 
-        self.includes[module_spec.name] = module_spec
-        self.scope.add_include(
-            module_spec.name,
-            module_spec.scope,
-            module_spec.surface,
-        )
+        self.includes[name] = module_spec
+        self.scope.add_include(name, module_spec.scope, module_spec.surface)
 
     def link(self):
         """Link all the types in this module and all included modules."""
@@ -138,16 +138,23 @@ class ModuleSpec(object):
 class Compiler(object):
     """Compiles IDLs into Python modules."""
 
-    __slots__ = ('protocol', 'strict', 'parser', '_module_specs')
+    __slots__ = (
+        'protocol', 'strict', 'parser', 'include_as', '_module_specs'
+    )
 
-    def __init__(self, protocol, strict=True):
+    def __init__(self, protocol, strict=None, include_as=None):
         """Initialize the compiler.
 
         :param thriftrw.protocol.Protocol protocol:
            The protocol ot use to serialize and deserialize values.
         """
+        if strict is None:
+            strict = True
+        if include_as is None:
+            include_as = False
         self.protocol = protocol
         self.strict = strict
+        self.include_as = include_as
 
         self.parser = Parser()
 
@@ -260,7 +267,7 @@ class Compiler(object):
 
         program = self.parser.parse(contents)
 
-        header_processor = HeaderProcessor(self, module_spec)
+        header_processor = HeaderProcessor(self, module_spec, self.include_as)
         for header in program.headers:
             header.apply(header_processor)
 
@@ -274,11 +281,12 @@ class Compiler(object):
 class HeaderProcessor(object):
     """Processes headers found in the Thrift file."""
 
-    __slots__ = ('compiler', 'module_spec')
+    __slots__ = ('compiler', 'module_spec', 'include_as')
 
-    def __init__(self, compiler, module_spec):
+    def __init__(self, compiler, module_spec, include_as):
         self.compiler = compiler
         self.module_spec = module_spec
+        self.include_as = include_as
 
     def visit_include(self, include):
 
@@ -310,12 +318,27 @@ class HeaderProcessor(object):
                 % (include.path, include.lineno, self.module_spec.path, path)
             )
 
+        # name is the name of the module. included_name is the name under
+        # which it's exposed inside the current module.
         name = os.path.splitext(os.path.basename(include.path))[0]
+
+        if include.name and not self.include_as:
+            raise ThriftCompilerError(
+                'Cannot include "%s" as "%s" on line %d. '
+                'The "include-as" syntax is currently disabled. '
+                'Enable it by instantiating a Loader with include_as=True'
+                % (name, include.name, include.lineno)
+            )
+
+        included_name = include.name
+        if included_name is None:
+            included_name = name
+
         with open(path, 'r') as f:
             contents = f.read()
 
         included_module_spec = self.compiler.compile(name, contents, path)
-        self.module_spec.add_include(included_module_spec)
+        self.module_spec.add_include(included_name, included_module_spec)
 
     def visit_namespace(self, namespace):
         pass  # nothing to do
