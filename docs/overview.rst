@@ -180,6 +180,12 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
 
     .. versionadded:: 1.0
 
+.. py:attribute:: __thrift_source__
+
+    Contents of the .thrift file from which this module was compiled.
+
+    .. versionadded:: 1.1
+
 .. py:attribute:: __constants__
 
     Mapping of constant name to value for all constants defined in the source

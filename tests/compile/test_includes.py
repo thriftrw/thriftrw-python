@@ -34,14 +34,15 @@ def loader():
 
 
 def test_simple_include(tmpdir, loader):
-    tmpdir.join('types.thrift').write('''
+    types_source = '''
         struct Item {
             1: required string key
             2: required string value
         }
-    ''')
+    '''
+    tmpdir.join('types.thrift').write(types_source)
 
-    tmpdir.join('svc.thrift').write('''
+    svc_source = '''
         include "./types.thrift"
 
         struct BatchGetResponse {
@@ -51,14 +52,17 @@ def test_simple_include(tmpdir, loader):
         service ItemStore {
             BatchGetResponse batchGetItems(1: list<string> keys)
         }
-    ''')
+    '''
+    tmpdir.join('svc.thrift').write(svc_source)
 
     svc = loader.load(str(tmpdir.join('svc.thrift')))
 
     # Loading the module we depend on explicitly should give back the same
     # generated module.
     assert svc.types is loader.load(str(tmpdir.join('types.thrift')))
+    assert svc.types.__thrift_source__ == types_source
     assert svc.__includes__ == (svc.types,)
+    assert svc.__thrift_source__ == svc_source
 
     item = svc.types.Item(key='foo', value='bar')
     response = svc.BatchGetResponse([item])
