@@ -93,7 +93,7 @@ class Include(namedtuple('Include', 'name path lineno')):
             1: required common.UUID uuid
         }
 
-    thriftrw also supports a custom "include-as" syntax:
+    thriftrw also supports a custom "include-as" syntax if explicitly enabled.
 
     ::
 
@@ -103,8 +103,8 @@ class Include(namedtuple('Include', 'name path lineno')):
             1: required t.UUID uuid
         }
 
-    Note that this is a custom addition to the Thrift grammar and not
-    currently supported by standard Thrift compilers.
+    Note that this is a custom addition to the Thrift grammar and will break
+    compatbility with Apache Thrift.
 
     .. py:attribute:: name
 

@@ -4,9 +4,6 @@ Releases
 1.1.0 (unreleased)
 ------------------
 
-- Add support for custom include-as syntax. This is disabled by default because
-  it is incompatible with Apache Thrift. For more information, see
-  :ref:`including-modules`.
 - Expose ``result_type`` on the args type for service functions.
 - Expose the contents of the Thrift file on compiled modules under the
   ``__thrift_source__`` attribute.
