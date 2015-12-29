@@ -550,7 +550,7 @@ class ConstMap(namedtuple('ConstList', 'pairs lineno'), ConstValue):
 
     .. py:attribute:: pairs
 
-        Collection of pairs of ``ConstValue`` objects.
+        Dictionary mapping ``ConstValue`` keys to ``ConstValue`` values.
     """
 
     def apply(self, visitor):

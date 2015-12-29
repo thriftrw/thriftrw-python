@@ -39,24 +39,81 @@ def test_parse_errors(s):
         Parser().parse(s)
 
 
-def test_parse_annotations():
-    assert ast.Typedef(
-        name='Integer',
-        target_type=ast.PrimitiveType(
-            name='i32',
-            annotations=[
-                ast.Annotation('foo', 'bar', lineno=2),
-                ast.Annotation('baz', 'qux', lineno=3),
-            ]
+@pytest.mark.parametrize('start, expected, s', [
+    # type annotations
+    ('annotations', [], ''),
+    ('annotations', [], '()'),
+    ('annotations', [
+        ast.Annotation('foo', True, 1),
+        ast.Annotation('bar', 'baz', 1),
+        ast.Annotation('qux', True, 1),
+    ], "(foo, bar = 'baz', qux)"),
+
+    # constants
+    (
+        'const_value',
+        ast.ConstReference('SomeEnum.someItem', 1),
+        'SomeEnum.someItem',
+    ),
+    (
+        'const_value',
+        ast.ConstList(
+            values=[
+                ast.ConstPrimitiveValue(1, 1),
+                ast.ConstPrimitiveValue(2, 1),
+                ast.ConstPrimitiveValue(3, 1),
+            ],
+            lineno=1,
         ),
-        annotations=[
-            ast.Annotation('boxed', 'true', lineno=4),
-            ast.Annotation('bounded', True, lineno=4),
-        ],
-        lineno=4,
-    ) == Parser(start='typedef', silent=True).parse(
-        '''typedef i32 (
+        '[1, 2, 3]',
+    ),
+    (
+        'const_value',
+        ast.ConstMap(
+            pairs={
+                ast.ConstPrimitiveValue('x', 1): ast.ConstReference('y', 1),
+                ast.ConstPrimitiveValue('baz', 1): ast.ConstReference(42, 1),
+            },
+            lineno=1,
+        ),
+        '{"x": y, "baz": 42}',
+    ),
+
+    # field types
+    ('field_type', ast.PrimitiveType('byte', []), 'byte'),
+    ('field_type', ast.PrimitiveType('byte', []), 'i8'),  # i8 == byte
+    ('field_type', ast.PrimitiveType('i16', []), 'i16'),
+    (
+        'field_type',
+        ast.PrimitiveType('i32', [
+            ast.Annotation('foo', 'bar', 1),
+            ast.Annotation('baz', 'qux', 1),
+        ]),
+        'i32 (foo = "bar", baz = "qux")',
+    ),
+
+    (
+        # typedef with annotations on both, the typedef and the arguments.
+        'typedef',
+        ast.Typedef(
+            name='Integer',
+            target_type=ast.PrimitiveType('i32', [
+                ast.Annotation('foo', 'bar', 3),
+                ast.Annotation('baz', 'qux', 4),
+            ]),
+            annotations=[
+                ast.Annotation('boxed', 'true', 5),
+                ast.Annotation('bounded', True, 5),
+            ],
+            lineno=5,
+        ),
+        """
+        typedef i32 (
             foo = "bar";
             baz = "qux";
-        ) Integer (boxed = "true", bounded)'''
-    )
+        ) Integer (boxed = "true", bounded)
+        """,
+    ),
+])
+def test_parse_ast(start, expected, s):
+    assert expected == Parser(start=start, silent=True).parse(s)
