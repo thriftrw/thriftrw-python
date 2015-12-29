@@ -138,7 +138,7 @@ class ParserSpec(object):
 
     def p_const_list(self, p):
         '''const_list : '[' const_list_seq ']' '''
-        p[0] = ast.ConstList(list(p[2]), p.lineno(2))
+        p[0] = ast.ConstList(list(p[2]), p.lineno(1))
 
     def p_const_list_seq(self, p):
         '''const_list_seq : const_value sep const_list_seq
@@ -148,7 +148,7 @@ class ParserSpec(object):
 
     def p_const_map(self, p):
         '''const_map : '{' const_map_seq '}' '''
-        p[0] = ast.ConstMap(dict(p[2]), p.lineno(2))
+        p[0] = ast.ConstMap(dict(p[2]), p.lineno(1))
 
     def p_const_map_seq(self, p):
         '''const_map_seq : const_map_item sep const_map_seq
@@ -350,6 +350,7 @@ class ParserSpec(object):
     def p_base_type(self, p):  # noqa
         '''base_type : BOOL annotations
                      | BYTE annotations
+                     | I8 annotations
                      | I16 annotations
                      | I32 annotations
                      | I64 annotations
@@ -357,7 +358,11 @@ class ParserSpec(object):
                      | STRING annotations
                      | BINARY annotations'''
 
-        p[0] = ast.PrimitiveType(p[1], p[2])
+        name = p[1]
+        if name == 'i8':
+            name = 'byte'
+
+        p[0] = ast.PrimitiveType(name, p[2])
 
     def p_container_type(self, p):
         '''container_type : map_type

@@ -9,6 +9,9 @@ Releases
   ``__thrift_source__`` attribute.
 - Don't fail compilation if fields in unions specify themselves as
   ``optional``.
+- Added ``i8`` as an alias for ``byte`` in Thrift files.
+- Fixed a bug where the line number of constant lists and maps was incorrect in
+  the AST.
 
 
 1.0.1 (2015-12-11)
