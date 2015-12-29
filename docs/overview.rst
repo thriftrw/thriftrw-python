@@ -462,9 +462,9 @@ referenced by using ``include`` statements with paths **relative to the current
 .thrift file**. The paths must be in the form ``./foo.thrift``,
 ``./foo/bar.thrift``, ``../baz.thrift``, and so on.
 
-Included modules will automatically be compiled along with the
-module that included them, and they will be made available in the generated
-module with the base name of the included file.
+Included modules will automatically be compiled along with the module that
+included them, and they will be made available in the generated module with the
+**base name** of the included file (without the extension).
 
 For example, given::
 
