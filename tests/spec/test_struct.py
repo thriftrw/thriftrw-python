@@ -415,3 +415,12 @@ def test_default_value_type_mismatches(loads, expr):
         'Default value for field' in str(exc_info) and
         'does not match its type' in str(exc_info)
     )
+
+
+def test_has_thrift_module(loads):
+    module = loads('''
+        struct Foo {
+            1: required string a
+        }
+    ''')
+    assert module is module.Foo.__thrift_module__

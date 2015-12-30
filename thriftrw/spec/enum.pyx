@@ -129,7 +129,7 @@ class EnumTypeSpec(TypeSpec):
     def link(self, scope):
         if not self.linked:
             self.linked = True
-            self.surface = enum_cls(self)
+            self.surface = enum_cls(self, scope)
         return self
 
     def to_wire(self, value):
@@ -187,7 +187,7 @@ class EnumTypeSpec(TypeSpec):
     __repr__ = __str__
 
 
-def enum_cls(enum_spec):
+def enum_cls(enum_spec, scope):
     """Generates a class for the given EnumTypeSpec.
 
     :param EnumTypeSpec enum_spec:
@@ -205,6 +205,7 @@ def enum_cls(enum_spec):
     enum_dct['values'] = tuple(values)
     enum_dct['name_of'] = name_of
     enum_dct['type_spec'] = enum_spec
+    enum_dct['__thrift_module__'] = scope.module
     enum_dct['__slots__'] = ()
     enum_dct['__doc__'] = enum_docstring(
         enum_spec.name, enum_spec.items.items()

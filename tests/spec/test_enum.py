@@ -161,3 +161,12 @@ def test_enum_constant_invalid_default(loads, s):
         loads(s)
 
     assert 'is not a valid value for enum "X"' in str(exc_info)
+
+
+def test_has_thrift_module(loads):
+    module = loads('''
+        enum Foo {
+            A = 1, B, C
+        }
+    ''')
+    assert module is module.Foo.__thrift_module__

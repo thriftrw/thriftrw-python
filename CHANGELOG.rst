@@ -7,6 +7,8 @@ Releases
 - Expose ``result_type`` on the args type for service functions.
 - Expose the contents of the Thrift file on compiled modules under the
   ``__thrift_source__`` attribute.
+- Expose a reference back to the module on generated types as
+  ``__thrift_module__``.
 - Don't fail compilation if fields in unions specify themselves as
   ``optional``.
 - Added ``i8`` as an alias for ``byte`` in Thrift files.

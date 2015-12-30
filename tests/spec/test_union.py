@@ -213,3 +213,11 @@ def test_validate(loads):
 
     with pytest.raises(TypeError):
         Foo.type_spec.validate(Foo(s=1))
+
+
+def test_has_thrift_module(loads):
+    module = loads('''union Foo {
+        1: binary b
+        2: string s
+    }''')
+    assert module is module.Foo.__thrift_module__
