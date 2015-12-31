@@ -195,6 +195,15 @@ The generated module contains two top-level functions ``dumps`` and ``loads``.
 
         Renamed from ``constants`` to ``__constants__``.
 
+All generated types also expose the following attributes:
+
+.. py:attribute:: __thrift_module__
+
+    Reference back to the module containing this type.
+
+    .. versionadded:: 1.1
+
+
 Includes
 ~~~~~~~~
 

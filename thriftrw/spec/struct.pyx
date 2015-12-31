@@ -556,6 +556,7 @@ def struct_cls(struct_spec, scope):
     struct_dct['type_spec'] = struct_spec
     struct_dct['to_primitive'] = common.to_primitive_method(struct_spec)
     struct_dct['from_primitive'] = common.from_primitive_classmethod()
+    struct_dct['__thrift_module__'] = scope.module
     struct_dct['__slots__'] = tuple(slots)
     struct_dct['__init__'] = struct_init(
         struct_spec.name,

@@ -332,6 +332,7 @@ def union_cls(union_spec, scope):
     union_dct['type_spec'] = union_spec
     union_dct['to_primitive'] = common.to_primitive_method(union_spec)
     union_dct['from_primitive'] = common.from_primitive_classmethod()
+    union_dct['__thrift_module__'] = scope.module
     union_dct['__slots__'] = tuple(field_names)
     union_dct['__init__'] = union_init(
         union_spec.name,
