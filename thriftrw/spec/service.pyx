@@ -243,6 +243,13 @@ class FunctionSpec(object):
 
         Name of the function.
 
+    .. py:attribute:: service
+
+        The :py:class:`ServiceSpec` that contains this function.
+        This value is available only after the spec has been linked.
+
+        .. versionadded:: 1.1
+
     .. py:attribute:: args_spec
 
         :py:class:`FunctionArgsSpec` specifying the arguments accepted by this
@@ -273,7 +280,7 @@ class FunctionSpec(object):
     """
 
     __slots__ = ('name', 'args_spec', 'result_spec', 'oneway', 'linked',
-                 'surface')
+                 'surface', 'service')
 
     def __init__(self, name, args_spec, result_spec, oneway):
         self.name = name
@@ -282,6 +289,7 @@ class FunctionSpec(object):
         self.oneway = oneway
         self.linked = False
         self.surface = None
+        self.service = None
 
     @classmethod
     def compile(cls, func, service_name):
@@ -313,8 +321,9 @@ class FunctionSpec(object):
 
         return cls(func.name, args_spec, result_spec, func.oneway)
 
-    def link(self, scope):
+    def link(self, scope, service):
         if not self.linked:
+            self.service = service
             self.linked = True
             if self.result_spec:
                 self.result_spec = self.result_spec.link(scope, self)
@@ -409,7 +418,7 @@ class ServiceSpec(object):
                     self.parent.name, self.parent.lineno
                 )
 
-            self.functions = [func.link(scope) for func in self.functions]
+            self.functions = [func.link(scope, self) for func in self.functions]
             self.surface = service_cls(self, scope)
 
             # Build index for lookup. Normalize type of names to bytes since

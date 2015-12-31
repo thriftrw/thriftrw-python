@@ -364,6 +364,7 @@ def test_args_and_results_know_function_spec(loads):
         m.S.functionReturningVoid.spec is
         m.S.functionReturningVoid.response.type_spec.function
     )
+    assert m.S.functionReturningVoid.spec.service is m.S.service_spec
 
     assert (
         m.S.functionReturningNonVoid.spec is
