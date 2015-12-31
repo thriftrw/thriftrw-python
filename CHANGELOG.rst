@@ -5,6 +5,7 @@ Releases
 ------------------
 
 - Expose ``result_type`` on the args type for service functions.
+- Expose ``service`` on function spec.
 - Expose the contents of the Thrift file on compiled modules under the
   ``__thrift_source__`` attribute.
 - Expose a reference back to the module on generated types as
