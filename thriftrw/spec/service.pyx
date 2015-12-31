@@ -24,7 +24,8 @@ from collections import namedtuple
 
 from . import check
 from .spec_mapper import type_spec_or_ref
-from .struct import StructTypeSpec, FieldSpec
+from .field import FieldSpec
+from .struct import StructTypeSpec
 from .union import UnionTypeSpec
 from ..errors import ThriftCompilerError
 from ..errors import UnknownExceptionError

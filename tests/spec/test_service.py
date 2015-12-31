@@ -27,7 +27,7 @@ from thriftrw.errors import ThriftCompilerError
 from thriftrw.errors import UnknownExceptionError
 from thriftrw.spec.reference import TypeReference
 from thriftrw.spec.service import ServiceSpec
-from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec.field import FieldSpec
 from thriftrw.idl import Parser
 from thriftrw.idl.ast import ServiceReference
 from thriftrw.wire import ttype

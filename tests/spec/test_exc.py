@@ -24,7 +24,7 @@ import pytest
 
 from thriftrw.idl import Parser
 from thriftrw.spec.exc import ExceptionTypeSpec
-from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec.field import FieldSpec
 from thriftrw.spec import primitive as prim_spec
 
 

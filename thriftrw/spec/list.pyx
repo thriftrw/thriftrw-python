@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import collections
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value import ListValue
+from thriftrw.wire.value cimport ListValue
 
 from . import check
 from .base import TypeSpec
