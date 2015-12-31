@@ -25,7 +25,7 @@ import six
 
 from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec.struct import StructTypeSpec
-from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec.field import FieldSpec
 from thriftrw.idl import Parser
 from thriftrw.spec import primitive as prim_spec
 from thriftrw.spec.reference import TypeReference

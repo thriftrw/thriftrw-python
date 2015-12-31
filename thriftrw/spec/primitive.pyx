@@ -24,7 +24,7 @@ import six
 import numbers
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value import (
+from thriftrw.wire.value cimport (
     BoolValue,
     ByteValue,
     DoubleValue,

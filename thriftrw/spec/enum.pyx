@@ -21,7 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value import I32Value
+from thriftrw.wire.value cimport I32Value
 
 from . import check
 from .base import TypeSpec

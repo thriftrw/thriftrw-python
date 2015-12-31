@@ -24,7 +24,7 @@ import pytest
 
 from thriftrw.idl import Parser
 from thriftrw.spec.union import UnionTypeSpec
-from thriftrw.spec.struct import FieldSpec
+from thriftrw.spec.field import FieldSpec
 from thriftrw.spec.reference import TypeReference
 from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec import primitive as prim_spec

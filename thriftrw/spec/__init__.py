@@ -135,10 +135,11 @@ from __future__ import absolute_import, unicode_literals, print_function
 from .base import TypeSpec
 from .const import ConstSpec
 from .enum import EnumTypeSpec
+from .field import FieldSpec
 from .list import ListTypeSpec
 from .map import MapTypeSpec
 from .set import SetTypeSpec
-from .struct import StructTypeSpec, FieldSpec
+from .struct import StructTypeSpec
 from .exc import ExceptionTypeSpec
 from .union import UnionTypeSpec
 from .typedef import TypedefTypeSpec

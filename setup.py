@@ -21,6 +21,7 @@ cython_modules = [
     'thriftrw.spec.common',
     'thriftrw.spec.enum',
     'thriftrw.spec.exc',
+    'thriftrw.spec.field',
     'thriftrw.spec.list',
     'thriftrw.spec.map',
     'thriftrw.spec.primitive',

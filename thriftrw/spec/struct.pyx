@@ -21,13 +21,12 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value import StructValue, FieldValue
+from thriftrw.wire.value cimport StructValue
 
 from . import check
 from . import common
 from .base import TypeSpec
-from .const import const_value_or_ref
-from .spec_mapper import type_spec_or_ref
+from .field import FieldSpec
 from ..errors import ThriftCompilerError
 
 __all__ = ['StructTypeSpec', 'FieldSpec']
@@ -231,138 +230,6 @@ class StructTypeSpec(TypeSpec):
             self.name == other.name and
             self.fields == other.fields and
             self.base_cls == other.base_cls and
-            self.linked == other.linked
-        )
-
-
-class FieldSpec(object):
-    """Specification for a single field on a struct.
-
-    .. py:attribute:: id
-
-        Field identifier of this field.
-
-    .. py:attribute:: name
-
-        Name of the field.
-
-    .. py:attribute:: spec
-
-        :py:class:`TypeSpec` for the type of values accepted by this field.
-
-    .. py:attribute:: required
-
-        Whether this field is required or not.
-
-    .. py:attribute:: default_value
-
-        Default value of the field if any. None otherwise.
-    """
-
-    __slots__ = ('id', 'name', 'spec', 'required', 'default_value', 'linked')
-
-    def __init__(self, id, name, spec, required, default_value=None):
-        self.id = id
-        self.name = name
-        self.spec = spec
-        self.required = required
-        self.default_value = default_value
-        self.linked = False
-
-    def link(self, scope):
-        if not self.linked:
-            self.linked = True
-            self.spec = self.spec.link(scope)
-            if self.default_value is not None:
-                try:
-                    self.default_value = self.default_value.link(
-                        scope,
-                        self.spec
-                    ).surface
-                except TypeError as e:
-                    raise ThriftCompilerError(
-                        'Default value for field "%s" does not match '
-                        'its type "%s": %s'
-                        % (self.name, self.spec.name, e)
-                    )
-                except ValueError as e:
-                    raise ThriftCompilerError(
-                        'Default value for field "%s" is not valid: %s'
-                        % (self.name, e)
-                    )
-        return self
-
-    @property
-    def ttype_code(self):
-        return self.spec.ttype_code
-
-    @classmethod
-    def compile(cls, field, struct_name, require_requiredness=True):
-        if field.id is None:
-            raise ThriftCompilerError(
-                'Field "%s" of "%s" does not have an explicit field ID. '
-                'Please specify the numeric ID for the field.'
-                % (field.name, struct_name)
-            )
-
-        required = field.requiredness
-        if required is None:
-            if require_requiredness:
-                raise ThriftCompilerError(
-                    'Field "%s" of "%s" on line %d does not explicitly '
-                    'specify requiredness. Please specify whether the field '
-                    'is optional or required in the IDL.'
-                    % (field.name, struct_name, field.lineno)
-                )
-            else:
-                required = False
-
-        # TODO check field ids are valid signed 16-bit integers
-
-        default_value = None
-        if field.default is not None:
-            default_value = const_value_or_ref(field.default)
-
-        field_type_spec = type_spec_or_ref(field.field_type)
-        return cls(
-            id=field.id,
-            name=field.name,
-            spec=field_type_spec,
-            required=required,
-            default_value=default_value,
-        )
-
-    # While FieldSpec has an interface similar to TypeSpec, it's not an actual
-    # TypeSpec.
-
-    def to_wire(self, value):
-        assert value is not None
-        return FieldValue(
-            id=self.id,
-            ttype=self.spec.ttype_code,
-            value=self.spec.to_wire(value),
-        )
-
-    def from_wire(self, wire_value):
-        assert wire_value is not None
-        return self.spec.from_wire(wire_value.value)
-
-    def __str__(self):
-        # Field __str__ must reference spec names instead of the specs to
-        # avoid an infinite loop in case the field is self-referential.
-        return 'FieldSpec(id=%r, name=%r, spec_name=%r)' % (
-            self.id, self.name, self.spec.name
-        )
-
-    __repr__ = __str__
-
-    def __eq__(self, other):
-        return (
-            self.id == other.id and
-            self.name == other.name and
-            self.spec == other.spec and
-            self.required == other.required and
-            self.default_value == other.default_value and
             self.linked == other.linked
         )
 

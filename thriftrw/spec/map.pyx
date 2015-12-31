@@ -23,7 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import collections
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value import MapItem, MapValue
+from thriftrw.wire.value cimport MapItem, MapValue
 
 from . import check
 from .base import TypeSpec
