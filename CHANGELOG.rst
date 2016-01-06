@@ -13,6 +13,7 @@ Releases
 - Don't fail compilation if fields in unions specify themselves as
   ``optional``.
 - Added ``i8`` as an alias for ``byte`` in Thrift files.
+- Allow multiple enum items to have the same value.
 - Fixed a bug where the line number of constant lists and maps was incorrect in
   the AST.
 

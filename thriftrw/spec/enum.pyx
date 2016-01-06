@@ -20,6 +20,8 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from collections import defaultdict
+
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport I32Value
 
@@ -43,7 +45,12 @@ class EnumTypeSpec(TypeSpec):
 
     .. py:attribute:: values_to_names
 
-        Mapping of enum item values to their names.
+        Mapping of enum item values to a list of enum item names with that
+        value.
+
+        .. versionchanged:: 1.1
+
+            Changed to a list of names.
 
     .. py:attribute:: surface
 
@@ -66,7 +73,8 @@ class EnumTypeSpec(TypeSpec):
 
     .. py:classmethod:: name_of(value)
 
-        Finds the name of an enum item by its value.
+        Finds the name of an enum item by its value. If multiple enum items
+        have this value, any of the matching item names could can be returned.
 
         :param int value:
             A value for an item defined in this enum.
@@ -97,6 +105,10 @@ class EnumTypeSpec(TypeSpec):
 
             def name_of(self, value):
                 # ...
+
+    .. versionchanged:: 1.1
+
+        Added support for multiple enum items with the same value.
     """
 
     __slots__ = ('name', 'items', 'values_to_names', 'linked', 'surface')
@@ -110,17 +122,9 @@ class EnumTypeSpec(TypeSpec):
         self.name = name
         self.items = items
 
-        values_to_names = {}
+        values_to_names = defaultdict(lambda: [])
         for name, value in items.items():
-            if value in values_to_names:
-                dupe = values_to_names[value]
-                raise ThriftCompilerError(
-                    'Items "%s" and "%s" of enum "%s" have value "%d". '
-                    'Enums items cannot share values.' % (
-                        name, dupe, self.name, value
-                    )
-                )
-            values_to_names[value] = name
+            values_to_names[value].append(name)
 
         self.values_to_names = values_to_names
         self.linked = False
@@ -223,7 +227,10 @@ def name_of(cls, value):
     :returns:
         Name of the corresponding enum item or None if no such item exists.
     """
-    return cls._VALUES_TO_NAMES.get(value)
+    names = cls._VALUES_TO_NAMES.get(value)
+    if names:
+        return names[0]
+    return None
 
 
 def enum_docstring(name, items):
