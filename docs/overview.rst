@@ -515,6 +515,36 @@ without extra cost because the result is cached by the system.
 
     assert service.types is types
 
+.. _annotations:
+
+Customizing behavior with annotations
+-------------------------------------
+
+Thrift supports adding annotations to defined types, fields, references to
+primitive types, etc. These may be used to customize behavior of ``thriftrw``.
+
+The following annotations are supported by ``thriftrw``.
+
+``py.primitiveType``
+
+    Applies to enums only. This annotation may be used to change the primitive
+    representation of enums. Valid values are ``int`` (the default) and
+    ``string``.
+
+    For example::
+
+        enum Status {
+            QUEUED,
+            RUNNING,
+            FAILED,
+            SUCCEEDED,
+        } (py.primitiveType = "string")
+
+    The primitive representation of the items will now be ``"QUEUED"``,
+    ``"RUNNING"``, ``"FAILED"``, and ``"SUCCEEDED"``.
+
+    .. versionadded:: 1.1
+
 .. _calling-apache-thrift:
 
 Calling Apache Thrift

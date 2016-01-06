@@ -28,8 +28,63 @@ from thriftrw.wire.value cimport I32Value
 from . import check
 from .base import TypeSpec
 from ..errors import ThriftCompilerError
+from .annotation import compile as compile_annotations
 
 __all__ = ['EnumTypeSpec']
+
+
+PRIMITIVE_TYPE = 'py.primitiveType'
+
+
+class _EnumIntPrimitive(object):
+    """Implements ``to/from_primitive`` for enums where the primitive
+    representation is the integer value of the enum.
+    """
+
+    __slots__ = ('spec',)
+
+    def __init__(self, enum_spec):
+        self.spec = enum_spec
+
+    def to_primitive(self, value):
+        # TODO validate that the value is in the list of known values for this
+        # enum.
+        return value
+
+    def from_primitive(self, value):
+        # TODO validate that the value is in the list of known values for this
+        # enum.
+        return value
+
+
+class _EnumStringPrimitive(object):
+    """Implements ``to/from_primitive`` for enums where the primitive
+    representation is the string representation of the enum.
+
+    If multiple enum items have the same value, ``to_primitive`` can return
+    any of the valid names for a value.
+    """
+
+    def __init__(self, enum_spec):
+        self.spec = enum_spec
+
+    def to_primitive(self, value):
+        names = self.spec.values_to_names.get(value)
+        if not names:
+            raise ValueError(
+                'Enum "%s" does not define an item with value %r'
+                % (self.spec.name, value)
+            )
+        return names[0]
+
+    def from_primitive(self, name):
+        value = self.spec.items.get(name)
+        if value is None:
+            raise ValueError(
+                'Enum "%s" does not define an item with name "%s"'
+                % (self.spec.name, name)
+            )
+        return value
 
 
 class EnumTypeSpec(TypeSpec):
@@ -43,6 +98,12 @@ class EnumTypeSpec(TypeSpec):
 
         Mapping of enum item names to item values.
 
+    .. py:attribute:: annotations
+
+        Dictionary of annotations defined on this enum.
+
+        .. versionadded:: 1.1
+
     .. py:attribute:: values_to_names
 
         Mapping of enum item values to a list of enum item names with that
@@ -55,6 +116,16 @@ class EnumTypeSpec(TypeSpec):
     .. py:attribute:: surface
 
         The surface for this spec.
+
+    The following annotations are supported by enum.
+
+    ``py.primitiveType``
+
+        Controls the type of value ``to_primitive`` and ``from_primitive`` for
+        this enum produces. Valid values are "string" and "int". Defaults to
+        "int".
+
+        .. versionadded:: 1.1
 
     The `surface` for enum types is a class with the following:
 
@@ -111,24 +182,38 @@ class EnumTypeSpec(TypeSpec):
         Added support for multiple enum items with the same value.
     """
 
-    __slots__ = ('name', 'items', 'values_to_names', 'linked', 'surface')
+    __slots__ = (
+        'name',
+        'items',
+        'values_to_names',
+        'linked',
+        'surface',
+        'annotations',
+        '_primitive'
+    )
 
     ttype_code = ttype.I32
 
-    def __init__(self, name, items):
+    def __init__(self, name, items, annotations=None):
         assert name
         assert items is not None
 
         self.name = name
         self.items = items
+        self.annotations = annotations or {}
+        self.linked = False
+        self.surface = None
 
         values_to_names = defaultdict(lambda: [])
         for name, value in items.items():
             values_to_names[value].append(name)
 
         self.values_to_names = values_to_names
-        self.linked = False
-        self.surface = None
+
+        if self.annotations.get(PRIMITIVE_TYPE) == 'string':
+            self._primitive = _EnumStringPrimitive(self)
+        else:
+            self._primitive = _EnumIntPrimitive(self)
 
     def link(self, scope):
         if not self.linked:
@@ -139,15 +224,17 @@ class EnumTypeSpec(TypeSpec):
     def to_wire(self, value):
         return I32Value(value)
 
-    def to_primitive(self, value):
-        return value
+    @property
+    def to_primitive(self):
+        return self._primitive.to_primitive
 
     def from_wire(self, wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def from_primitive(self, prim_value):
-        return prim_value
+    @property
+    def from_primitive(self):
+        return self._primitive.from_primitive
 
     def validate(self, instance):
         if instance not in self.values_to_names:
@@ -176,7 +263,8 @@ class EnumTypeSpec(TypeSpec):
 
             items[item.name] = value
 
-        return cls(enum.name, items)
+        annots = compile_annotations(enum.annotations)
+        return cls(enum.name, items, annots)
 
     def __eq__(self, other):
         return (
