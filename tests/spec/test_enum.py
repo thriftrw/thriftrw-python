@@ -69,14 +69,13 @@ def test_compile_duplicate_names(parse):
     assert 'has duplicates' in str(exc_info)
 
 
-def test_compile_values_collide():
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        EnumTypeSpec(
-            'TestEnum',
-            {'A': 1, 'B': 5, 'C': 1},
-        )
+def test_compile_values_collide(parse):
+    enum_ast = parse('enum Foo { A, B, C = 0, D }')
+    spec = EnumTypeSpec.compile(enum_ast)
 
-    assert 'Enums items cannot share values' in str(exc_info)
+    assert spec.items == {'A': 0, 'B': 1, 'C': 0, 'D': 1}
+    assert set(spec.values_to_names[0]) == set(['A', 'C'])
+    assert set(spec.values_to_names[1]) == set(['B', 'D'])
 
 
 def test_link(loads):
