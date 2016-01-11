@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.1.0 (unreleased)
+1.1.0 (2016-01-11)
 ------------------
 
 - Expose ``result_type`` on the args type for service functions.
