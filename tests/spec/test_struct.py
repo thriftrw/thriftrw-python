@@ -158,7 +158,8 @@ def test_load_simple(loads):
     obj = SimpleStruct('hello', 42)
     assert obj.a == 'hello'
     assert obj.c == 42
-    assert None == obj.b == obj.d
+    assert obj.b is None
+    assert obj.d is None
 
     obj = SimpleStruct(c=42, a='hello', b=b'world', d=2)
     assert obj.a == 'hello'
