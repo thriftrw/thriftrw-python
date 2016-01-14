@@ -27,7 +27,7 @@ from thriftrw.protocol.core cimport Protocol
 
 
 cdef class Serializer(object):
-    cdef Protocol protocol
+    cdef readonly Protocol protocol
 
     cpdef bytes dumps(self, obj)
 
@@ -35,7 +35,7 @@ cdef class Serializer(object):
 
 
 cdef class Deserializer(object):
-    cdef Protocol protocol
+    cdef readonly Protocol protocol
 
     cpdef object loads(self, obj_cls, bytes s)
 
