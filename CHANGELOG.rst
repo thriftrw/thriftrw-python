@@ -10,6 +10,8 @@ Releases
 1.1.0 (2016-01-11)
 ------------------
 
+- Allow changing the primitive representation of enums with the
+  ``py.primitiveType`` annotation. See :ref:`annotations`.
 - Expose ``result_type`` on the args type for service functions.
 - Expose ``service`` on function spec.
 - Expose the contents of the Thrift file on compiled modules under the

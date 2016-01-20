@@ -169,3 +169,37 @@ def test_has_thrift_module(loads):
         }
     ''')
     assert module is module.Foo.__thrift_module__
+
+
+def test_primitive_type_string(loads):
+    Answer = loads('''
+        enum Answer {
+            Yes, No, Unspecified
+        } (py.primitiveType = "string")
+    ''').Answer
+
+    spec = Answer.type_spec
+
+    assert spec.to_primitive(Answer.Yes) == 'Yes'
+    assert spec.to_primitive(Answer.No) == 'No'
+    assert spec.to_primitive(Answer.Unspecified) == 'Unspecified'
+
+    for i in [Answer.Yes, Answer.No, Answer.Unspecified]:
+        assert spec.from_primitive(spec.to_primitive(i)) == i
+
+    assert spec.to_wire(Answer.Yes) == vi32(0)
+    assert spec.to_wire(Answer.No) == vi32(1)
+    assert spec.to_wire(Answer.Unspecified) == vi32(2)
+
+    with pytest.raises(ValueError) as exc_info:
+        spec.to_primitive(42)
+    assert (
+        'Enum "Answer" does not define an item with value 42' in str(exc_info)
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        spec.from_primitive('Umm')
+    assert (
+        'Enum "Answer" does not define an item with name "Umm"'
+        in str(exc_info)
+    )
