@@ -460,22 +460,3 @@ def test_message_invalid_version(bs):
         BinaryProtocol().deserialize_message(bs)
 
     assert 'Unsupported version "42"' in str(exc_info)
-
-
-@pytest.mark.parametrize('bs', [
-    [
-        0x80, 0x01,  # version = 1
-        0x00, 0x05,  # type = invalid
-        0x00, 0x00, 0x00, 0x06,                 # length = 6
-        0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
-        0x00, 0x00, 0x00, 0x01,     # seqId = 1
-        0x00,   # STOP
-    ]
-])
-def test_message_invalid_message_type(bs):
-    bs = bytes(bytearray(bs))
-
-    with pytest.raises(ThriftProtocolError) as exc_info:
-        BinaryProtocol().deserialize_message(bs)
-
-    assert 'Unknown message type "5"' in str(exc_info)

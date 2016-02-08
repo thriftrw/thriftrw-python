@@ -35,20 +35,19 @@ def struct(module):
     Struct = module.Struct
 
     return Struct(
-        strings=['foo'] * 100,
-        ints=set([256] * 100),
-        mapped={n: 'bar' for n in range(100)},
+        strings=['foo'] * 100000,
+        ints=set([256] * 100000),
+        mapped={n: 'bar' for n in range(100000)},
     )
 
 
 def test_binary_dumps(benchmark, module, struct):
-    benchmark(lambda: module.dumps(struct))
+    benchmark(module.dumps, struct)
 
 
 def test_binary_loads(benchmark, module, struct):
     serialized = module.dumps(struct)
-
-    benchmark(lambda: module.loads(struct.__class__, serialized))
+    benchmark(module.loads, struct.__class__, serialized)
 
 
 def test_to_primitive(benchmark, struct):
@@ -57,5 +56,4 @@ def test_to_primitive(benchmark, struct):
 
 def test_from_primitive(benchmark, struct):
     primitive = struct.to_primitive()
-
-    benchmark(lambda: struct.type_spec.from_primitive(primitive))
+    benchmark(struct.type_spec.from_primitive, primitive)
