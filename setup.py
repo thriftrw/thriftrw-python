@@ -24,6 +24,7 @@ cython_modules = [
     'thriftrw.spec.field',
     'thriftrw.spec.list',
     'thriftrw.spec.map',
+    'thriftrw.spec.reference',
     'thriftrw.spec.primitive',
     'thriftrw.spec.service',
     'thriftrw.spec.set',

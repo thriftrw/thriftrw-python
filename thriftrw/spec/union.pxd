@@ -20,19 +20,13 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .struct cimport StructTypeSpec
+from .base cimport TypeSpec
 
 
-__all__ = ['ExceptionTypeSpec']
+cdef class UnionTypeSpec(TypeSpec):
+    cdef readonly unicode name
+    cdef readonly list fields
+    cdef readonly bint allow_empty
 
-
-cdef class ExceptionTypeSpec(StructTypeSpec):
-    """Spec for ``exception`` types defined in the Thrift file.
-
-    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
-    except that the generated class inherits the ``Exception`` class.
-    """
-
-    def __init__(self, *args, **kwargs):
-        kwargs['base_cls'] = Exception
-        super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
+    cdef public bint linked
+    cdef public object surface

@@ -22,16 +22,17 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import collections
 
+from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value cimport MapItem, MapValue
+from thriftrw._cython cimport richcompare
+from thriftrw.wire.value cimport MapItem, MapValue, Value
 
 from . import check
-from .base import TypeSpec
 
 __all__ = ['MapTypeSpec']
 
 
-class MapTypeSpec(TypeSpec):
+cdef class MapTypeSpec(TypeSpec):
     """Spec for map types.
 
     .. py:attribute:: kspec
@@ -42,8 +43,6 @@ class MapTypeSpec(TypeSpec):
 
         TypeSpec for the kind of values matching maps must contain.
     """
-
-    __slots__ = ('kspec', 'vspec', 'linked')
 
     ttype_code = ttype.MAP
     surface = dict
@@ -63,14 +62,14 @@ class MapTypeSpec(TypeSpec):
     def name(self):
         return 'map<%s, %s>' % (self.kspec.name, self.vspec.name)
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.kspec = self.kspec.link(scope)
             self.vspec = self.vspec.link(scope)
         return self
 
-    def to_wire(self, value):
+    cpdef Value to_wire(MapTypeSpec self, object value):
         return MapValue(
             key_ttype=self.kspec.ttype_code,
             value_ttype=self.vspec.ttype_code,
@@ -80,26 +79,26 @@ class MapTypeSpec(TypeSpec):
             ]
         )
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(MapTypeSpec self, object value):
         return {
             self.kspec.to_primitive(k): self.vspec.to_primitive(v)
             for k, v in value.items()
         }
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(MapTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return {
             self.kspec.from_wire(i.key): self.vspec.from_wire(i.value)
             for i in wire_value.pairs
         }
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(MapTypeSpec self, object prim_value):
         return {
             self.kspec.from_primitive(k): self.vspec.from_primitive(v)
             for k, v in prim_value.items()
         }
 
-    def validate(self, instance):
+    cpdef void validate(MapTypeSpec self, object instance) except *:
         check.instanceof_class(self, collections.Mapping, instance)
         for k, v in instance.items():
             self.kspec.validate(k)
@@ -108,11 +107,12 @@ class MapTypeSpec(TypeSpec):
     def __str__(self):
         return 'MapTypeSpec(kspec=%r, vspec=%r)' % (self.kspec, self.vspec)
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.kspec == other.kspec and
-            self.vspec == other.vspec and
-            self.linked == other.linked
-        )
+    def __richcmp__(MapTypeSpec self, MapTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.kspec, other.kspec),
+            (self.vspec, other.vspec),
+        ])
+

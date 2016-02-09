@@ -20,20 +20,22 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from thriftrw._cython cimport richcompare
+from thriftrw.wire.value cimport Value
+
+from .base cimport TypeSpec
 from .spec_mapper import type_spec_or_ref
 
 
-class TypedefTypeSpec(object):
+cdef class TypedefTypeSpec(TypeSpec):
     """Typedefs are aliases for other types.
 
     Typedefs resolve themselves to the target type at link time and eliminate
     themselves from the tree.
     """
 
-    __slots__ = ('name', 'target_spec')
-
     def __init__(self, name, target_spec):
-        self.name = name
+        self.name = unicode(name)
         self.target_spec = target_spec
 
     @classmethod
@@ -41,16 +43,32 @@ class TypedefTypeSpec(object):
         target_spec = type_spec_or_ref(typedef.target_type)
         return cls(typedef.name, target_spec)
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         return self.target_spec.link(scope)
+
+    cpdef Value to_wire(TypedefTypeSpec self, object value):
+        return self.target_spec.to_wire(value)
+
+    cpdef object from_wire(TypedefTypeSpec self, Value wire_value):
+        return self.target_spec.from_wire(wire_value)
+
+    cpdef object to_primitive(TypedefTypeSpec self, object value):
+        return self.target_spec.to_primitive(value)
+
+    cpdef object from_primitive(TypedefTypeSpec self, object prim_value):
+        return self.target_spec.from_primitive(prim_value)
+
+    cpdef void validate(TypedefTypeSpec self, object o) except *:
+        self.target_spec.validate(o)
 
     def __str__(self):
         return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    def __richcmp__(TypedefTypeSpec self, TypedefTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.target_spec, other.target_spec),
+        ])

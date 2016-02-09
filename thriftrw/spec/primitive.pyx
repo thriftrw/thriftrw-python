@@ -25,6 +25,7 @@ import numbers
 
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport (
+    Value,
     BoolValue,
     ByteValue,
     DoubleValue,
@@ -35,7 +36,7 @@ from thriftrw.wire.value cimport (
 )
 
 from . import check
-from .base import TypeSpec
+from .base cimport TypeSpec
 
 __all__ = [
     'BoolTypeSpec',
@@ -53,10 +54,8 @@ if six.PY3:
     long = int  # No long in Py3.
 
 
-class PrimitiveTypeSpec(TypeSpec):
+cdef class PrimitiveTypeSpec(TypeSpec):
     """TypeSpec for primitive types."""
-
-    __slots__ = ('name', 'code', 'value_cls', 'surface', 'cast')
 
     def __init__(self, name, code, value_cls, surface, cast=None):
         """
@@ -73,7 +72,7 @@ class PrimitiveTypeSpec(TypeSpec):
             If provided, this is used to cast values into a standard shape
             before passing them to ``value_cls``
         """
-        self.name = name
+        self.name = unicode(name)
         self.code = code
         self.value_cls = value_cls
         self.surface = surface
@@ -86,122 +85,141 @@ class PrimitiveTypeSpec(TypeSpec):
     def ttype_code(self):
         return self.code
 
-    def to_wire(self, value):
+    cpdef Value to_wire(self, object value):
         return self.value_cls(self.cast(value))
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(PrimitiveTypeSpec self, object value):
         return value
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(PrimitiveTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(PrimitiveTypeSpec self, object prim_value):
         return self.cast(prim_value)
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         return self
 
-    def validate(self, instance):
+    cpdef void validate(PrimitiveTypeSpec self, object instance) except *:
         # TODO check bounds for numeric values
         check.instanceof_surface(self, instance)
 
     def __str__(self):
         return 'PrimitiveTypeSpec(%r, %s)' % (self.code, self.value_cls)
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
+
+    def __richcmp__(PrimitiveTypeSpec self, PrimitiveTypeSpec other, int op):
+        if op == 2:
+            return self is other
+        else:
+            return False
 
 
-class _TextualTypeSpec(TypeSpec):
+cdef class _TextualTypeSpec(TypeSpec):
 
     ttype_code = ttype.BINARY
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         return self
 
-    def to_wire(self, value):
+    cpdef Value to_wire(_TextualTypeSpec self, object value):
         if isinstance(value, six.text_type):
             value = value.encode('utf-8')
         return BinaryValue(value)
 
-    def validate(self, instance):
+    cpdef void validate(_TextualTypeSpec self, object instance) except *:
         if not isinstance(instance, (six.binary_type, six.text_type)):
             raise TypeError(
                 'Cannot convert %r into a "%s".' % (instance, self.name)
             )
 
 
-class _TextTypeSpec(_TextualTypeSpec):
+cdef class _TextTypeSpec(_TextualTypeSpec):
     """TypeSpec for the text type."""
-
-    __slots__ = ()
 
     name = 'string'
     surface = six.text_type
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(_TextTypeSpec self, object value):
         if isinstance(value, six.binary_type):
             value = value.decode('utf-8')
         return value
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(_TextTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value.decode('utf-8')
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(_TextTypeSpec self, object prim_value):
         if isinstance(prim_value, six.binary_type):
             prim_value = prim_value.decode('utf-8')
         return prim_value
 
+    def __richcmp__(_TextTypeSpec self, _TextTypeSpec other, int op):
+        if op == 2:
+            return self is other
+        else:
+            return False
 
-class _BinaryTypeSpec(_TextualTypeSpec):
 
-    __slots__ = ()
+cdef class _BinaryTypeSpec(_TextualTypeSpec):
 
     name = 'binary'
     surface = six.binary_type
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(_BinaryTypeSpec self, object value):
         if isinstance(value, six.text_type):
             value = value.encode('utf-8')
         return value
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(_BinaryTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(_BinaryTypeSpec self, object prim_value):
         if isinstance(prim_value, six.text_type):
             prim_value = prim_value.encode('utf-8')
         return prim_value
 
+    def __richcmp__(_BinaryTypeSpec self, _BinaryTypeSpec other, int op):
+        if op == 2:
+            return self is other
+        else:
+            return False
 
-class _BoolTypeSpec(TypeSpec):
 
-    __slots__ = ()
+cdef class _BoolTypeSpec(TypeSpec):
 
     name = 'bool'
     surface = bool
     ttype_code = ttype.BOOL
 
-    def to_wire(self, value):
+    cpdef Value to_wire(_BoolTypeSpec self, object value):
         return BoolValue(bool(value))
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(_BoolTypeSpec self, object value):
         return bool(value)
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(_BoolTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(_BoolTypeSpec self, object prim_value):
         return bool(prim_value)
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         return self
 
-    def validate(self, instance):
+    cpdef void validate(_BoolTypeSpec self, object instance) except *:
         check.instanceof_class(self, (bool, int), instance)
+
+    def __richcmp__(_BoolTypeSpec self, _BoolTypeSpec other, int op):
+        if op == 2:
+            return self is other
+        else:
+            return False
 
 
 BoolTypeSpec = _BoolTypeSpec()

@@ -23,16 +23,17 @@ from __future__ import absolute_import, unicode_literals, print_function
 from collections import defaultdict
 
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value cimport I32Value
+from thriftrw._cython cimport richcompare
+from thriftrw.wire.value cimport I32Value, Value
+from .base cimport TypeSpec
 
 from . import check
-from .base import TypeSpec
 from ..errors import ThriftCompilerError
 
 __all__ = ['EnumTypeSpec']
 
 
-class EnumTypeSpec(TypeSpec):
+cdef class EnumTypeSpec(TypeSpec):
     """TypeSpec for enum types.
 
     .. py:attribute:: name
@@ -111,15 +112,13 @@ class EnumTypeSpec(TypeSpec):
         Added support for multiple enum items with the same value.
     """
 
-    __slots__ = ('name', 'items', 'values_to_names', 'linked', 'surface')
-
     ttype_code = ttype.I32
 
     def __init__(self, name, items):
         assert name
         assert items is not None
 
-        self.name = name
+        self.name = unicode(name)
         self.items = items
 
         values_to_names = defaultdict(lambda: [])
@@ -130,26 +129,26 @@ class EnumTypeSpec(TypeSpec):
         self.linked = False
         self.surface = None
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.surface = enum_cls(self, scope)
         return self
 
-    def to_wire(self, value):
+    cpdef Value to_wire(self, object value):
         return I32Value(value)
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(self, object value):
         return value
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(self, object prim_value):
         return prim_value
 
-    def validate(self, instance):
+    cpdef void validate(self, object instance) except *:
         if instance not in self.values_to_names:
             raise ValueError(
                 '%r is not a valid value for enum "%s"' % (instance, self.name)
@@ -178,17 +177,17 @@ class EnumTypeSpec(TypeSpec):
 
         return cls(enum.name, items)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.items == other.items and
-            self.linked == other.linked
-        )
+    def __richcmp__(EnumTypeSpec self, EnumTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.items, other.items),
+        ])
 
     def __str__(self):
         return 'EnumTypeSpec(name=%r, items=%r)' % (self.name, self.items)
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
 
 def enum_cls(enum_spec, scope):

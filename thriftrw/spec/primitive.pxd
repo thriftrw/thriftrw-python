@@ -20,19 +20,30 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .struct cimport StructTypeSpec
+from libc.stdint cimport int8_t
+
+from .base cimport TypeSpec
 
 
-__all__ = ['ExceptionTypeSpec']
+cdef class PrimitiveTypeSpec(TypeSpec):
+    cdef readonly unicode name
+    cdef readonly int8_t code
+    cdef readonly object value_cls
+    cdef readonly object surface
+    cdef readonly object cast
 
 
-cdef class ExceptionTypeSpec(StructTypeSpec):
-    """Spec for ``exception`` types defined in the Thrift file.
+cdef class _TextualTypeSpec(TypeSpec):
+    pass
 
-    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
-    except that the generated class inherits the ``Exception`` class.
-    """
 
-    def __init__(self, *args, **kwargs):
-        kwargs['base_cls'] = Exception
-        super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
+cdef class _TextTypeSpec(_TextualTypeSpec):
+    pass
+
+
+cdef class _BinaryTypeSpec(_TextualTypeSpec):
+    pass
+
+
+cdef class _BoolTypeSpec(TypeSpec):
+    pass
