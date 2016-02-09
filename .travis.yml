@@ -24,5 +24,21 @@ matrix:
 install:
     - pip install tox
     - pip install cython
+    - |
+        # If we're testing pypy on Travis, make sure to get a newer version of
+        # PyPy since Travis uses 2.5.
+        #
+        # Adapted from https://github.com/travis-ci/travis-ci/issues/5027#issuecomment-170939193
+        if [ "$TOX_ENV" = "pypy" ]; then
+            export PYENV_ROOT="$HOME/.pyenv"
+            if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
+                cd "$PYENV_ROOT" && git pull
+            else
+                rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
+            fi
+            export PYPY_VERSION="4.0.1"
+            "$PYENV_ROOT/bin/pyenv" install "pypy-$PYPY_VERSION"
+            export PATH="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin:$PATH"
+        fi
 script:
     - tox -e $TOX_ENV
