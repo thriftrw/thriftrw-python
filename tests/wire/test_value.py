@@ -24,7 +24,7 @@ import pytest
 
 from thriftrw.wire import value
 from thriftrw.wire import ttype
-from thriftrw.wire.value import ValueVisitor
+from thriftrw.wire.value import _ValueVisitorArgs
 
 
 @pytest.mark.parametrize('value, visit_name, visit_args', [
@@ -76,18 +76,13 @@ from thriftrw.wire.value import ValueVisitor
 def test_visitors(value, visit_name, visit_args):
     """Checks that for each value type, the correct visitor is called."""
 
-    class MockVisitor(ValueVisitor):
-        pass
+    visitor = _ValueVisitorArgs()
+    result = value.apply(visitor)
+    name = result[0]
+    args = result[1:]
 
-    visitor = MockVisitor()
-
-    def visit(*args):
-        assert args == visit_args
-        return 'hello'
-
-    setattr(visitor, visit_name, visit)
-
-    assert 'hello' == value.apply(visitor)
+    assert visit_name == name
+    assert visit_args == args
 
 
 def test_struct_get():

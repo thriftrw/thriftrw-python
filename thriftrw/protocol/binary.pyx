@@ -20,9 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import struct
-from six.moves import range
-
 from libc.stdint cimport (
     int8_t,
     int16_t,
@@ -32,7 +29,6 @@ from libc.stdint cimport (
 
 from thriftrw.wire cimport ttype
 from thriftrw.wire.message cimport Message
-from thriftrw.wire.mtype import MESSAGE_TYPES
 
 from thriftrw._buffer cimport ReadBuffer
 from thriftrw._buffer cimport WriteBuffer
@@ -67,24 +63,22 @@ from ._endian cimport (
 )
 
 
-STRUCT_END = 0
+cdef int8_t STRUCT_END = 0
 
-VERSION = 1
+cdef int32_t VERSION = 1
 
 # Under strict mode, the version number is in most significant 16-bits of the
 # 32-bit integer, and the most significant bit is set. This mask gets &-ed
 # with the integer to get just the version number (it still needs to be
 # shifted 16-bits to the right).
-VERSION_MASK = 0x7fff0000
+cdef int32_t VERSION_MASK = 0x7fff0000
 
 # The least significant 8-bits of the 32-bit integer contain the type.
-TYPE_MASK = 0x000000ff
+cdef int32_t TYPE_MASK = 0x000000ff
 
 
 cdef class BinaryProtocolReader(object):
     """Parser for the binary protocol."""
-
-    cdef ReadBuffer reader
 
     def __cinit__(self, ReadBuffer reader):
         """Initialize the reader.
@@ -123,7 +117,30 @@ cdef class BinaryProtocolReader(object):
             raise ThriftProtocolError('Unknown TType "%r"' % typ)
 
     cpdef object read(self, int8_t typ):
-        return self._reader(typ)(self)
+        if typ == ttype.BOOL:
+            return self.read_bool()
+        elif typ == ttype.BYTE:
+            return self.read_byte()
+        elif typ == ttype.DOUBLE:
+            return self.read_double()
+        elif typ == ttype.I16:
+            return self.read_i16()
+        elif typ == ttype.I32:
+            return self.read_i32()
+        elif typ == ttype.I64:
+            return self.read_i64()
+        elif typ == ttype.BINARY:
+            return self.read_binary()
+        elif typ == ttype.STRUCT:
+            return self.read_struct()
+        elif typ == ttype.MAP:
+            return self.read_map()
+        elif typ == ttype.SET:
+            return self.read_set()
+        elif typ == ttype.LIST:
+            return self.read_list()
+        else:
+            raise ThriftProtocolError('Unknown TType "%r"' % typ)
 
     cdef void _read(self, char* data, int count) except *:
         self.reader.read(data, count)
@@ -153,6 +170,11 @@ cdef class BinaryProtocolReader(object):
         return (<double*>(&value))[0]
 
     cdef Message read_message(self):
+        cdef int8_t typ
+        cdef int16_t version
+        cdef int32_t size
+        cdef bytes name
+
         size = self._i32()
         # TODO with cython, some of the Python-specific hacks around bit
         # twiddling can be skipped.
@@ -174,9 +196,6 @@ cdef class BinaryProtocolReader(object):
             #     name:4 type:1 seqid:4 payload
             name = self.reader.take(size)
             typ = self._byte()
-
-        if typ not in MESSAGE_TYPES:
-            raise ThriftProtocolError('Unknown message type "%r"' % typ)
 
         seqid = self._i32()
         body = self.read(ttype.STRUCT)
@@ -292,8 +311,6 @@ cdef class BinaryProtocolReader(object):
 cdef class BinaryProtocolWriter(ValueVisitor):
     """Serializes values using the Thrift Binary protocol."""
 
-    cdef WriteBuffer writer
-
     def __cinit__(self, WriteBuffer writer):
         """Initialize the writer.
 
@@ -313,14 +330,14 @@ cdef class BinaryProtocolWriter(ValueVisitor):
     cdef _write(self, char* data, int length):
         self.writer.write(data, length)
 
-    cpdef object visit_bool(self, bint value):  # bool:1
+    cdef object visit_bool(self, bint value):  # bool:1
         self.visit_byte(value)
 
-    cpdef object visit_byte(self, int8_t value):  # byte:1
+    cdef object visit_byte(self, int8_t value):  # byte:1
         cdef char c = <char>value
         self._write(&c, 1)
 
-    cpdef object visit_double(self, double value):  # double:8
+    cdef object visit_double(self, double value):  # double:8
         # If confused:
         #
         #   <typ*>(&value)[0]
@@ -328,23 +345,23 @@ cdef class BinaryProtocolWriter(ValueVisitor):
         # Is just "interpret the in-memory representation of value as typ"
         self.visit_i64((<int64_t*>(&value))[0])
 
-    cpdef object visit_i16(self, int16_t value):  # i16:2
+    cdef object visit_i16(self, int16_t value):  # i16:2
         value = htobe16(value)
         self._write(<char*>(&value), 2)
 
-    cpdef object visit_i32(self, int32_t value):  # i32:4
+    cdef object visit_i32(self, int32_t value):  # i32:4
         value = htobe32(value)
         self._write(<char*>(&value), 4)
 
-    cpdef object visit_i64(self, int64_t value):  # i64:8
+    cdef object visit_i64(self, int64_t value):  # i64:8
         value = htobe64(value)
         self._write(<char*>(&value), 8)
 
-    cpdef object visit_binary(self, bytes value):  # len:4 str:len
+    cdef object visit_binary(self, bytes value):  # len:4 str:len
         self.visit_i32(len(value))
         self.writer.write_bytes(value)
 
-    cpdef object visit_struct(self, list fields):
+    cdef object visit_struct(self, list fields):
         # ( type:1 id:2 value:* ){fields} '0'
         for field in fields:
             self.visit_byte(field.ttype)
@@ -352,7 +369,7 @@ cdef class BinaryProtocolWriter(ValueVisitor):
             self.write(field.value)
         self.visit_byte(STRUCT_END)
 
-    cpdef object visit_map(
+    cdef object visit_map(
         self, int8_t key_ttype, int8_t value_ttype, list pairs
     ):
         # key_type:1 value_type:1 count:4 (key:* value:*){count}
@@ -364,7 +381,7 @@ cdef class BinaryProtocolWriter(ValueVisitor):
             self.write(item.key)
             self.write(item.value)
 
-    cpdef object visit_set(self, int8_t value_ttype, list values):
+    cdef object visit_set(self, int8_t value_ttype, list values):
         # value_type:1 count:4 (item:*){count}
         self.visit_byte(value_ttype)
         self.visit_i32(len(values))
@@ -372,7 +389,7 @@ cdef class BinaryProtocolWriter(ValueVisitor):
         for v in values:
             self.write(v)
 
-    cpdef object visit_list(self, int8_t value_ttype, list values):
+    cdef object visit_list(self, int8_t value_ttype, list values):
         # value_type:1 count:4 (item:*){count}
         self.visit_byte(value_ttype)
         self.visit_i32(len(values))

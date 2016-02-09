@@ -20,10 +20,87 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from libc.stdint cimport (
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+)
+
 from thriftrw.protocol.core cimport Protocol
 from thriftrw.wire.message cimport Message
-from thriftrw.wire.value cimport Value
+from thriftrw._buffer cimport ReadBuffer, WriteBuffer
+from thriftrw.wire.value cimport (
+    ValueVisitor,
+    Value,
+    BoolValue,
+    ByteValue,
+    DoubleValue,
+    I16Value,
+    I32Value,
+    I64Value,
+    BinaryValue,
+    FieldValue,
+    StructValue,
+    MapValue,
+    MapItem,
+    SetValue,
+    ListValue,
+)
 
 
 cdef class BinaryProtocol(Protocol):
     pass
+
+cdef class BinaryProtocolReader(object):
+    cdef ReadBuffer reader
+
+    cdef object _reader(self, int8_t typ)
+
+    cpdef object read(self, int8_t typ)
+
+    cdef void _read(self, char* data, int count) except *
+
+    cdef int8_t _byte(self) except *
+
+    cdef int16_t _i16(self) except *
+
+    cdef int32_t _i32(self) except *
+
+    cdef int64_t _i64(self) except *
+
+    cdef double _double(self) except *
+
+    cdef Message read_message(self)
+
+    cdef BoolValue read_bool(self)
+
+    cdef ByteValue read_byte(self)
+
+    cdef DoubleValue read_double(self)
+
+    cdef I16Value read_i16(self)
+
+    cdef I32Value read_i32(self)
+
+    cdef I64Value read_i64(self)
+
+    cdef BinaryValue read_binary(self)
+
+    cdef StructValue read_struct(self)
+
+    cdef MapValue read_map(self)
+
+    cdef SetValue read_set(self)
+
+    cdef ListValue read_list(self)
+
+
+cdef class BinaryProtocolWriter(ValueVisitor):
+    cdef WriteBuffer writer
+
+    cpdef void write(self, Value value)
+
+    cdef _write(self, char* data, int length)
+
+    cdef void write_message(self, Message message) except *

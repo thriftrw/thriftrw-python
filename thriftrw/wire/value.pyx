@@ -56,7 +56,7 @@ cdef class Value(object):
     they are sent and received over the wire.
     """
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(Value self, ValueVisitor visitor):
         """Apply the value to the given visitor.
 
         The appropriate `visit_*` method will be called and its result
@@ -75,7 +75,7 @@ cdef class BoolValue(Value):
 
     ttype_code = ttype.BOOL
 
-    def __cinit__(self, bint value):
+    def __cinit__(BoolValue self, bint value):
         self.value = value
 
     def __richcmp__(BoolValue self, BoolValue other not None, int op):
@@ -87,7 +87,7 @@ cdef class BoolValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(BoolValue self, ValueVisitor visitor):
         return visitor.visit_bool(self.value)
 
 
@@ -96,7 +96,7 @@ cdef class ByteValue(Value):
 
     ttype_code = ttype.BYTE
 
-    def __cinit__(self, int8_t value):
+    def __cinit__(ByteValue self, int8_t value):
         self.value = value
 
     def __richcmp__(ByteValue self, ByteValue other not None, int op):
@@ -108,7 +108,7 @@ cdef class ByteValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(ByteValue self, ValueVisitor visitor):
         return visitor.visit_byte(self.value)
 
 
@@ -117,7 +117,7 @@ cdef class DoubleValue(Value):
 
     ttype_code = ttype.DOUBLE
 
-    def __cinit__(self, double value):
+    def __cinit__(DoubleValue self, double value):
         self.value = value
 
     def __richcmp__(DoubleValue self, DoubleValue other not None, int op):
@@ -129,7 +129,7 @@ cdef class DoubleValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(DoubleValue self, ValueVisitor visitor):
         return visitor.visit_double(self.value)
 
 
@@ -138,7 +138,7 @@ cdef class I16Value(Value):
 
     ttype_code = ttype.I16
 
-    def __cinit__(self, int16_t value):
+    def __cinit__(I16Value self, int16_t value):
         self.value = value
 
     def __richcmp__(I16Value self, I16Value other not None, int op):
@@ -150,7 +150,7 @@ cdef class I16Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(I16Value self, ValueVisitor visitor):
         return visitor.visit_i16(self.value)
 
 
@@ -159,7 +159,7 @@ cdef class I32Value(Value):
 
     ttype_code = ttype.I32
 
-    def __cinit__(self, int value):
+    def __cinit__(I32Value self, int value):
         self.value = value
 
     def __richcmp__(I32Value self, I32Value other not None, int op):
@@ -171,7 +171,7 @@ cdef class I32Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(I32Value self, ValueVisitor visitor):
         return visitor.visit_i32(self.value)
 
 
@@ -180,7 +180,7 @@ cdef class I64Value(Value):
 
     ttype_code = ttype.I64
 
-    def __cinit__(self, long value):
+    def __cinit__(I64Value self, long value):
         self.value = value
 
     def __richcmp__(I64Value self, I64Value other not None, int op):
@@ -192,7 +192,7 @@ cdef class I64Value(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(I64Value self, ValueVisitor visitor):
         return visitor.visit_i64(self.value)
 
 
@@ -205,7 +205,7 @@ cdef class BinaryValue(Value):
 
     ttype_code = ttype.BINARY
 
-    def __cinit__(self, bytes value):
+    def __cinit__(BinaryValue self, bytes value):
         self.value = value
 
     def __richcmp__(BinaryValue self, BinaryValue other not None, int op):
@@ -217,7 +217,7 @@ cdef class BinaryValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(BinaryValue self, ValueVisitor visitor):
         return visitor.visit_binary(self.value)
 
 
@@ -237,7 +237,7 @@ cdef class FieldValue(object):
         Value for this field.
     """
 
-    def __cinit__(self, int16_t id, int8_t ttype, value):
+    def __cinit__(FieldValue self, int16_t id, int8_t ttype, value):
         self.id = id
         self.ttype = ttype
         self.value = value
@@ -266,7 +266,7 @@ cdef class StructValue(Value):
 
     ttype_code = ttype.STRUCT
 
-    def __cinit__(self, list fields):
+    def __cinit__(StructValue self, list fields):
         self.fields = fields
 
     def __init__(self, list fields):
@@ -274,7 +274,7 @@ cdef class StructValue(Value):
         for field in fields:
             self._index[(field.id, field.ttype)] = field
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(StructValue self, ValueVisitor visitor):
         return visitor.visit_struct(self.fields)
 
     def get(self, field_id, field_ttype):
@@ -315,7 +315,7 @@ cdef class MapItem(object):
         Value associated with the key
     """
 
-    def __cinit__(self, key, value):
+    def __cinit__(MapItem self, key, value):
         self.key = key
         self.value = value
 
@@ -352,7 +352,7 @@ cdef class MapValue(Value):
 
     ttype_code = ttype.MAP
 
-    def __cinit__(self, int8_t key_ttype, int8_t value_ttype, list pairs):
+    def __cinit__(MapValue self, int8_t key_ttype, int8_t value_ttype, list pairs):
         self.key_ttype = key_ttype
         self.value_ttype = value_ttype
         self.pairs = pairs
@@ -370,7 +370,7 @@ cdef class MapValue(Value):
     def __repr__(self):
         return str(self)
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(MapValue self, ValueVisitor visitor):
         return visitor.visit_map(self.key_ttype, self.value_ttype, self.pairs)
 
 
@@ -388,7 +388,7 @@ cdef class SetValue(Value):
 
     ttype_code = ttype.SET
 
-    def __cinit__(self, int8_t value_ttype, list values):
+    def __cinit__(SetValue self, int8_t value_ttype, list values):
         self.value_ttype = value_ttype
         self.values = values
 
@@ -404,7 +404,7 @@ cdef class SetValue(Value):
             (self.values, other.values),
         ])
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(SetValue self, ValueVisitor visitor):
         return visitor.visit_set(self.value_ttype, self.values)
 
 
@@ -422,7 +422,7 @@ cdef class ListValue(Value):
 
     ttype_code = ttype.LIST
 
-    def __cinit__(self, int8_t value_ttype, list values):
+    def __cinit__(ListValue self, int8_t value_ttype, list values):
         self.value_ttype = value_ttype
         self.values = values
 
@@ -438,7 +438,7 @@ cdef class ListValue(Value):
             (self.values, other.values),
         ])
 
-    cpdef object apply(self, visitor):
+    cpdef object apply(ListValue self, ValueVisitor visitor):
         return visitor.visit_list(self.value_ttype, self.values)
 
 
@@ -454,7 +454,7 @@ cdef class ValueVisitor(object):
     here is to avoid ``isinstance`` checks.
     """
 
-    cpdef object visit_bool(self, bint value):
+    cdef object visit_bool(self, bint value):
         """Visits boolean values.
 
         :param bool value:
@@ -462,7 +462,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_byte(self, int8_t value):
+    cdef object visit_byte(self, int8_t value):
         """Visits 8-bit integers.
 
         :param int value:
@@ -470,7 +470,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_double(self, double value):
+    cdef object visit_double(self, double value):
         """Visits double values.
 
         :param float value:
@@ -478,7 +478,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_i16(self, int16_t value):
+    cdef object visit_i16(self, int16_t value):
         """Visits 16-bit integers.
 
         :param int value:
@@ -486,7 +486,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_i32(self, int32_t value):
+    cdef object visit_i32(self, int32_t value):
         """Visits 32-bit integers.
 
         :param int value:
@@ -494,7 +494,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_i64(self, int64_t value):
+    cdef object visit_i64(self, int64_t value):
         """Visits 64-bit integers.
 
         :param int value:
@@ -502,7 +502,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_binary(self, bytes value):
+    cdef object visit_binary(self, bytes value):
         """Visits binary blobs.
 
         :param bytes value:
@@ -510,7 +510,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_struct(self, list fields):
+    cdef object visit_struct(self, list fields):
         """Visits structs.
 
         :param fields:
@@ -518,7 +518,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_map(
+    cdef object visit_map(
         self, int8_t key_ttype, int8_t value_ttype, list pairs
     ):
         """Visits maps.
@@ -532,7 +532,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_set(self, int8_t value_ttype, list values):
+    cdef object visit_set(self, int8_t value_ttype, list values):
         """Visits sets.
 
         :param thriftrw.wire.TType value_ttype:
@@ -542,7 +542,7 @@ cdef class ValueVisitor(object):
         """
         raise NotImplementedError
 
-    cpdef object visit_list(self, int8_t value_ttype, list values):
+    cdef object visit_list(self, int8_t value_ttype, list values):
         """Visits lists.
 
         :param thriftrw.wire.TType value_ttype:
@@ -551,3 +551,46 @@ cdef class ValueVisitor(object):
             Collection of values in the list.
         """
         raise NotImplementedError
+
+
+cdef class _ValueVisitorArgs(ValueVisitor):
+    """A ValueVisitor that simply returns the arguments for a visitor along
+    with its name.
+
+    This is meant for testing only.
+    """
+
+    cdef object visit_bool(self, bint value):
+        return ('visit_bool', value)
+
+    cdef object visit_byte(self, int8_t value):
+        return ('visit_byte', value)
+
+    cdef object visit_double(self, double value):
+        return ('visit_double', value)
+
+    cdef object visit_i16(self, int16_t value):
+        return ('visit_i16', value)
+
+    cdef object visit_i32(self, int32_t value):
+        return ('visit_i32', value)
+
+    cdef object visit_i64(self, int64_t value):
+        return ('visit_i64', value)
+
+    cdef object visit_binary(self, bytes value):
+        return ('visit_binary', value)
+
+    cdef object visit_struct(self, list fields):
+        return ('visit_struct', fields)
+
+    cdef object visit_map(
+        self, int8_t key_ttype, int8_t value_ttype, list pairs
+    ):
+        return ('visit_map', key_ttype, value_ttype, pairs)
+
+    cdef object visit_set(self, int8_t value_ttype, list values):
+        return ('visit_set', value_ttype, values)
+
+    cdef object visit_list(self, int8_t value_ttype, list values):
+        return ('visit_list', value_ttype, values)
