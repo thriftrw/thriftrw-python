@@ -20,8 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import collections
-
 from . cimport check
 from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
@@ -79,7 +77,7 @@ cdef class ListTypeSpec(TypeSpec):
         return [self.vspec.from_primitive(v) for v in prim_value]
 
     cpdef void validate(ListTypeSpec self, object instance) except *:
-        check.instanceof_class(self, collections.Iterable, instance)
+        check.isiterable(self, instance)
         for v in instance:
             self.vspec.validate(v)
 

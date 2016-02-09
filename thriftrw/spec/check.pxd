@@ -29,3 +29,7 @@ cpdef type_code_matches(TypeSpec type_spec, Value wire_value)
 cpdef instanceof_surface(TypeSpec type_spec, object value)
 
 cpdef instanceof_class(TypeSpec type_spec, cls, object value)
+
+cpdef isiterable(TypeSpec type_spec, object value)
+
+cpdef ismapping(TypeSpec type_spec, object value)

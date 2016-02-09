@@ -20,8 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import collections
-
 from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
@@ -83,7 +81,7 @@ cdef class SetTypeSpec(TypeSpec):
         return result
 
     cpdef void validate(self, object instance) except *:
-        check.instanceof_class(self, collections.Iterable, instance)
+        check.isiterable(self, instance)
         for v in instance:
             self.vspec.validate(v)
 

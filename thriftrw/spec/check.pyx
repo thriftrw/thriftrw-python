@@ -63,3 +63,17 @@ cpdef instanceof_class(TypeSpec type_spec, cls, object value):
         raise TypeError(
             'Cannot serialize %r into a "%s".' % (value, type_spec.name)
         )
+
+cpdef isiterable(TypeSpec type_spec, object value):
+    """Checks if the given value is iterable."""
+    if not hasattr(value, '__iter__'):
+        raise TypeError(
+            'Cannot serialize %r into a "%s".' % (value, type_spec.name)
+        )
+
+cpdef ismapping(TypeSpec type_spec, object value):
+    """Checks if the given value is iterable."""
+    if not hasattr(value, '__getitem__') or not hasattr(value, 'items'):
+        raise TypeError(
+            'Cannot serialize %r into a "%s".' % (value, type_spec.name)
+        )

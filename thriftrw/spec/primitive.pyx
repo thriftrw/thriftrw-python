@@ -20,9 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import six
-import numbers
-
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport (
     Value,
@@ -48,10 +45,6 @@ __all__ = [
     'BinaryTypeSpec',
     'TextTypeSpec',
 ]
-
-
-if six.PY3:
-    long = int  # No long in Py3.
 
 
 cdef class PrimitiveTypeSpec(TypeSpec):
@@ -126,12 +119,12 @@ cdef class _TextualTypeSpec(TypeSpec):
         return self
 
     cpdef Value to_wire(_TextualTypeSpec self, object value):
-        if isinstance(value, six.text_type):
+        if isinstance(value, unicode):
             value = value.encode('utf-8')
         return BinaryValue(value)
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
-        if not isinstance(instance, (six.binary_type, six.text_type)):
+        if not isinstance(instance, (bytes, unicode)):
             raise TypeError(
                 'Cannot convert %r into a "%s".' % (instance, self.name)
             )
@@ -141,10 +134,10 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
     """TypeSpec for the text type."""
 
     name = 'string'
-    surface = six.text_type
+    surface = unicode
 
     cpdef object to_primitive(_TextTypeSpec self, object value):
-        if isinstance(value, six.binary_type):
+        if isinstance(value, bytes):
             value = value.decode('utf-8')
         return value
 
@@ -153,7 +146,7 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
         return wire_value.value.decode('utf-8')
 
     cpdef object from_primitive(_TextTypeSpec self, object prim_value):
-        if isinstance(prim_value, six.binary_type):
+        if isinstance(prim_value, bytes):
             prim_value = prim_value.decode('utf-8')
         return prim_value
 
@@ -167,10 +160,10 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
 cdef class _BinaryTypeSpec(_TextualTypeSpec):
 
     name = 'binary'
-    surface = six.binary_type
+    surface = bytes
 
     cpdef object to_primitive(_BinaryTypeSpec self, object value):
-        if isinstance(value, six.text_type):
+        if isinstance(value, unicode):
             value = value.encode('utf-8')
         return value
 
@@ -179,7 +172,7 @@ cdef class _BinaryTypeSpec(_TextualTypeSpec):
         return wire_value.value
 
     cpdef object from_primitive(_BinaryTypeSpec self, object prim_value):
-        if isinstance(prim_value, six.text_type):
+        if isinstance(prim_value, unicode):
             prim_value = prim_value.encode('utf-8')
         return prim_value
 
@@ -225,23 +218,23 @@ cdef class _BoolTypeSpec(TypeSpec):
 BoolTypeSpec = _BoolTypeSpec()
 
 ByteTypeSpec = PrimitiveTypeSpec(
-    'byte', ttype.BYTE, ByteValue, numbers.Integral, int
+    'byte', ttype.BYTE, ByteValue, (int, long), int
 )
 
 DoubleTypeSpec = PrimitiveTypeSpec(
-    'double', ttype.DOUBLE, DoubleValue, numbers.Number, float
+    'double', ttype.DOUBLE, DoubleValue, (int, long, float), float
 )
 
 I16TypeSpec = PrimitiveTypeSpec(
-    'i16', ttype.I16, I16Value, numbers.Integral, int
+    'i16', ttype.I16, I16Value, (int, long), int
 )
 
 I32TypeSpec = PrimitiveTypeSpec(
-    'i32', ttype.I32, I32Value, numbers.Integral, int
+    'i32', ttype.I32, I32Value, (int, long), int
 )
 
 I64TypeSpec = PrimitiveTypeSpec(
-    'i64', ttype.I64, I64Value, numbers.Integral, long
+    'i64', ttype.I64, I64Value, (int, long), long
 )
 
 BinaryTypeSpec = _BinaryTypeSpec()

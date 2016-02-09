@@ -20,8 +20,6 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import collections
-
 from . cimport check
 from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
@@ -98,7 +96,7 @@ cdef class MapTypeSpec(TypeSpec):
         }
 
     cpdef void validate(MapTypeSpec self, object instance) except *:
-        check.instanceof_class(self, collections.Mapping, instance)
+        check.ismapping(self, instance)
         for k, v in instance.items():
             self.kspec.validate(k)
             self.vspec.validate(v)
