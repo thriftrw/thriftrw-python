@@ -46,21 +46,6 @@ cdef class TypedefTypeSpec(TypeSpec):
     cpdef TypeSpec link(self, scope):
         return self.target_spec.link(scope)
 
-    cpdef Value to_wire(TypedefTypeSpec self, object value):
-        return self.target_spec.to_wire(value)
-
-    cpdef object from_wire(TypedefTypeSpec self, Value wire_value):
-        return self.target_spec.from_wire(wire_value)
-
-    cpdef object to_primitive(TypedefTypeSpec self, object value):
-        return self.target_spec.to_primitive(value)
-
-    cpdef object from_primitive(TypedefTypeSpec self, object prim_value):
-        return self.target_spec.from_primitive(prim_value)
-
-    cpdef void validate(TypedefTypeSpec self, object o) except *:
-        self.target_spec.validate(o)
-
     def __str__(self):
         return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
 

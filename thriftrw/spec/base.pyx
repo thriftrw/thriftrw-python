@@ -65,7 +65,9 @@ cdef class TypeSpec(object):
         :returns thriftrw.wire.Value:
             Wire representation of the value.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'to_wire called on unlinked type reference: %r', self
+        )
 
     cpdef object from_wire(TypeSpec self, Value wire_value):
         """Converts the given :py:class:`thriftrw.wire.Value` back into the
@@ -77,7 +79,9 @@ cdef class TypeSpec(object):
             If the type of the wire value does not have the correct Thrift
             type for this type spec.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'from_wire called on unlinked type reference: %r', self
+        )
 
     cpdef TypeSpec link(self, scope):
         raise NotImplementedError
@@ -96,7 +100,9 @@ cdef class TypeSpec(object):
             A representation of that value using only primitive types, lists,
             and maps.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'to_primitive called on unlinked type reference: %r', self
+        )
 
     cpdef object from_primitive(TypeSpec self, object prim_value):
         """Converts a primitive value into a value of this type.
@@ -111,7 +117,9 @@ cdef class TypeSpec(object):
         :returns:
             A value matching this TypeSpec.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'from_primitive called on unlinked type reference: %r', self
+        )
 
     cpdef void validate(TypeSpec self, object o) except *:
         """Whether an instance of this spec is valid.
@@ -125,4 +133,6 @@ cdef class TypeSpec(object):
             If the value matched the type but did not hold the correct set of
             acceptable values.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'validate called on unlinked type reference: %r', self
+        )

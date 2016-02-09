@@ -28,7 +28,7 @@ from .base cimport TypeSpec
 __all__ = ['TypeReference']
 
 
-cdef class TypeReference(object):
+cdef class TypeReference(TypeSpec):
     """A reference to another type."""
 
     __slots__ = ('name', 'lineno')
@@ -36,32 +36,6 @@ cdef class TypeReference(object):
     def __init__(self, name, lineno):
         self.name = name
         self.lineno = lineno
-
-    cpdef Value to_wire(self, object value):
-        raise NotImplementedError(
-            'to_wire called on unlinked type reference: %r', self
-        )
-
-    cpdef object from_wire(self, Value wire_value):
-        raise NotImplementedError(
-            'from_wire called on unlinked type reference: %r', self
-        )
-
-    cpdef object to_primitive(self, object value):
-        raise NotImplementedError(
-            'to_primitive called on unlinked type reference: %r', self
-        )
-
-    cpdef object from_primitive(self, object prim_value):
-        raise NotImplementedError(
-            'from_primitive called on unlinked type reference: %r', self
-        )
-
-
-    cpdef void validate(self, object o) except *:
-        raise NotImplementedError(
-            'validate called on unlinked type reference: %r', self
-        )
 
     cpdef TypeSpec link(self, scope):
         return scope.resolve_type_spec(self.name, self.lineno)
