@@ -26,8 +26,8 @@ from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
 from .base cimport TypeSpec
 from .field cimport FieldSpec
+from . cimport check
 
-from . import check
 from . import common
 from ..errors import ThriftCompilerError
 

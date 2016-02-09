@@ -18,6 +18,7 @@ cython_modules = [
     'thriftrw.protocol.core',
     'thriftrw.protocol.binary',
     'thriftrw.spec.base',
+    'thriftrw.spec.check',
     'thriftrw.spec.common',
     'thriftrw.spec.enum',
     'thriftrw.spec.exc',

@@ -35,7 +35,7 @@ from thriftrw.wire.value cimport (
     BinaryValue,
 )
 
-from . import check
+from . cimport check
 from .base cimport TypeSpec
 
 __all__ = [

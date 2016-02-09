@@ -26,8 +26,8 @@ from thriftrw.wire.value cimport Value
 from .field cimport FieldSpec
 from .union cimport UnionTypeSpec
 from .struct cimport StructTypeSpec
+from . cimport check
 
-from . import check
 from .spec_mapper import type_spec_or_ref
 from ..errors import ThriftCompilerError
 from ..errors import UnknownExceptionError

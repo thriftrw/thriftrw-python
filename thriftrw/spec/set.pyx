@@ -27,8 +27,7 @@ from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport SetValue
 from thriftrw.wire.value cimport Value
-
-from . import check
+from . cimport check
 
 __all__ = ['SetTypeSpec']
 

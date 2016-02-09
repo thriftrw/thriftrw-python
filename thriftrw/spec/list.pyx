@@ -22,13 +22,12 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import collections
 
+from . cimport check
 from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport ListValue
 from thriftrw.wire.value cimport Value
-
-from . import check
 
 __all__ = ['ListTypeSpec']
 

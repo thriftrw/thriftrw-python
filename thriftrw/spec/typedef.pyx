@@ -22,8 +22,8 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport Value
-
 from .base cimport TypeSpec
+
 from .spec_mapper import type_spec_or_ref
 
 

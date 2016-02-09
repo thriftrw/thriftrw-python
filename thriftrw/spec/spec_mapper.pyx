@@ -20,10 +20,11 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .reference import TypeReference
-from .map import MapTypeSpec
-from .set import SetTypeSpec
-from .list import ListTypeSpec
+from .reference cimport TypeReference
+from .map cimport MapTypeSpec
+from .set cimport SetTypeSpec
+from .list cimport ListTypeSpec
+
 from .primitive import (
     BoolTypeSpec,
     ByteTypeSpec,

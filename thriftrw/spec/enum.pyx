@@ -26,8 +26,8 @@ from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport I32Value, Value
 from .base cimport TypeSpec
+from . cimport check
 
-from . import check
 from ..errors import ThriftCompilerError
 
 __all__ = ['EnumTypeSpec']
