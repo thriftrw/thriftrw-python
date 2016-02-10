@@ -175,8 +175,8 @@ Caveats
 Related
 -------
 
-`thriftrw <https://github.com/uber/thriftrw>`_ provides the same functionality
-for Node.js.
+* `thriftrw-node <https://github.com/thriftrw/thriftrw-node>`_
+* `thriftrw-go <https://github.com/thriftrw/thriftrw-go>`_
 
 License
 -------

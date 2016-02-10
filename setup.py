@@ -148,7 +148,7 @@ setup(
     long_description=long_description,
     author='Abhinav Gupta',
     author_email='abg@uber.com',
-    url='https://github.com/uber/thriftrw-python',
+    url='https://github.com/thriftrw/thriftrw-python',
     packages=find_packages(exclude=('tests', 'tests.*')),
     license='MIT',
     install_requires=['six', 'ply'],

@@ -35,7 +35,7 @@ Making changes
 
 -   Clone the GitHub repo (or your fork of it).
 
-        $ git clone https://github.com/uber/thriftrw-python.git thriftrw
+        $ git clone https://github.com/thriftrw/thriftrw-python.git thriftrw
         $ cd thriftrw
 
 -   Create a virtualenv and install the dependencies.
