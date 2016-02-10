@@ -8,11 +8,11 @@
 `Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
 Read The Docs.
 
-.. |build| image:: https://travis-ci.org/uber/thriftrw-python.svg?branch=master
-    :target: https://travis-ci.org/uber/thriftrw-python
+.. |build| image:: https://travis-ci.org/thriftrw/thriftrw-python.svg?branch=master
+    :target: https://travis-ci.org/thriftrw/thriftrw-python
 
-.. |coverage| image:: https://coveralls.io/repos/uber/thriftrw-python/badge.svg?branch=master&service=github
-    :target: https://coveralls.io/github/uber/thriftrw-python?branch=master
+.. |coverage| image:: https://coveralls.io/repos/thriftrw/thriftrw-python/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/thriftrw/thriftrw-python?branch=master
 
 
 .. |docs| image:: https://readthedocs.org/projects/thriftrw/badge/?version=latest
