@@ -22,11 +22,13 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from collections import namedtuple
 
-from . import check
+from thriftrw.wire.value cimport Value
+from .field cimport FieldSpec
+from .union cimport UnionTypeSpec
+from .struct cimport StructTypeSpec
+from . cimport check
+
 from .spec_mapper import type_spec_or_ref
-from .field import FieldSpec
-from .struct import StructTypeSpec
-from .union import UnionTypeSpec
 from ..errors import ThriftCompilerError
 from ..errors import UnknownExceptionError
 
@@ -39,7 +41,7 @@ __all__ = [
 ]
 
 
-class FunctionArgsSpec(StructTypeSpec):
+cdef class FunctionArgsSpec(StructTypeSpec):
     """Represents the parameters of a service function.
 
     .. py:attribute:: function
@@ -66,8 +68,6 @@ class FunctionArgsSpec(StructTypeSpec):
 
         Added ``result_type`` class attribute to the surface.
     """
-
-    __slots__ = StructTypeSpec.__slots__ + ('function',)
 
     def __init__(self, name, params):
         super(FunctionArgsSpec, self).__init__(name, params)
@@ -109,7 +109,7 @@ class FunctionArgsSpec(StructTypeSpec):
         return spec
 
 
-class FunctionResultSpec(UnionTypeSpec):
+cdef class FunctionResultSpec(UnionTypeSpec):
     """Represents the result of a service function.
 
     .. py:attribute:: return_spec
@@ -146,10 +146,6 @@ class FunctionResultSpec(UnionTypeSpec):
         Added the ``function`` attribute.
     """
 
-    __slots__ = UnionTypeSpec.__slots__ + (
-        'return_spec', 'exception_specs', 'exception_ids', 'function'
-    )
-
     def __init__(self, name, return_spec, exceptions):
         self.return_spec = return_spec
         self.exception_specs = exceptions
@@ -178,7 +174,7 @@ class FunctionResultSpec(UnionTypeSpec):
             name, result_specs, allow_empty=(return_spec is None)
         )
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)
 
         for field in wire_value.fields:
@@ -237,7 +233,7 @@ class FunctionResultSpec(UnionTypeSpec):
         return cls(result_name, return_spec, exc_specs)
 
 
-class FunctionSpec(object):
+cdef class FunctionSpec(object):
     """Specification of a single function on a service.
 
     .. py:attribute:: name
@@ -280,11 +276,8 @@ class FunctionSpec(object):
         Added the ``oneway`` attribute.
     """
 
-    __slots__ = ('name', 'args_spec', 'result_spec', 'oneway', 'linked',
-                 'surface', 'service')
-
     def __init__(self, name, args_spec, result_spec, oneway):
-        self.name = name
+        self.name = unicode(name)
         self.args_spec = args_spec
         self.result_spec = result_spec
         self.oneway = oneway
@@ -322,7 +315,7 @@ class FunctionSpec(object):
 
         return cls(func.name, args_spec, result_spec, func.oneway)
 
-    def link(self, scope, service):
+    cpdef FunctionSpec link(self, scope, ServiceSpec service):
         if not self.linked:
             self.service = service
             self.linked = True
@@ -346,10 +339,11 @@ class FunctionSpec(object):
             self.name, self.args_spec, self.result_spec
         )
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
 
-class ServiceSpec(object):
+cdef class ServiceSpec(object):
     """Spec for a single service.
 
     .. py:attribute:: name
@@ -376,13 +370,8 @@ class ServiceSpec(object):
     function defined in the service.
     """
 
-    __slots__ = (
-        'name', 'functions', 'parent', 'linked', 'surface',
-        '_functions',
-    )
-
     def __init__(self, name, functions, parent):
-        self.name = name
+        self.name = unicode(name)
         self.functions = functions
         self.parent = parent
 
@@ -410,7 +399,7 @@ class ServiceSpec(object):
 
         return cls(service.name, functions, service.parent)
 
-    def link(self, scope):
+    cpdef ServiceSpec link(self, scope):
         if not self.linked:
             self.linked = True
 
@@ -449,7 +438,8 @@ class ServiceSpec(object):
             self.name, self.functions, self.parent
         )
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
 
 class ServiceFunction(

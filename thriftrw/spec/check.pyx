@@ -20,11 +20,14 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from .base cimport TypeSpec
+
+from thriftrw.wire.value cimport Value
 
 __all__ = ['type_code_matches', 'instanceof_surface']
 
 
-def type_code_matches(type_spec, wire_value):
+cpdef type_code_matches(TypeSpec type_spec, Value wire_value):
     """Verifies that the ttype_code for the TypeSpec and the Value matches.
 
     Raises ``ValueError`` if not.
@@ -42,7 +45,7 @@ def type_code_matches(type_spec, wire_value):
         )
 
 
-def instanceof_surface(type_spec, value):
+cpdef instanceof_surface(TypeSpec type_spec, object value):
     """Verifies that the value is an instance of the type's surface.
 
     Raises ``TypeError`` if not.
@@ -55,8 +58,22 @@ def instanceof_surface(type_spec, value):
     instanceof_class(type_spec, type_spec.surface, value)
 
 
-def instanceof_class(type_spec, cls, value):
+cpdef instanceof_class(TypeSpec type_spec, cls, object value):
     if not isinstance(value, cls):
+        raise TypeError(
+            'Cannot serialize %r into a "%s".' % (value, type_spec.name)
+        )
+
+cpdef isiterable(TypeSpec type_spec, object value):
+    """Checks if the given value is iterable."""
+    if not hasattr(value, '__iter__'):
+        raise TypeError(
+            'Cannot serialize %r into a "%s".' % (value, type_spec.name)
+        )
+
+cpdef ismapping(TypeSpec type_spec, object value):
+    """Checks if the given value is iterable."""
+    if not hasattr(value, '__getitem__') or not hasattr(value, 'items'):
         raise TypeError(
             'Cannot serialize %r into a "%s".' % (value, type_spec.name)
         )

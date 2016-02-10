@@ -20,19 +20,40 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .struct cimport StructTypeSpec
+from thriftrw._cython cimport richcompare
+from thriftrw.wire.value cimport Value
+
+from .base cimport TypeSpec
+
+__all__ = ['TypeReference']
 
 
-__all__ = ['ExceptionTypeSpec']
+cdef class TypeReference(TypeSpec):
+    """A reference to another type."""
 
+    __slots__ = ('name', 'lineno')
 
-cdef class ExceptionTypeSpec(StructTypeSpec):
-    """Spec for ``exception`` types defined in the Thrift file.
+    def __init__(self, name, lineno):
+        self.name = name
+        self.lineno = lineno
 
-    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
-    except that the generated class inherits the ``Exception`` class.
-    """
+    cpdef TypeSpec link(self, scope):
+        return scope.resolve_type_spec(self.name, self.lineno)
 
-    def __init__(self, *args, **kwargs):
-        kwargs['base_cls'] = Exception
-        super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
+    # It may be worth making this implement the TypeSpec interface and raise
+    # exceptions complaining about unresolved type references, since that's
+    # probably a bug.
+
+    def __str__(self):
+        return 'TypeReference(%s, lineno=%d)' % (
+            self.name, self.lineno
+        )
+
+    def __repr__(self):
+        return str(self)
+
+    def __richcmp__(TypeReference self, TypeReference other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.lineno, other.lineno),
+        ])

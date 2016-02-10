@@ -21,18 +21,20 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire cimport ttype
+from thriftrw.wire.value cimport Value
+from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
+from .base cimport TypeSpec
+from .field cimport FieldSpec
+from . cimport check
 
-from . import check
 from . import common
-from .base import TypeSpec
-from .field import FieldSpec
 from ..errors import ThriftCompilerError
 
 __all__ = ['StructTypeSpec', 'FieldSpec']
 
 
-class StructTypeSpec(TypeSpec):
+cdef class StructTypeSpec(TypeSpec):
     """A struct is a collection of named fields.
 
     .. py:attribute:: name
@@ -101,10 +103,6 @@ class StructTypeSpec(TypeSpec):
                 # ...
     """
 
-    __slots__ = (
-        'name', 'fields', 'linked', 'surface', 'base_cls',
-    )
-
     ttype_code = ttype.STRUCT
 
     def __init__(self, name, fields, base_cls=None):
@@ -118,13 +116,13 @@ class StructTypeSpec(TypeSpec):
             Base class to use for generates classes. Defaults to ``object``.
         """
 
-        self.name = name
+        self.name = unicode(name)
         self.fields = fields
         self.linked = False
         self.surface = None
         self.base_cls = base_cls or object
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
@@ -159,7 +157,7 @@ class StructTypeSpec(TypeSpec):
             ))
         return cls(struct.name, fields)
 
-    def to_wire(self, struct):
+    cpdef Value to_wire(self, object struct):
         fields = []
 
         for field in self.fields:
@@ -170,18 +168,18 @@ class StructTypeSpec(TypeSpec):
 
         return StructValue(fields)
 
-    def to_primitive(self, union):
+    cpdef object to_primitive(self, object struct):
         prim = {}
 
         for field in self.fields:
-            value = getattr(union, field.name)
+            value = getattr(struct, field.name)
             if value is None:
                 continue
 
             prim[field.name] = field.spec.to_primitive(value)
         return prim
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)
         kwargs = {}
         for field in self.fields:
@@ -192,7 +190,7 @@ class StructTypeSpec(TypeSpec):
 
         return self.surface(**kwargs)
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(self, object prim_value):
         kwargs = {}
 
         for field in self.fields:
@@ -203,7 +201,7 @@ class StructTypeSpec(TypeSpec):
 
         return self.surface(**kwargs)
 
-    def validate(self, instance):
+    cpdef void validate(self, object instance) except *:
         check.instanceof_surface(self, instance)
 
         for field in self.fields:
@@ -223,15 +221,15 @@ class StructTypeSpec(TypeSpec):
             self.__class__.__name__, self.name, self.fields
         )
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.fields == other.fields and
-            self.base_cls == other.base_cls and
-            self.linked == other.linked
-        )
+    def __richcmp__(StructTypeSpec self, StructTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.fields, other.fields),
+            (self.base_cls, other.base_cls),
+        ])
 
 
 def struct_init(cls_name, field_names, field_defaults, base_cls, validate):

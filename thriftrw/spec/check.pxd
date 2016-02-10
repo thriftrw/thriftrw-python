@@ -20,19 +20,16 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from .struct cimport StructTypeSpec
+from .base cimport TypeSpec
 
+from thriftrw.wire.value cimport Value
 
-__all__ = ['ExceptionTypeSpec']
+cpdef type_code_matches(TypeSpec type_spec, Value wire_value)
 
+cpdef instanceof_surface(TypeSpec type_spec, object value)
 
-cdef class ExceptionTypeSpec(StructTypeSpec):
-    """Spec for ``exception`` types defined in the Thrift file.
+cpdef instanceof_class(TypeSpec type_spec, cls, object value)
 
-    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
-    except that the generated class inherits the ``Exception`` class.
-    """
+cpdef isiterable(TypeSpec type_spec, object value)
 
-    def __init__(self, *args, **kwargs):
-        kwargs['base_cls'] = Exception
-        super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
+cpdef ismapping(TypeSpec type_spec, object value)

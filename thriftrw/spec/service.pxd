@@ -21,18 +21,39 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .struct cimport StructTypeSpec
+from .union cimport UnionTypeSpec
+from .base cimport TypeSpec
 
 
-__all__ = ['ExceptionTypeSpec']
+cdef class FunctionArgsSpec(StructTypeSpec):
+    cdef public FunctionSpec function
 
 
-cdef class ExceptionTypeSpec(StructTypeSpec):
-    """Spec for ``exception`` types defined in the Thrift file.
+cdef class FunctionResultSpec(UnionTypeSpec):
+    cdef public TypeSpec return_spec
+    cdef public list exception_specs
+    cdef public FunctionSpec function
+    cdef public object exception_ids
 
-    This is exactly the same as :py:class:`thriftrw.spec.StructTypeSpec`
-    except that the generated class inherits the ``Exception`` class.
-    """
 
-    def __init__(self, *args, **kwargs):
-        kwargs['base_cls'] = Exception
-        super(ExceptionTypeSpec, self).__init__(*args, **kwargs)
+cdef class FunctionSpec(object):
+    cdef readonly unicode name
+    cdef public FunctionArgsSpec args_spec
+    cdef public FunctionResultSpec result_spec
+    cdef readonly bint oneway
+    cdef public bint linked
+    cdef public object surface
+    cdef public ServiceSpec service
+
+    cpdef FunctionSpec link(self, scope, ServiceSpec service)
+
+
+cdef class ServiceSpec(object):
+    cdef readonly unicode name
+    cdef public list functions
+    cdef public object parent
+    cdef public dict _functions
+    cdef public bint linked
+    cdef public object surface
+
+    cpdef ServiceSpec link(self, scope)

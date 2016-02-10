@@ -20,18 +20,17 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import collections
-
+from . cimport check
+from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
+from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport ListValue
-
-from . import check
-from .base import TypeSpec
+from thriftrw.wire.value cimport Value
 
 __all__ = ['ListTypeSpec']
 
 
-class ListTypeSpec(TypeSpec):
+cdef class ListTypeSpec(TypeSpec):
     """Spec for list types.
 
     .. py:attribute:: vspec
@@ -39,8 +38,6 @@ class ListTypeSpec(TypeSpec):
         TypeSpec for the kind of values lists conforming to this spec must
         contain.
     """
-
-    __slots__ = ('vspec', 'linked')
 
     ttype_code = ttype.LIST
     surface = list
@@ -53,7 +50,7 @@ class ListTypeSpec(TypeSpec):
         self.vspec = vspec
         self.linked = False
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.vspec = self.vspec.link(scope)
@@ -63,34 +60,35 @@ class ListTypeSpec(TypeSpec):
     def name(self):
         return 'list<%s>' % self.vspec.name
 
-    def to_wire(self, value):
+    cpdef Value to_wire(ListTypeSpec self, object value):
         return ListValue(
             value_ttype=self.vspec.ttype_code,
             values=[self.vspec.to_wire(v) for v in value],
         )
 
-    def to_primitive(self, value):
+    cpdef object to_primitive(ListTypeSpec self, object value):
         return [self.vspec.to_primitive(x) for x in value]
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(ListTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return [self.vspec.from_wire(v) for v in wire_value.values]
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(ListTypeSpec self, object prim_value):
         return [self.vspec.from_primitive(v) for v in prim_value]
 
-    def validate(self, instance):
-        check.instanceof_class(self, collections.Iterable, instance)
+    cpdef void validate(ListTypeSpec self, object instance) except *:
+        check.isiterable(self, instance)
         for v in instance:
             self.vspec.validate(v)
 
     def __str__(self):
         return 'ListTypeSpec(vspec=%r)' % self.vspec
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.vspec == other.vspec and
-            self.linked == other.linked
-        )
+    def __richcmp__(ListTypeSpec self, ListTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.vspec, other.vspec),
+        ])
+

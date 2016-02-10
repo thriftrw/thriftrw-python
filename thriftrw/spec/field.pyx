@@ -20,14 +20,16 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport FieldValue
+from .base cimport TypeSpec
 
 from .const import const_value_or_ref
 from .spec_mapper import type_spec_or_ref
 from ..errors import ThriftCompilerError
 
 
-class FieldSpec(object):
+cdef class FieldSpec(object):
     """Specification for a single field on a struct.
 
     .. py:attribute:: id
@@ -51,11 +53,9 @@ class FieldSpec(object):
         Default value of the field if any. None otherwise.
     """
 
-    __slots__ = ('id', 'name', 'spec', 'required', 'default_value', 'linked')
-
     def __init__(self, id, name, spec, required, default_value=None):
         self.id = id
-        self.name = name
+        self.name = unicode(name)
         self.spec = spec
         self.required = required
         self.default_value = default_value
@@ -146,14 +146,13 @@ class FieldSpec(object):
             self.id, self.name, self.spec.name
         )
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.id == other.id and
-            self.name == other.name and
-            self.spec == other.spec and
-            self.required == other.required and
-            self.default_value == other.default_value and
-            self.linked == other.linked
-        )
+    def __richcmp__(FieldSpec self, FieldSpec other not None, int op):
+        return richcompare(op, [
+            (self.id, other.id),
+            (self.name, other.name),
+            (self.spec, other.spec),
+            (self.required, other.required),
+        ])

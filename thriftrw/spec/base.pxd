@@ -20,35 +20,19 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-__all__ = ['TypeReference']
+from thriftrw.wire.value cimport Value
 
 
-class TypeReference(object):
-    """A reference to another type."""
+cdef class TypeSpec(object):
 
-    __slots__ = ('name', 'lineno')
+    cpdef Value to_wire(TypeSpec self, object value)
 
-    def __init__(self, name, lineno):
-        self.name = name
-        self.lineno = lineno
+    cpdef object from_wire(TypeSpec self, Value wire_value)
 
-    def link(self, scope):
-        return scope.resolve_type_spec(self.name, self.lineno)
+    cpdef TypeSpec link(self, scope)
 
-    # It may be worth making this implement the TypeSpec interface and raise
-    # exceptions complaining about unresolved type references, since that's
-    # probably a bug.
+    cpdef object to_primitive(TypeSpec self, object value)
 
-    def __str__(self):
-        return 'TypeReference(%s, lineno=%d)' % (
-            self.name, self.lineno
-        )
+    cpdef object from_primitive(TypeSpec self, object prim_value)
 
-    __repr__ = __str__
-
-    def __eq__(self, other):
-        return (
-            other is not None and
-            self.name == other.name and
-            self.lineno == other.lineno
-        )
+    cpdef void validate(TypeSpec self, object instance) except *

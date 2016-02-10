@@ -20,20 +20,22 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from thriftrw._cython cimport richcompare
+from thriftrw.wire.value cimport Value
+from .base cimport TypeSpec
+
 from .spec_mapper import type_spec_or_ref
 
 
-class TypedefTypeSpec(object):
+cdef class TypedefTypeSpec(TypeSpec):
     """Typedefs are aliases for other types.
 
     Typedefs resolve themselves to the target type at link time and eliminate
     themselves from the tree.
     """
 
-    __slots__ = ('name', 'target_spec')
-
     def __init__(self, name, target_spec):
-        self.name = name
+        self.name = unicode(name)
         self.target_spec = target_spec
 
     @classmethod
@@ -41,16 +43,17 @@ class TypedefTypeSpec(object):
         target_spec = type_spec_or_ref(typedef.target_type)
         return cls(typedef.name, target_spec)
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         return self.target_spec.link(scope)
 
     def __str__(self):
         return 'TypedefTypeSpec(%r, %r)' % (self.name, self.target_spec)
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.target_spec == other.target_spec
-        )
+    def __richcmp__(TypedefTypeSpec self, TypedefTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.target_spec, other.target_spec),
+        ])

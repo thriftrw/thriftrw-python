@@ -20,53 +20,56 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import abc
+from thriftrw.wire.value cimport Value
 
 __all__ = ['TypeSpec']
 
 
-class TypeSpec(object):
+cdef class TypeSpec(object):
     """Base class for classes representing TypeSpecs.
 
     A TypeSpec knows how to convert values of the corresponding type to and
     from :py:class:`thriftrw.wire.Value` objects.
     """
-    __metaclass__ = abc.ABCMeta
     __slots__ = ()
 
-    @property
-    def name(self):
+    property name:
         """Name of the type referenced by this type spec."""
-        raise NotImplementedError
 
-    @property
-    def ttype_code(self):
+        def __get__(self):
+            raise NotImplementedError
+
+    property ttype_code:
         """Numeric TType used for the type spec.
 
         The value must be from :py:data:`thriftrw.wire.TType`.
         """
-        raise NotImplementedError
 
-    @property
-    def surface(self):
+        def __get__(self):
+            raise NotImplementedError
+
+    property surface:
         """The surface of a type spec.
 
         The surface of a type spec, if non-None is the value associated with
         its name at the top-level in the generated module.
         """
-        raise NotImplementedError
 
-    @abc.abstractmethod
-    def to_wire(self, value):
+        def __get__(self):
+            raise NotImplementedError
+
+    cpdef Value to_wire(TypeSpec self, object value):
         """Converts the given value into a :py:class:`thriftrw.wire.Value`
         object.
 
         :returns thriftrw.wire.Value:
             Wire representation of the value.
         """
+        raise NotImplementedError(
+            'to_wire called on unlinked type reference: %r', self
+        )
 
-    @abc.abstractmethod
-    def from_wire(self, wire_value):
+    cpdef object from_wire(TypeSpec self, Value wire_value):
         """Converts the given :py:class:`thriftrw.wire.Value` back into the
         original type.
 
@@ -76,13 +79,14 @@ class TypeSpec(object):
             If the type of the wire value does not have the correct Thrift
             type for this type spec.
         """
+        raise NotImplementedError(
+            'from_wire called on unlinked type reference: %r', self
+        )
 
-    @abc.abstractmethod
-    def link(self, scope):
-        pass
+    cpdef TypeSpec link(self, scope):
+        raise NotImplementedError
 
-    @abc.abstractmethod
-    def to_primitive(self, value):
+    cpdef object to_primitive(TypeSpec self, object value):
         """Converts a value matching this type spec into a primitive value.
 
         A primitive value is a text, binary, integer, or float value, or a
@@ -96,9 +100,11 @@ class TypeSpec(object):
             A representation of that value using only primitive types, lists,
             and maps.
         """
+        raise NotImplementedError(
+            'to_primitive called on unlinked type reference: %r', self
+        )
 
-    @abc.abstractmethod
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(TypeSpec self, object prim_value):
         """Converts a primitive value into a value of this type.
 
         A primitive value is a text, binary, integer, or float value, or a
@@ -111,9 +117,11 @@ class TypeSpec(object):
         :returns:
             A value matching this TypeSpec.
         """
+        raise NotImplementedError(
+            'from_primitive called on unlinked type reference: %r', self
+        )
 
-    @abc.abstractmethod
-    def validate(self, instance):
+    cpdef void validate(TypeSpec self, object o) except *:
         """Whether an instance of this spec is valid.
 
         :param instance:
@@ -125,4 +133,6 @@ class TypeSpec(object):
             If the value matched the type but did not hold the correct set of
             acceptable values.
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            'validate called on unlinked type reference: %r', self
+        )

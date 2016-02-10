@@ -4,7 +4,8 @@ Releases
 1.1.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Serialization and deserialization to and from binary is now almost twice as
+  fast.
 
 
 1.1.0 (2016-01-11)

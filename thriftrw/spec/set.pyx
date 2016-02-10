@@ -20,24 +20,21 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-import collections
-
+from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
+from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport SetValue
-
-from . import check
-from .base import TypeSpec
+from thriftrw.wire.value cimport Value
+from . cimport check
 
 __all__ = ['SetTypeSpec']
 
 
-class SetTypeSpec(TypeSpec):
+cdef class SetTypeSpec(TypeSpec):
     """
     :param TypeSpec vspec:
         TypeSpec of values stored in the set.
     """
-
-    __slots__ = ('vspec', 'linked')
 
     ttype_code = ttype.SET
 
@@ -45,7 +42,7 @@ class SetTypeSpec(TypeSpec):
         self.vspec = vspec
         self.linked = False
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.vspec = self.vspec.link(scope)
@@ -55,36 +52,47 @@ class SetTypeSpec(TypeSpec):
     def name(self):
         return 'set<%s>' % self.vspec.name
 
-    def to_wire(self, value):
+    cpdef Value to_wire(self, object value):
+        items = []
+        for v in value:
+            items.append(self.vspec.to_wire(v))
         return SetValue(
             value_ttype=self.vspec.ttype_code,
-            values=[self.vspec.to_wire(v) for v in value],
+            values=items,
         )
 
-    def to_primitive(self, value):
-        return [self.vspec.to_primitive(x) for x in value]
+    cpdef object to_primitive(self, object value):
+        items = []
+        for x in value:
+            items.append(self.vspec.to_primitive(x))
+        return items
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)
-        return set(
-            self.vspec.from_wire(v) for v in wire_value.values
-        )
+        result = set()
+        for v in wire_value.values:
+            result.add(self.vspec.from_wire(v))
+        return result
 
-    def from_primitive(self, prim_value):
-        return set(self.vspec.from_primitive(v) for v in prim_value)
+    cpdef object from_primitive(self, object prim_value):
+        result = set()
+        for v in prim_value:
+            result.add(self.vspec.from_primitive(v))
+        return result
 
-    def validate(self, instance):
-        check.instanceof_class(self, collections.Iterable, instance)
+    cpdef void validate(self, object instance) except *:
+        check.isiterable(self, instance)
         for v in instance:
             self.vspec.validate(v)
 
     def __str__(self):
         return 'SetTypeSpec(vspec=%r)' % self.vspec
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.vspec == other.vspec and
-            self.linked == other.linked
-        )
+    def __richcmp__(SetTypeSpec self, SetTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.vspec, other.vspec),
+        ])
+

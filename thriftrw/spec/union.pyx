@@ -21,18 +21,20 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire cimport ttype
+from thriftrw.wire.value cimport Value
+from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
+from .base cimport TypeSpec
+from .field cimport FieldSpec
+from . cimport check
 
-from . import check
 from . import common
-from .base import TypeSpec
-from .field import FieldSpec
 from ..errors import ThriftCompilerError
 
 __all__ = ['UnionTypeSpec', 'FieldSpec']
 
 
-class UnionTypeSpec(TypeSpec):
+cdef class UnionTypeSpec(TypeSpec):
     """Spec for Thrift unions.
 
     The surface for union types is a class with the following:
@@ -87,18 +89,16 @@ class UnionTypeSpec(TypeSpec):
                 # ...
     """
 
-    __slots__ = ('name', 'fields', 'linked', 'surface', 'allow_empty')
-
     ttype_code = ttype.STRUCT
 
     def __init__(self, name, fields, allow_empty=None):
-        self.name = name
+        self.name = unicode(name)
         self.fields = fields
         self.linked = False
         self.surface = None
         self.allow_empty = allow_empty
 
-    def link(self, scope):
+    cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
@@ -149,7 +149,7 @@ class UnionTypeSpec(TypeSpec):
             ))
         return cls(union.name, fields)
 
-    def to_wire(self, union):
+    cpdef Value to_wire(UnionTypeSpec self, object union):
         fields = []
 
         for field in self.fields:
@@ -160,7 +160,7 @@ class UnionTypeSpec(TypeSpec):
 
         return StructValue(fields)
 
-    def to_primitive(self, union):
+    cpdef object to_primitive(UnionTypeSpec self, object union):
         for field in self.fields:
             value = getattr(union, field.name)
             if value is None:
@@ -169,7 +169,7 @@ class UnionTypeSpec(TypeSpec):
             return {field.name: field.spec.to_primitive(value)}
         return {}
 
-    def from_wire(self, wire_value):
+    cpdef object from_wire(UnionTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)
         kwargs = {}
         for field in self.fields:
@@ -181,7 +181,7 @@ class UnionTypeSpec(TypeSpec):
 
         return self.surface(**kwargs)
 
-    def from_primitive(self, prim_value):
+    cpdef object from_primitive(UnionTypeSpec self, object prim_value):
         kwargs = {}
 
         for field in self.fields:
@@ -193,7 +193,7 @@ class UnionTypeSpec(TypeSpec):
 
         return self.surface(**kwargs)
 
-    def validate(self, instance):
+    cpdef void validate(UnionTypeSpec self, object instance) except *:
         check.instanceof_surface(self, instance)
 
         found = 0
@@ -225,14 +225,14 @@ class UnionTypeSpec(TypeSpec):
             self.__class__.__name__, self.name, self.fields
         )
 
-    __repr__ = __str__
+    def __repr__(self):
+        return str(self)
 
-    def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.fields == other.fields and
-            self.linked == other.linked
-        )
+    def __richcmp__(UnionTypeSpec self, UnionTypeSpec other not None, int op):
+        return richcompare(op, [
+            (self.name, other.name),
+            (self.fields, other.fields),
+        ])
 
 
 def union_init(cls_name, fields, allow_empty, validate):
