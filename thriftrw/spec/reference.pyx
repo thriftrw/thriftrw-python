@@ -34,7 +34,7 @@ cdef class TypeReference(TypeSpec):
     __slots__ = ('name', 'lineno')
 
     def __init__(self, name, lineno):
-        self.name = name
+        self.name = str(name)
         self.lineno = lineno
 
     cpdef TypeSpec link(self, scope):

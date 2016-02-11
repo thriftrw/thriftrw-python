@@ -277,7 +277,7 @@ cdef class FunctionSpec(object):
     """
 
     def __init__(self, name, args_spec, result_spec, oneway):
-        self.name = unicode(name)
+        self.name = str(name)
         self.args_spec = args_spec
         self.result_spec = result_spec
         self.oneway = oneway
@@ -371,7 +371,7 @@ cdef class ServiceSpec(object):
     """
 
     def __init__(self, name, functions, parent):
-        self.name = unicode(name)
+        self.name = str(name)
         self.functions = functions
         self.parent = parent
 
@@ -416,7 +416,7 @@ cdef class ServiceSpec(object):
             self._functions = {}
             for f in self.functions:
                 name = f.name
-                if not isinstance(name, bytes):
+                if isinstance(name, unicode):
                     name = name.encode('utf-8')
                 self._functions[name] = f
 
@@ -429,7 +429,7 @@ cdef class ServiceSpec(object):
 
         .. versionadded:: 1.0
         """
-        if not isinstance(name, bytes):
+        if isinstance(name, unicode):
             name = name.encode('utf-8')
         return self._functions.get(name, None)
 

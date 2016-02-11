@@ -24,7 +24,7 @@ from .base cimport TypeSpec
 
 
 cdef class EnumTypeSpec(TypeSpec):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef readonly dict items
     cdef readonly values_to_names
     cdef public bint linked

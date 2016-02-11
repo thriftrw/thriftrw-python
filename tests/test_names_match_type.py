@@ -18,18 +18,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from __future__ import absolute_import, unicode_literals, print_function
+"""
+Tests in this file just make sure that the names for functions and types are
+valid for use in ``type()`` calls and assignable to ``__name__``.
+"""
 
-from libc.stdint cimport int16_t
+from __future__ import absolute_import, print_function
+# We intentionally don't add unicode_literals here because we want the system
+# to use whatever the default is for that version of Python.
 
-from .base cimport TypeSpec
+import pytest
 
 
-cdef class FieldSpec(object):
-    cdef readonly int16_t id
-    cdef readonly str name
-    cdef readonly bint required
+@pytest.fixture
+def service(loads):
+    return loads('''
+        struct Item {}
 
-    cdef public TypeSpec spec
-    cdef public object default_value
-    cdef public bint linked
+        service Service { void someMethod() }
+    ''')
+
+
+def test_function_spec_name(service):
+    func_spec = service.Service.someMethod.spec
+
+    def some_func():
+        pass
+
+    some_func.__name__ = func_spec.name
+
+
+def test_type_spec_name(service):
+    type_spec = service.Item.type_spec
+    type(type_spec.name, (), {})

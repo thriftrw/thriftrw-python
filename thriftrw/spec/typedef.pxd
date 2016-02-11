@@ -24,5 +24,5 @@ from .base cimport TypeSpec
 
 
 cdef class TypedefTypeSpec(TypeSpec):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef public TypeSpec target_spec

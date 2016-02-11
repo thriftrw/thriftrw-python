@@ -1,6 +1,20 @@
 Releases
 ========
 
+1.2.2 (unreleased)
+------------------
+
+- Re-add the changes from 1.2.0 with a fix. Serialization and deserialization
+  should be fast again.
+
+
+1.2.1 (2016-02-11)
+------------------
+
+- Revert changes made in 1.2.0 because they unintentionally break some
+  str/unicode concerns in TypeSpecs.
+
+
 1.2.0 (2016-02-11)
 ------------------
 

@@ -26,7 +26,7 @@ from .base cimport TypeSpec
 
 
 cdef class PrimitiveTypeSpec(TypeSpec):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef readonly int8_t code
     cdef readonly object value_cls
     cdef readonly object surface

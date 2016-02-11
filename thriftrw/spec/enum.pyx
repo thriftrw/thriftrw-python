@@ -118,7 +118,7 @@ cdef class EnumTypeSpec(TypeSpec):
         assert name
         assert items is not None
 
-        self.name = unicode(name)
+        self.name = str(name)
         self.items = items
 
         values_to_names = defaultdict(lambda: [])

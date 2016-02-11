@@ -24,7 +24,7 @@ from .base cimport TypeSpec
 
 
 cdef class StructTypeSpec(TypeSpec):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef readonly list fields
     cdef readonly object base_cls
 

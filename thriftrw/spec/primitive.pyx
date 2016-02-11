@@ -65,7 +65,7 @@ cdef class PrimitiveTypeSpec(TypeSpec):
             If provided, this is used to cast values into a standard shape
             before passing them to ``value_cls``
         """
-        self.name = unicode(name)
+        self.name = str(name)
         self.code = code
         self.value_cls = value_cls
         self.surface = surface
@@ -133,7 +133,7 @@ cdef class _TextualTypeSpec(TypeSpec):
 cdef class _TextTypeSpec(_TextualTypeSpec):
     """TypeSpec for the text type."""
 
-    name = 'string'
+    name = str('string')
     surface = unicode
 
     cpdef object to_primitive(_TextTypeSpec self, object value):
@@ -159,7 +159,7 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
 
 cdef class _BinaryTypeSpec(_TextualTypeSpec):
 
-    name = 'binary'
+    name = str('binary')
     surface = bytes
 
     cpdef object to_primitive(_BinaryTypeSpec self, object value):
@@ -185,7 +185,7 @@ cdef class _BinaryTypeSpec(_TextualTypeSpec):
 
 cdef class _BoolTypeSpec(TypeSpec):
 
-    name = 'bool'
+    name = str('bool')
     surface = bool
     ttype_code = ttype.BOOL
 

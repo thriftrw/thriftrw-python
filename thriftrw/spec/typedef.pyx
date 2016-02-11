@@ -35,7 +35,7 @@ cdef class TypedefTypeSpec(TypeSpec):
     """
 
     def __init__(self, name, target_spec):
-        self.name = unicode(name)
+        self.name = str(name)
         self.target_spec = target_spec
 
     @classmethod

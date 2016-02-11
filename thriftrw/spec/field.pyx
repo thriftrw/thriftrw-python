@@ -55,7 +55,7 @@ cdef class FieldSpec(object):
 
     def __init__(self, id, name, spec, required, default_value=None):
         self.id = id
-        self.name = unicode(name)
+        self.name = str(name)
         self.spec = spec
         self.required = required
         self.default_value = default_value

@@ -37,7 +37,7 @@ cdef class FunctionResultSpec(UnionTypeSpec):
 
 
 cdef class FunctionSpec(object):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef public FunctionArgsSpec args_spec
     cdef public FunctionResultSpec result_spec
     cdef readonly bint oneway
@@ -49,7 +49,7 @@ cdef class FunctionSpec(object):
 
 
 cdef class ServiceSpec(object):
-    cdef readonly unicode name
+    cdef readonly str name
     cdef public list functions
     cdef public object parent
     cdef public dict _functions
