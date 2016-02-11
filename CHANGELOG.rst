@@ -1,6 +1,20 @@
 Releases
 ========
 
+1.2.1 (unreleased)
+------------------
+
+- Revert changes made in 1.2.0 because they unintentionally break some
+  str/unicode concerns in TypeSpecs.
+
+
+1.2.0 (2016-02-11)
+------------------
+
+- Serialization and deserialization to and from binary is now almost twice as
+  fast.
+
+
 1.1.0 (2016-01-11)
 ------------------
 
