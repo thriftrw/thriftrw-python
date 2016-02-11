@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.1 (unreleased)
+1.2.1 (2016-02-11)
 ------------------
 
 - Revert changes made in 1.2.0 because they unintentionally break some
