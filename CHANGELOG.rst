@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.1.1 (unreleased)
+1.2.0 (2016-02-11)
 ------------------
 
 - Serialization and deserialization to and from binary is now almost twice as
