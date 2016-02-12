@@ -4,7 +4,8 @@ Releases
 1.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Re-add the changes from 1.2.0 with a fix. Serialization and deserialization
+  should be fast again.
 
 
 1.2.1 (2016-02-11)

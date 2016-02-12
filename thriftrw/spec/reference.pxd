@@ -24,5 +24,5 @@ from .base cimport TypeSpec
 
 
 cdef class TypeReference(TypeSpec):
-    cdef readonly name
+    cdef readonly str name
     cdef readonly int lineno

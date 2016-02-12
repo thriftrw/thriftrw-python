@@ -116,7 +116,7 @@ cdef class StructTypeSpec(TypeSpec):
             Base class to use for generates classes. Defaults to ``object``.
         """
 
-        self.name = unicode(name)
+        self.name = str(name)
         self.fields = fields
         self.linked = False
         self.surface = None
