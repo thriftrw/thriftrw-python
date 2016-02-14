@@ -36,7 +36,7 @@ def struct(module):
 
     return Struct(
         strings=['foo'] * 100000,
-        ints=set([256] * 100000),
+        ints=set(range(100000)),
         mapped={n: 'bar' for n in range(100000)},
     )
 
