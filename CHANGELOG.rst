@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.2 (unreleased)
+1.2.2 (2016-02-15)
 ------------------
 
 - Re-add the changes from 1.2.0 with a fix. Serialization and deserialization

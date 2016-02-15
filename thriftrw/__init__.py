@@ -28,6 +28,6 @@ from __future__ import absolute_import, unicode_literals, print_function
 from .loader import load
 from .loader import install
 
-__version__ = '1.2.2.dev0'
+__version__ = '1.2.2'
 
 __all__ = ['load', 'install']
