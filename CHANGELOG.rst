@@ -4,7 +4,8 @@ Releases
 1.2.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed bug where ``Decimal`` and ``Fraction`` values were disallowed for
+  ``float`` fields.
 
 
 1.2.2 (2016-02-15)

@@ -22,6 +22,8 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+from decimal import Decimal
+from fractions import Fraction
 from itertools import permutations
 
 from thriftrw import spec
@@ -30,7 +32,7 @@ from thriftrw.wire import ttype
 from ..util.value import *  # noqa
 
 
-@pytest.mark.parametrize('args', [
+@pytest.mark.parametrize('t_spec, value, obj', [
     (spec.BoolTypeSpec, vbool(True), True),
     (spec.BoolTypeSpec, vbool(False), False),
 
@@ -50,12 +52,30 @@ from ..util.value import *  # noqa
      vlist(ttype.BYTE, vbyte(1), vbyte(2), vbyte(3)),
      [1, 2, 3]),
 ])
-def test_primitive_wire_conversion(args):
-    # workaround for pytest-dev/pytest#1086 until pytest 2.8.2 is released.
-    t_spec, value, obj = args
-
+def test_primitive_wire_conversion(t_spec, value, obj):
+    t_spec.validate(obj)
     assert value == t_spec.to_wire(obj)
     assert obj == t_spec.from_wire(value)
+
+
+@pytest.mark.parametrize('t_spec, value, input, output', [
+    (
+        spec.DoubleTypeSpec,
+        vdouble(1.391874431876),
+        Decimal(1.391874431876),
+        1.391874431876,
+    ),
+    (
+        spec.DoubleTypeSpec,
+        vdouble(1.713294871420987),
+        Fraction(1.713294871420987),
+        1.713294871420987,
+    ),
+])
+def test_primitive_to_wire(t_spec, value, input, output):
+    t_spec.validate(input)
+    assert value == t_spec.to_wire(input)
+    assert output == t_spec.from_wire(value)
 
 
 @pytest.mark.parametrize('t_spec, value', [
