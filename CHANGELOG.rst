@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.3 (unreleased)
+1.2.3 (2016-02-16)
 ------------------
 
 - Fixed bug where ``Decimal`` and ``Fraction`` values were disallowed for
