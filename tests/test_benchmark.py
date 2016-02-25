@@ -20,40 +20,67 @@
 
 import pytest
 
-
-@pytest.fixture
-def module(loads):
-    return loads('''struct Struct {
-        1: required list<string> strings;
-        2: required set<i32> ints;
-        3: required map<i32, string> mapped;
-    }''')
+import thriftrw
 
 
-@pytest.fixture
-def struct(module):
-    Struct = module.Struct
+@pytest.fixture(scope='session')
+def module(request):
+    return thriftrw.loader.Loader().loads('benchmark', '''
+        struct PrimitiveContainers {
+            1: required list<string> strings;
+            2: required set<i32> ints;
+            3: required map<i32, string> mapped;
+        }
 
-    return Struct(
-        strings=['foo'] * 100000,
-        ints=set(range(100000)),
-        mapped={n: 'bar' for n in range(100000)},
-    )
+        struct Point {
+            1: required double x;
+            2: required double y;
+        }
+
+        struct Edge {
+            1: required Point start;
+            2: required Point end;
+        }
+
+        struct Graph { 1: required list<Edge> edges }
+    ''')
 
 
-def test_binary_dumps(benchmark, module, struct):
-    benchmark(module.dumps, struct)
+@pytest.fixture(params=[
+    'primitive_containers',
+    'nested_structs',
+])
+def value(module, request):
+    if request.param == 'primitive_containers':
+        return module.PrimitiveContainers(
+            strings=['foo'] * 100000,
+            ints=set(range(100000)),
+            mapped={n: 'bar' for n in range(100000)},
+        )
+    elif request.param == 'nested_structs':
+        return module.Graph(edges=[
+            module.Edge(
+                start=module.Point(1.23, 4.56),
+                end=module.Point(1.23, 4.56),
+            ) for i in range(1000)
+        ])
+    else:
+        raise NotImplementedError
 
 
-def test_binary_loads(benchmark, module, struct):
-    serialized = module.dumps(struct)
-    benchmark(module.loads, struct.__class__, serialized)
+def test_binary_dumps(benchmark, module, value):
+    benchmark(module.dumps, value)
 
 
-def test_to_primitive(benchmark, struct):
-    benchmark(struct.to_primitive)
+def test_binary_loads(benchmark, module, value):
+    serialized = module.dumps(value)
+    benchmark(module.loads, value.__class__, serialized)
 
 
-def test_from_primitive(benchmark, struct):
-    primitive = struct.to_primitive()
-    benchmark(struct.type_spec.from_primitive, primitive)
+def test_to_primitive(benchmark, value):
+    benchmark(value.to_primitive)
+
+
+def test_from_primitive(benchmark, value):
+    primitive = value.to_primitive()
+    benchmark(value.type_spec.from_primitive, primitive)
