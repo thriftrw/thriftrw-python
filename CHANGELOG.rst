@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.4 (unreleased)
+1.2.4 (2016-03-04)
 ------------------
 
 - Fixed a bug that caused optional arguments to show up out of order in
