@@ -351,7 +351,6 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
         # are assigned.
         validate(self)
 
-    # TODO reasonable docstring
     return __init__
 
 
@@ -370,17 +369,15 @@ def struct_docstring(cls_name, required_fields, optional_fields):
         optional_section = '\n'.join(
             [''] +
             ['\nThe following arguments are optional:\n'] +
-            ['-   %s (default: %s)' % pair
-             for pair in optional_fields.items()]
+            ['-   %s (default: %s)' % pair for pair in optional_fields]
         )
 
     param_list = (
         list(required_fields) +
-        ['%s=None' % name for name in optional_fields.keys()]
+        ['%s=None' % name for name, value in optional_fields]
     )
 
     header = '%s(%s)' % (cls_name, ', '.join(param_list))
-
     return header + required_section + optional_section
 
 
@@ -436,7 +433,7 @@ def struct_cls(struct_spec, scope):
     struct_dct['__doc__'] = struct_docstring(
         struct_spec.name,
         required_fields,
-        dict(zip(optional_fields, field_defaults)),
+        list(zip(optional_fields, field_defaults)),
     )
 
     # TODO generate a reasonable docstring for the class too.
