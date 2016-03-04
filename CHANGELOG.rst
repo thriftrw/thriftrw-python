@@ -4,7 +4,8 @@ Releases
 1.2.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed a bug that caused optional arguments to show up out of order in
+  ``struct`` docstrings.
 
 
 1.2.3 (2016-02-16)
