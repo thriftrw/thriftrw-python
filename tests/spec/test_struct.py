@@ -143,6 +143,7 @@ def test_link_simple(scope):
 
     SimpleStruct = spec.surface
     assert SimpleStruct.type_spec is spec
+    assert 'SimpleStruct(a, c, b=None, d=None)' in SimpleStruct.__doc__
 
 
 def test_load_simple(loads):
@@ -169,6 +170,8 @@ def test_load_simple(loads):
 
     assert SimpleStruct('hello', 42) == SimpleStruct('hello', 42)
     assert SimpleStruct('hello', 42) != SimpleStruct('world', 42)
+
+    assert 'SimpleStruct(a, c, b=None, d=None)' in SimpleStruct.__doc__
 
 
 def test_simple_convert(loads):
@@ -200,6 +203,8 @@ def test_simple_convert(loads):
 
         assert spec.from_wire(wire_value) == value
         assert SimpleStruct.from_primitive(prim_value) == value
+
+    assert 'SimpleStruct(a, b=None)' in SimpleStruct.__doc__
 
 
 def test_required_field_missing(loads):
@@ -293,6 +298,11 @@ def test_default_values(loads):
         assert spec.from_wire(wire_value) == value
         assert Struct.from_primitive(prim_value) == value
 
+    assert (
+        'DefaultStruct(requiredField, optionalField=None, '
+        'optionalFieldWithDefault=None, requiredFieldWithDefault=None)'
+    ) in Struct.__doc__
+
 
 def test_default_binary_value(loads):
     Struct = loads('''struct Struct {
@@ -309,6 +319,11 @@ def test_constructor_behavior(loads):
         3: required binary requiredFieldWithDefault = "";
         4: required string requiredField;
     }''').ConstructorStruct
+
+    assert (
+        'ConstructorStruct(requiredField, optionalField=None, '
+        'optionalFieldWithDefault=None, requiredFieldWithDefault=None)'
+    ) in Struct.__doc__
 
     with pytest.raises(TypeError) as exc_info:
         Struct()
