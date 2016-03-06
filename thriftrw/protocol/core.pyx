@@ -35,24 +35,6 @@ from thriftrw.wire.message cimport Message
 __all__ = ['Protocol']
 
 
-cdef class String(object):
-
-    def __cinit__(String self, char* contents, int32_t length,
-                  bytes _data=None):
-        self.contents = contents
-        self.length = length
-        self._data = _data
-
-    cdef bytes as_bytes(String self):
-        return self.contents[:self.length]
-
-    @staticmethod
-    cdef String from_bytes(bytes s):
-        cdef char* contents = s
-        cdef int32_t length = len(s)
-        return String(contents, length, s)
-
-
 cdef class FieldHeader(object):
 
     def __cinit__(FieldHeader self, int8_t type, int16_t id):
@@ -84,8 +66,7 @@ cdef class ListHeader(object):
 
 cdef class MessageHeader(object):
 
-    def __cinit__(MessageHeader self, String name, int8_t type,
-                  int32_t seqid):
+    def __cinit__(MessageHeader self, bytes name, int8_t type, int32_t seqid):
         self.name = name
         self.type = type
         self.seqid = seqid
@@ -102,7 +83,7 @@ cdef class ProtocolWriter(object):
     cdef void write_i16(self, int16_t value) except *: pass
     cdef void write_i32(self, int32_t value) except *: pass
     cdef void write_i64(self, int64_t value) except *: pass
-    cdef void write_binary(self, String value) except *: pass
+    cdef void write_binary(self, bytes value) except *: pass
     cdef void write_struct_begin(self) except *: pass
     cdef void write_field_begin(self, FieldHeader header) except *: pass
     cdef void write_field_end(self) except *: pass
@@ -168,7 +149,7 @@ cdef class Protocol(object):
         cdef WriteBuffer buff = WriteBuffer()
         cdef ProtocolWriter writer = self.writer(buff)
         cdef MessageHeader header = MessageHeader(
-            String.from_bytes(message.name),
+            message.name,
             message.message_type,
             message.seqid,
         )
@@ -213,7 +194,7 @@ cdef class _ValueWriter(ValueVisitor):
         self.writer.write_i64(value)
 
     cdef object visit_binary(self, bytes value):
-        self.writer.write_binary(String.from_bytes(value))
+        self.writer.write_binary(value)
 
     cdef object visit_struct(self, list fields):
         self.writer.write_struct_begin()

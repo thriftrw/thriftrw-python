@@ -33,19 +33,6 @@ from thriftrw.wire.message cimport Message
 from thriftrw._buffer cimport WriteBuffer
 
 
-cdef class String(object):
-    cdef char* contents
-    cdef int32_t length
-    cdef bytes _data
-    # If this was created using from_bytes, we need to hold the reference to
-    # the original PyObject to ensure it doesn't get GCed.
-
-    cdef bytes as_bytes(self)
-
-    @staticmethod
-    cdef String from_bytes(bytes s)
-
-
 cdef class FieldHeader(object):
     cdef readonly int8_t type
     cdef readonly int16_t id
@@ -68,7 +55,7 @@ cdef class ListHeader(object):
 
 
 cdef class MessageHeader(object):
-    cdef readonly String name
+    cdef readonly bytes name
     cdef readonly int8_t type
     cdef readonly int32_t seqid
 
@@ -85,7 +72,7 @@ cdef class ProtocolWriter(object):
     cdef void write_i16(self, int16_t value) except *
     cdef void write_i32(self, int32_t value) except *
     cdef void write_i64(self, int64_t value) except *
-    cdef void write_binary(self, String value) except *
+    cdef void write_binary(self, bytes value) except *
 
     # Structs
 

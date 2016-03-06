@@ -53,7 +53,6 @@ from thriftrw.wire.value cimport (
 from .core cimport (
     Protocol,
     ProtocolWriter,
-    String,
     FieldHeader,
     MapHeader,
     SetHeader,
@@ -362,10 +361,12 @@ cdef class BinaryProtocolWriter(ProtocolWriter):
         value = htobe64(value)
         self._write(<char*>(&value), 8)
 
-    cdef void write_binary(BinaryProtocolWriter self, String s) except *:
+    cdef void write_binary(BinaryProtocolWriter self, bytes value) except *:
         # len:4 str:len
-        self.write_i32(s.length)
-        self._write(s.contents, s.length)
+        cdef int32_t length = <int32_t>len(value)
+        cdef char* contents = value;
+        self.write_i32(length)
+        self._write(contents, length)
 
     cdef void write_field_begin(BinaryProtocolWriter self,
                                 FieldHeader header) except *:

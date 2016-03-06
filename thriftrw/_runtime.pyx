@@ -30,7 +30,6 @@ from thriftrw.protocol.core cimport (
     Protocol,
     ProtocolWriter,
     MessageHeader,
-    String,
 )
 from thriftrw.wire cimport mtype
 from thriftrw.wire cimport ttype
@@ -96,13 +95,15 @@ cdef class Serializer(object):
                 'in messages.'
             )
 
+        cdef bytes name
+        if isinstance(function_spec.name, unicode):
+            name = function_spec.name.encode('utf-8')
+        else:
+            name = function_spec.name
+
         cdef WriteBuffer buff = WriteBuffer()
         cdef ProtocolWriter writer = self.protocol.writer(buff)
-        cdef MessageHeader header = MessageHeader(
-            String.from_bytes(function_spec.name),
-            message_type,
-            seqid,
-        )
+        cdef MessageHeader header = MessageHeader(name, message_type, seqid)
 
         writer.write_message_begin(header)
         obj_spec.write_to(writer, obj)

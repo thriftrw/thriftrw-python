@@ -30,7 +30,6 @@ from libc.stdint cimport (
 from .core cimport (
     Protocol,
     ProtocolWriter,
-    String,
     FieldHeader,
     MapHeader,
     SetHeader,
