@@ -89,7 +89,7 @@ cdef class MapTypeSpec(TypeSpec):
             self.kspec.ttype_code, self.vspec.ttype_code, len(value)
         )
         writer.write_map_begin(header)
-        for k, v in value.iteritems():
+        for k, v in value.items():
             self.kspec.write_to(writer, k)
             self.vspec.write_to(writer, v)
         writer.write_map_end()
