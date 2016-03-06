@@ -25,7 +25,13 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from libc.stdint cimport int32_t
 
-from thriftrw.protocol.core cimport Protocol
+from thriftrw._buffer cimport WriteBuffer
+from thriftrw.protocol.core cimport (
+    Protocol,
+    ProtocolWriter,
+    MessageHeader,
+    String,
+)
 from thriftrw.wire cimport mtype
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value, StructValue
@@ -56,8 +62,11 @@ cdef class Serializer(object):
         return self.dumps(obj)
 
     cpdef bytes dumps(self, obj):
-        cdef Value value = obj.__class__.type_spec.to_wire(obj)
-        return self.protocol.serialize_value(value)
+        cdef WriteBuffer buff = WriteBuffer()
+        cdef ProtocolWriter writer = self.protocol.writer(buff)
+
+        obj.__class__.type_spec.write_to(writer, obj)
+        return buff.value
 
     cpdef bytes message(self, obj, int32_t seqid=0):
         """Serializes the given request or response into a Thrift Message.
@@ -87,12 +96,19 @@ cdef class Serializer(object):
                 'in messages.'
             )
 
-        cdef StructValue body = obj_spec.to_wire(obj)
-        cdef Message message = Message(
-            function_spec.name, seqid, message_type, body
+        cdef WriteBuffer buff = WriteBuffer()
+        cdef ProtocolWriter writer = self.protocol.writer(buff)
+        cdef MessageHeader header = MessageHeader(
+            String.from_bytes(function_spec.name),
+            message_type,
+            seqid,
         )
 
-        return self.protocol.serialize_message(message)
+        writer.write_message_begin(header)
+        obj_spec.write_to(writer, obj)
+        writer.write_message_end()
+
+        return buff.value
 
 
 cdef class Deserializer(object):

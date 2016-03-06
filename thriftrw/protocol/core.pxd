@@ -20,12 +20,99 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+from libc.stdint cimport (
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+)
+
 from thriftrw.wire cimport ttype
-from thriftrw.wire.value cimport Value
+from thriftrw.wire.value cimport Value, ValueVisitor
 from thriftrw.wire.message cimport Message
+from thriftrw._buffer cimport WriteBuffer
+
+
+cdef class String(object):
+    cdef char* contents
+    cdef int32_t length
+    cdef bytes _data
+    # If this was created using from_bytes, we need to hold the reference to
+    # the original PyObject to ensure it doesn't get GCed.
+
+    cdef bytes as_bytes(self)
+
+    @staticmethod
+    cdef String from_bytes(bytes s)
+
+
+cdef class FieldHeader(object):
+    cdef readonly int8_t type
+    cdef readonly int16_t id
+
+
+cdef class MapHeader(object):
+    cdef readonly int8_t ktype
+    cdef readonly int8_t vtype
+    cdef readonly int32_t size
+
+
+cdef class SetHeader(object):
+    cdef readonly int8_t type
+    cdef readonly int32_t size
+
+
+cdef class ListHeader(object):
+    cdef readonly int8_t type
+    cdef readonly int32_t size
+
+
+cdef class MessageHeader(object):
+    cdef readonly String name
+    cdef readonly int8_t type
+    cdef readonly int32_t seqid
+
+
+cdef class ProtocolWriter(object):
+
+    cdef void write_value(self, Value value) except *
+
+    # Primitives
+
+    cdef void write_bool(self, bint value) except *
+    cdef void write_byte(self, int8_t value) except *
+    cdef void write_double(self, double value) except *
+    cdef void write_i16(self, int16_t value) except *
+    cdef void write_i32(self, int32_t value) except *
+    cdef void write_i64(self, int64_t value) except *
+    cdef void write_binary(self, String value) except *
+
+    # Structs
+
+    cdef void write_struct_begin(self) except *
+    cdef void write_field_begin(self, FieldHeader header) except *
+    cdef void write_field_end(self) except *
+    cdef void write_struct_end(self) except *
+
+    # Containers
+
+    cdef void write_map_begin(self, MapHeader header) except *
+    cdef void write_map_end(self) except *
+
+    cdef void write_set_begin(self, SetHeader header) except *
+    cdef void write_set_end(self) except *
+
+    cdef void write_list_begin(self, ListHeader header) except *
+    cdef void write_list_end(self) except *
+
+    # Messages
+
+    cdef void write_message_begin(self, MessageHeader header) except *
+    cdef void write_message_end(self) except *
 
 
 cdef class Protocol(object):
+    cpdef ProtocolWriter writer(self, WriteBuffer buff)
 
     cpdef bytes serialize_value(self, Value value)
 
@@ -34,3 +121,7 @@ cdef class Protocol(object):
     cpdef bytes serialize_message(self, Message message)
 
     cpdef Message deserialize_message(self, bytes s)
+
+
+cdef class _ValueWriter(ValueVisitor):
+    cdef ProtocolWriter writer

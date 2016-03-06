@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire.value cimport Value
+from thriftrw.protocol.core cimport ProtocolWriter
 
 __all__ = ['TypeSpec']
 
@@ -57,6 +58,10 @@ cdef class TypeSpec(object):
 
         def __get__(self):
             raise NotImplementedError
+
+    cpdef void write_to(TypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_value(self.to_wire(value))
 
     cpdef Value to_wire(TypeSpec self, object value):
         """Converts the given value into a :py:class:`thriftrw.wire.Value`

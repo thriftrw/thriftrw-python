@@ -26,6 +26,10 @@ from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
+from thriftrw.protocol.core cimport (
+    ProtocolWriter,
+    FieldHeader,
+)
 from .base cimport TypeSpec
 from .field cimport FieldSpec
 from . cimport check
@@ -180,6 +184,22 @@ cdef class StructTypeSpec(TypeSpec):
 
             prim[field.name] = field.spec.to_primitive(value)
         return prim
+
+    cpdef void write_to(StructTypeSpec self, ProtocolWriter writer,
+                        object struct) except *:
+        writer.write_struct_begin()
+
+        for field in self.fields:
+            value = getattr(struct, field.name)
+            if value is None:
+                continue
+
+            header = FieldHeader(field.spec.ttype_code, field.id)
+            writer.write_field_begin(header)
+            field.spec.write_to(writer, value)
+            writer.write_field_end()
+
+        writer.write_struct_end()
 
     cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)

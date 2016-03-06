@@ -25,6 +25,7 @@ from collections import defaultdict
 from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport I32Value, Value
+from thriftrw.protocol.core cimport ProtocolWriter
 from .base cimport TypeSpec
 from . cimport check
 
@@ -144,6 +145,10 @@ cdef class EnumTypeSpec(TypeSpec):
     cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)
         return wire_value.value
+
+    cpdef void write_to(EnumTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_i32(value)
 
     cpdef object from_primitive(self, object prim_value):
         return prim_value

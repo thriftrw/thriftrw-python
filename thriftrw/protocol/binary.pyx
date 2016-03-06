@@ -33,7 +33,6 @@ from thriftrw.wire.message cimport Message
 from thriftrw._buffer cimport ReadBuffer
 from thriftrw._buffer cimport WriteBuffer
 from thriftrw.wire.value cimport (
-    ValueVisitor,
     Value,
     BoolValue,
     ByteValue,
@@ -48,9 +47,19 @@ from thriftrw.wire.value cimport (
     MapItem,
     SetValue,
     ListValue,
+    ValueVisitor,
 )
 
-from .core cimport Protocol
+from .core cimport (
+    Protocol,
+    ProtocolWriter,
+    String,
+    FieldHeader,
+    MapHeader,
+    SetHeader,
+    ListHeader,
+    MessageHeader,
+)
 from ..errors import EndOfInputError
 from ..errors import ThriftProtocolError
 from ._endian cimport (
@@ -308,10 +317,10 @@ cdef class BinaryProtocolReader(object):
         )
 
 
-cdef class BinaryProtocolWriter(ValueVisitor):
+cdef class BinaryProtocolWriter(ProtocolWriter):
     """Serializes values using the Thrift Binary protocol."""
 
-    def __cinit__(self, WriteBuffer writer):
+    def __cinit__(BinaryProtocolWriter self, WriteBuffer writer):
         """Initialize the writer.
 
         :param writer:
@@ -319,107 +328,89 @@ cdef class BinaryProtocolWriter(ValueVisitor):
         """
         self.writer = writer
 
-    cpdef void write(self, Value value):
-        """Writes the given value.
-
-        :param value:
-            A ``Value`` object.
-        """
-        value.apply(self)
-
-    cdef _write(self, char* data, int length):
+    cdef void _write(BinaryProtocolWriter self, char* data, int length):
         self.writer.write(data, length)
 
-    cdef object visit_bool(self, bint value):  # bool:1
-        self.visit_byte(value)
+    cdef void write_bool(self, bint value) except *:  # bool:1
+        self.write_byte(value)
 
-    cdef object visit_byte(self, int8_t value):  # byte:1
+    cdef void write_byte(BinaryProtocolWriter self, int8_t value) except *:
+        # byte:1
         cdef char c = <char>value
         self._write(&c, 1)
 
-    cdef object visit_double(self, double value):  # double:8
+    cdef void write_double(self, double value) except *:  # double:8
         # If confused:
         #
         #   <typ*>(&value)[0]
         #
         # Is just "interpret the in-memory representation of value as typ"
-        self.visit_i64((<int64_t*>(&value))[0])
+        self.write_i64((<int64_t*>(&value))[0])
 
-    cdef object visit_i16(self, int16_t value):  # i16:2
+    cdef void write_i16(BinaryProtocolWriter self, int16_t value) except *:
+        # i16:2
         value = htobe16(value)
         self._write(<char*>(&value), 2)
 
-    cdef object visit_i32(self, int32_t value):  # i32:4
+    cdef void write_i32(BinaryProtocolWriter self, int32_t value) except *:
+        # i32:4
         value = htobe32(value)
         self._write(<char*>(&value), 4)
 
-    cdef object visit_i64(self, int64_t value):  # i64:8
+    cdef void write_i64(BinaryProtocolWriter self, int64_t value) except *:
+        # i64:8
         value = htobe64(value)
         self._write(<char*>(&value), 8)
 
-    cdef object visit_binary(self, bytes value):  # len:4 str:len
-        self.visit_i32(len(value))
-        self.writer.write_bytes(value)
+    cdef void write_binary(BinaryProtocolWriter self, String s) except *:
+        # len:4 str:len
+        self.write_i32(s.length)
+        self._write(s.contents, s.length)
 
-    cdef object visit_struct(self, list fields):
-        # ( type:1 id:2 value:* ){fields} '0'
-        for field in fields:
-            self.visit_byte(field.ttype)
-            self.visit_i16(field.id)
-            self.write(field.value)
-        self.visit_byte(STRUCT_END)
+    cdef void write_field_begin(BinaryProtocolWriter self,
+                                FieldHeader header) except *:
+        # type:1 id:2
+        self.write_byte(header.type)
+        self.write_i16(header.id)
 
-    cdef object visit_map(
-        self, int8_t key_ttype, int8_t value_ttype, list pairs
-    ):
-        # key_type:1 value_type:1 count:4 (key:* value:*){count}
-        self.visit_byte(key_ttype)
-        self.visit_byte(value_ttype)
-        self.visit_i32(len(pairs))
+    cdef void write_struct_end(BinaryProtocolWriter self) except *:
+        self.write_byte(STRUCT_END)
 
-        for item in pairs:
-            self.write(item.key)
-            self.write(item.value)
+    cdef void write_map_begin(BinaryProtocolWriter self,
+                              MapHeader header) except *:
+        # key_type:1 value_type:1 count:4
+        self.write_byte(header.ktype)
+        self.write_byte(header.vtype)
+        self.write_i32(header.size)
 
-    cdef object visit_set(self, int8_t value_ttype, list values):
-        # value_type:1 count:4 (item:*){count}
-        self.visit_byte(value_ttype)
-        self.visit_i32(len(values))
+    cdef void write_set_begin(BinaryProtocolWriter self,
+                              SetHeader header) except *:
+        # value_type:1 count:4
+        self.write_byte(header.type)
+        self.write_i32(header.size)
 
-        for v in values:
-            self.write(v)
+    cdef void write_list_begin(BinaryProtocolWriter self,
+                               ListHeader header) except *:
+        # value_type:1 count:4
+        self.write_byte(header.type)
+        self.write_i32(header.size)
 
-    cdef object visit_list(self, int8_t value_ttype, list values):
-        # value_type:1 count:4 (item:*){count}
-        self.visit_byte(value_ttype)
-        self.visit_i32(len(values))
-
-        for v in values:
-            self.write(v)
-
-    cdef void write_message(self, Message message) except *:
-        self.visit_binary(message.name)
-        self.visit_byte(message.message_type)
-        self.visit_i32(message.seqid)
-        self.write(message.body)
+    cdef void write_message_begin(BinaryProtocolWriter self,
+                                  MessageHeader message) except *:
+        self.write_binary(message.name)
+        self.write_byte(message.type)
+        self.write_i32(message.seqid)
 
 
 cdef class BinaryProtocol(Protocol):
     """Implements the Thrift binary protocol."""
 
-    cpdef bytes serialize_message(self, Message message):
-        cdef WriteBuffer buff = WriteBuffer()
-        BinaryProtocolWriter(buff).write_message(message)
-        return buff.value
+    cpdef ProtocolWriter writer(self, WriteBuffer buff):
+        return BinaryProtocolWriter(buff)
 
     cpdef Message deserialize_message(self, bytes s):
         cdef ReadBuffer buff = ReadBuffer(s)
         return BinaryProtocolReader(buff).read_message()
-
-    cpdef bytes serialize_value(self, Value value):
-        cdef WriteBuffer buff = WriteBuffer()
-        BinaryProtocolWriter(buff).write(value)
-        return buff.value
 
     cpdef Value deserialize_value(self, int typ, bytes s):
         cdef ReadBuffer buff = ReadBuffer(s)
