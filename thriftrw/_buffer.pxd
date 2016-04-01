@@ -35,13 +35,10 @@ cdef class ReadBuffer(object):
 
 
 cdef class WriteBuffer(object):
-    cdef char* data
-    cdef readonly int length, capacity
+    cdef object buff
 
     cpdef void clear(self)
 
     cpdef void write_bytes(self, bytes data)
 
     cdef void write(self, char* data, int count)
-
-    cdef void ensure_capacity(self, int min_bytes)

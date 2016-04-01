@@ -28,9 +28,7 @@ from thriftrw.errors import EndOfInputError
 
 
 def test_empty_write_buffer():
-    buff = WriteBuffer(10)
-    assert buff.length == 0
-    assert buff.capacity == 10
+    buff = WriteBuffer()
     assert buff.value == b''
 
 
@@ -43,12 +41,11 @@ def test_empty_read_buffer():
 
 
 def test_simple_write():
-    buff = WriteBuffer(10)
+    buff = WriteBuffer()
     buff.write_bytes(b'hello ')
     buff.write_bytes(b'world')
 
     assert buff.value == b'hello world'
-    assert buff.length == 11
 
 
 def test_simple_read():
@@ -64,10 +61,8 @@ def test_simple_read():
 
 
 def test_write_clear():
-    buff = WriteBuffer(10)
+    buff = WriteBuffer()
     buff.write_bytes(b'foo')
     buff.clear()
 
     assert buff.value == b''
-    assert buff.capacity == 10
-    assert buff.length == 0

@@ -20,49 +20,26 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
-from cpython.mem cimport (
-    PyMem_Malloc,
-    PyMem_Realloc,
-    PyMem_Free,
-)
+from io import BytesIO
+
 from libc.string cimport memcpy
 
 from .errors import EndOfInputError
-
-cdef int DEFAULT_CAPACITY = 4096  # 4k
 
 
 cdef class WriteBuffer(object):
     """A write-only in-memory buffer.
 
-    It defaults to a 4k sized buffer.
-
     The ``value`` attribute makes all data written to the buffer so far
     available as a Python ``bytes`` object.
     """
 
-    def __cinit__(self, int init_capacity=0):
-        """
-        :param int init_capacity:
-            Initial capacity of the write buffer.
-        """
-        init_capacity = init_capacity or DEFAULT_CAPACITY
-
-        self.data = <char*>PyMem_Malloc(init_capacity)
-        self.length = 0
-        self.capacity = init_capacity
-
-    def __dealloc__(self):
-        if self.data != NULL:
-            PyMem_Free(self.data)
-            self.data = NULL
+    def __init__(self):
+        self.buff = BytesIO()
 
     cpdef void clear(self):
         """Clears the buffer."""
-
-        capacity = self.length + self.capacity
-        self.length = 0
-        self.capacity = capacity
+        self.buff = BytesIO()
 
     cpdef void write_bytes(self, bytes data):
         """Writes the given Python bytes object to the buffer.
@@ -70,7 +47,7 @@ cdef class WriteBuffer(object):
         :param bytes data:
             Data to write to the buffer.
         """
-        self.write(data, len(data))
+        self.buff.write(data)
 
     cdef void write(self, char* data, int count):
         """Writes bytes from the given memory block to the buffer.
@@ -80,34 +57,13 @@ cdef class WriteBuffer(object):
         :param int count:
             Number of bytes to write.
         """
-        self.ensure_capacity(count)
-
-        memcpy(self.data + self.length, data, count)
-        self.length += count
-        self.capacity -= count
-
-    cdef void ensure_capacity(self, int min_bytes):
-        """Ensures that the buffer has enough room for at least ``min_bytes``
-        more bytes.
-        """
-        if min_bytes <= self.capacity:
-            return
-
-        new_total_length = self.length * 2
-        if new_total_length - self.length < min_bytes:
-            # If adding as much room as the current buffer size is not enough,
-            # add just enough room on top.
-            new_total_length += min_bytes
-
-        self.data = <char*>PyMem_Realloc(self.data, new_total_length)
-        self.capacity = new_total_length - self.length
+        self.buff.write(data[:count])
 
     property value:
         """Data written to the buffer so far."""
 
         def __get__(self):
-            cdef bytes out = self.data[:self.length]
-            return out
+            return self.buff.getvalue()
 
 
 cdef class ReadBuffer(object):
