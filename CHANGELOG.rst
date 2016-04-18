@@ -4,7 +4,7 @@ Releases
 1.2.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed a bug where the ``strict`` flag was not respected for exceptions.
 
 
 1.2.4 (2016-03-04)
