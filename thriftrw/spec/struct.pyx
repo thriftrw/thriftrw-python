@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import copy
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value
 from thriftrw._cython cimport richcompare
@@ -330,7 +331,7 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
             default_values = zip(field_names[-num_defaults:], field_defaults)
             for name, value in default_values:
                 if name in unassigned:
-                    setattr(self, name, value)
+                    setattr(self, name, copy.deepcopy(value))
                     unassigned.remove(name)
 
         if kwargs:
