@@ -4,7 +4,8 @@ Releases
 1.2.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed a bug that caused mutations to default values of structs to be
+  persisted across calls.
 
 
 1.2.4 (2016-03-04)

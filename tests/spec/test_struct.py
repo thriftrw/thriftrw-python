@@ -374,6 +374,44 @@ def test_validate_with_nested_primitives(loads):
     Struct.type_spec.validate(Struct(values={'a': 1}))
 
 
+def test_mutable_default(loads):
+    """Mutating default values should have no effect.
+    """
+    m = loads('''
+        struct X {
+            1: required list<string> foo = []
+            2: required map<string, string> bar = {}
+        }
+
+        struct Y {
+            1: required X x = {"foo": ["x", "y"], "bar": {"a": "b"}}
+        }
+    ''')
+    X = m.X
+    Y = m.Y
+
+    # mutable collections
+
+    assert [] == X().foo
+    X().foo.append('hello')
+    assert [] == X().foo
+
+    assert {} == X().bar
+    X().bar['x'] = 'y'
+    assert {} == X().bar
+
+    # mutable structs
+
+    assert X(foo=['x', 'y'], bar={'a': 'b'}) == Y().x
+
+    y = Y()
+    y.x.foo = ["a", "b"]
+    assert X(foo=['x', 'y'], bar={'a': 'b'}) == Y().x
+
+    Y().x.foo.append('z')
+    assert X(foo=['x', 'y'], bar={'a': 'b'}) == Y().x
+
+
 def test_self_referential(loads):
     Cons = loads('''struct Cons {
         1: required i32 value
