@@ -4,6 +4,8 @@ Releases
 1.2.5 (unreleased)
 ------------------
 
+- Fixed a bug that caused mutations to default values of structs to be
+  persisted across calls.
 - Fixed a bug where the ``strict`` flag was not respected for exceptions.
 
 
