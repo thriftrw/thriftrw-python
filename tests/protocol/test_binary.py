@@ -30,7 +30,10 @@ from thriftrw.wire import value
 from thriftrw.wire import Message
 from thriftrw.wire.mtype import CALL, REPLY, EXCEPTION, ONEWAY
 
-from ..util.value import *  # noqa
+from ..util.value import (
+    vbool, vbyte, vi16, vi32, vi64, vdouble, vbinary, vlist, vmap, vset,
+    vstruct,
+)
 
 
 def reader_writer_ids(x):
