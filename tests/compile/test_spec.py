@@ -29,7 +29,9 @@ from itertools import permutations
 from thriftrw import spec
 from thriftrw.wire import ttype
 
-from ..util.value import *  # noqa
+from ..util.value import (
+    vbool, vbyte, vi16, vi32, vi64, vdouble, vbinary, vlist, vmap, vset,
+)
 
 
 @pytest.mark.parametrize('t_spec, value, obj', [
