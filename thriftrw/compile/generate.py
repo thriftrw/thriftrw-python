@@ -89,7 +89,10 @@ class Generator(object):
         self.scope.add_type_spec(union_spec.name, union_spec, union.lineno)
 
     def visit_exc(self, exc):
-        exc_spec = spec.ExceptionTypeSpec.compile(exc)
+        exc_spec = spec.ExceptionTypeSpec.compile(
+            exc,
+            require_requiredness=self.strict,
+        )
         self.scope.add_type_spec(exc_spec.name, exc_spec, exc.lineno)
 
     def visit_service(self, svc):

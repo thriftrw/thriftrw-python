@@ -6,6 +6,7 @@ Releases
 
 - Fixed a bug that caused mutations to default values of structs to be
   persisted across calls.
+- Fixed a bug where the ``strict`` flag was not respected for exceptions.
 
 
 1.2.4 (2016-03-04)

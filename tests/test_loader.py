@@ -63,11 +63,18 @@ def test_load_from_file_non_strict_missing_requiredness(tmpdir):
             1: required string a
             2: string b
         }
+
+        exception Bar {
+            1: string message
+        }
     ''')
 
     loader = Loader(strict=False)
-    my_service = loader.load(str(tmpdir.join('my_service.thrift')))
-    my_service.Foo(b='b', a='a')
+    m = loader.load(str(tmpdir.join('my_service.thrift')))
+    m.Foo(b='b', a='a')
+
+    m.Bar(message='foo')
+    m.Bar()
 
 
 def test_caching(tmpdir, monkeypatch):
