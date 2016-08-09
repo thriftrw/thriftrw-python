@@ -23,6 +23,6 @@ matrix:
 
 install:
     - pip install tox
-    - pip install 'cython<0.24'
+    - pip install 'cython>=0.23,<0.24'
 script:
     - tox -e $TOX_ENV
