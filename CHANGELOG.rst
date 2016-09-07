@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.5 (unreleased)
+1.2.5 (2016-09-07)
 ------------------
 
 - Fixed a bug that caused mutations to default values of structs to be
