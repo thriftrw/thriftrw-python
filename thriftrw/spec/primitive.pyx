@@ -54,7 +54,15 @@ __all__ = [
 cdef class PrimitiveTypeSpec(TypeSpec):
     """TypeSpec for primitive types."""
 
-    def __init__(self, name, code, value_cls, surface, cast=None):
+    def __init__(
+        self,
+        name,
+        code,
+        value_cls,
+        surface,
+        cast=None,
+        validate_extra=None
+    ):
         """
         :param name:
             Name of the primitive type
@@ -68,11 +76,15 @@ cdef class PrimitiveTypeSpec(TypeSpec):
         :param cast:
             If provided, this is used to cast values into a standard shape
             before passing them to ``value_cls``
+        :param validate_extra:
+            If provided, this is used to validate values beyond checking that
+            they have the correct type.
         """
         self.name = str(name)
         self.code = code
         self.value_cls = value_cls
         self.surface = surface
+        self.validate_extra = validate_extra
 
         if cast is None:
             cast = (lambda x: x)
@@ -99,8 +111,9 @@ cdef class PrimitiveTypeSpec(TypeSpec):
         return self
 
     cpdef void validate(PrimitiveTypeSpec self, object instance) except *:
-        # TODO check bounds for numeric values
         check.instanceof_surface(self, instance)
+        if self.validate_extra is not None:
+            self.validate_extra(instance)
 
     def __str__(self):
         return 'PrimitiveTypeSpec(%r, %s)' % (self.code, self.value_cls)
@@ -219,6 +232,16 @@ cdef class _BoolTypeSpec(TypeSpec):
             return False
 
 
+def validate_signed_int(bits):
+    max_magnitude = 1 << (bits - 1)
+    min = -1 * max_magnitude
+    max = max_magnitude - 1
+    def _validate_signed_int(x):
+        if x < min or x > max:
+            raise OverflowError('Value %d does not fit in an i%d' % (x, bits))
+    return _validate_signed_int
+
+
 # Although the Integral and Number classes already cover int, long, (and
 # everything else in case Number), we list those out here explicitly because
 # old versions of PyPy or PyPy3 don't play well with isinstance checks
@@ -230,18 +253,28 @@ _FLOATING = (int, long, float, decimal.Decimal, fractions.Fraction,
 BoolTypeSpec = _BoolTypeSpec()
 
 ByteTypeSpec = PrimitiveTypeSpec(
-    'byte', ttype.BYTE, ByteValue, _INTEGRAL, int
+    'byte', ttype.BYTE, ByteValue, _INTEGRAL, int,
+    validate_extra=validate_signed_int(8)
 )
 
 DoubleTypeSpec = PrimitiveTypeSpec(
     'double', ttype.DOUBLE, DoubleValue, _FLOATING, float
 )
 
-I16TypeSpec = PrimitiveTypeSpec('i16', ttype.I16, I16Value, _INTEGRAL, int)
+I16TypeSpec = PrimitiveTypeSpec(
+    'i16', ttype.I16, I16Value, _INTEGRAL, int,
+    validate_extra=validate_signed_int(16)
+)
 
-I32TypeSpec = PrimitiveTypeSpec('i32', ttype.I32, I32Value, _INTEGRAL, int)
+I32TypeSpec = PrimitiveTypeSpec(
+    'i32', ttype.I32, I32Value, _INTEGRAL, int,
+    validate_extra=validate_signed_int(32)
+)
 
-I64TypeSpec = PrimitiveTypeSpec('i64', ttype.I64, I64Value, _INTEGRAL, long)
+I64TypeSpec = PrimitiveTypeSpec(
+    'i64', ttype.I64, I64Value, _INTEGRAL, long,
+    validate_extra=validate_signed_int(64)
+)
 
 BinaryTypeSpec = _BinaryTypeSpec()
 
