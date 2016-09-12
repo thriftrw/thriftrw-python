@@ -72,34 +72,34 @@ def test_validate():
 def test_validate_byte():
     ByteTypeSpec.validate(127)
     ByteTypeSpec.validate(-128)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         ByteTypeSpec.validate(128)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         ByteTypeSpec.validate(-129)
 
 
 def test_validate_i16():
     I16TypeSpec.validate(32767)
     I16TypeSpec.validate(-32768)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I16TypeSpec.validate(32768)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I16TypeSpec.validate(-32769)
 
 
 def test_validate_i32():
     I32TypeSpec.validate(2147483647)
     I32TypeSpec.validate(-2147483648)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I32TypeSpec.validate(2147483648)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I32TypeSpec.validate(-2147483649)
 
 
 def test_validate_i64():
     I64TypeSpec.validate(9223372036854775807)
     I64TypeSpec.validate(-9223372036854775808)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I64TypeSpec.validate(9223372036854775808)
-    with pytest.raises(OverflowError):
+    with pytest.raises(ValueError):
         I64TypeSpec.validate(-9223372036854775809)

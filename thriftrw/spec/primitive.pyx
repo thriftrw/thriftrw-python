@@ -238,7 +238,7 @@ def validate_signed_int(bits):
     max = max_magnitude - 1
     def _validate_signed_int(x):
         if x < min or x > max:
-            raise OverflowError('Value %d does not fit in an i%d' % (x, bits))
+            raise ValueError('Value %d does not fit in an i%d' % (x, bits))
     return _validate_signed_int
 
 
