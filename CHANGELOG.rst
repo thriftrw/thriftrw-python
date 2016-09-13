@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.2.6 (unreleased)
+1.3.0 (2016-09-13)
 ------------------
 
 - Changed ``PrimitiveTypeSpec.validate()`` to check that the values of
