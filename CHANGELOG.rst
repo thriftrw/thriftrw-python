@@ -4,7 +4,7 @@ Releases
 1.2.6 (unreleased)
 ------------------
 
-- Changed PrimitiveTypeSpec.validate() to check that the values of
+- Changed ``PrimitiveTypeSpec.validate()`` to check that the values of
   integer fields fit in the required number of bits.
 
 
