@@ -234,10 +234,10 @@ cdef class _BoolTypeSpec(TypeSpec):
 
 def validate_signed_int(bits):
     max_magnitude = 1 << (bits - 1)
-    min = -1 * max_magnitude
-    max = max_magnitude - 1
+    min_value = -1 * max_magnitude
+    max_value = max_magnitude - 1
     def _validate_signed_int(x):
-        if x < min or x > max:
+        if x < min_value or x > max_value:
             raise ValueError('Value %d does not fit in an i%d' % (x, bits))
     return _validate_signed_int
 
