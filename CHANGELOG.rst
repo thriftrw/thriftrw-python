@@ -6,6 +6,8 @@ Releases
 
 - Changed ``PrimitiveTypeSpec.validate()`` to check that the values of
   integer fields fit in the required number of bits.
+- Include the field ID and struct name in the exception messages from
+  ``StructTypeSpec.validate()``.
 
 
 1.2.5 (2016-09-07)
