@@ -216,7 +216,12 @@ cdef class StructTypeSpec(TypeSpec):
                     )
                 else:
                     continue
-            field.spec.validate(field_value)
+            try:
+                field.spec.validate(field_value)
+            except (ValueError, TypeError) as e:
+                raise e.__class__(
+                    'Field %d of %s is invalid: %s' % (field.id, self.name, e)
+                )
 
     def __str__(self):
         return '%s(name=%r, fields=%r)' % (

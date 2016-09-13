@@ -220,6 +220,19 @@ def test_required_field_missing(loads):
     assert 'Field "foo" of "X" is required' in str(exc_info)
 
 
+def test_int_field_too_large(loads):
+    X = loads('struct X { 1: optional i16 foo }').X
+    spec = X.type_spec
+
+    x = X()
+    x.foo = 1000000000000
+
+    with pytest.raises(ValueError) as exc_info:
+        spec.validate(x)
+
+    assert 'Field 1 of X is invalid' in str(exc_info)
+
+
 def test_empty(loads):
     S = loads('struct S {}').S
     spec = S.type_spec
