@@ -70,13 +70,13 @@ def test_primitive(parse, scope, loads):
     value = [
         Foo(1234),
         Foo(1234567890),
-        Foo(12345678901234567890),
+        Foo(1234567890123456789),
     ]
 
     prim_value = [
         {'i': 1234},
         {'i': 1234567890},
-        {'i': 12345678901234567890},
+        {'i': 1234567890123456789},
     ]
 
     assert spec.to_primitive(value) == prim_value

@@ -31,6 +31,7 @@ cdef class PrimitiveTypeSpec(TypeSpec):
     cdef readonly object value_cls
     cdef readonly object surface
     cdef readonly object cast
+    cdef readonly object validate_extra
 
 
 cdef class _TextualTypeSpec(TypeSpec):

@@ -23,6 +23,10 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
 
+from thriftrw.spec.primitive import ByteTypeSpec
+from thriftrw.spec.primitive import I16TypeSpec
+from thriftrw.spec.primitive import I32TypeSpec
+from thriftrw.spec.primitive import I64TypeSpec
 from thriftrw.spec.primitive import TextTypeSpec
 from thriftrw.wire.value import BinaryValue
 
@@ -63,3 +67,39 @@ def test_validate():
 
     with pytest.raises(TypeError):
         spec.validate(1)
+
+
+def test_validate_byte():
+    ByteTypeSpec.validate(127)
+    ByteTypeSpec.validate(-128)
+    with pytest.raises(ValueError):
+        ByteTypeSpec.validate(128)
+    with pytest.raises(ValueError):
+        ByteTypeSpec.validate(-129)
+
+
+def test_validate_i16():
+    I16TypeSpec.validate(32767)
+    I16TypeSpec.validate(-32768)
+    with pytest.raises(ValueError):
+        I16TypeSpec.validate(32768)
+    with pytest.raises(ValueError):
+        I16TypeSpec.validate(-32769)
+
+
+def test_validate_i32():
+    I32TypeSpec.validate(2147483647)
+    I32TypeSpec.validate(-2147483648)
+    with pytest.raises(ValueError):
+        I32TypeSpec.validate(2147483648)
+    with pytest.raises(ValueError):
+        I32TypeSpec.validate(-2147483649)
+
+
+def test_validate_i64():
+    I64TypeSpec.validate(9223372036854775807)
+    I64TypeSpec.validate(-9223372036854775808)
+    with pytest.raises(ValueError):
+        I64TypeSpec.validate(9223372036854775808)
+    with pytest.raises(ValueError):
+        I64TypeSpec.validate(-9223372036854775809)
