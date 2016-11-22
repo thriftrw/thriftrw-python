@@ -30,7 +30,7 @@ from libc.stdint cimport (
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value, ValueVisitor
 from thriftrw.wire.message cimport Message
-from thriftrw._buffer cimport WriteBuffer
+from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 
 
 cdef class FieldHeader(object):
@@ -98,8 +98,37 @@ cdef class ProtocolWriter(object):
     cdef void write_message_end(self) except *
 
 
+cdef class ProtocolReader:
+
+    # Primitives
+
+    cdef bool read_bool(self)
+    cdef int8_t read_byte(self)
+    cdef double read_double(self)
+    cdef int16_t read_i16(self)
+    cdef int32_t read_i32(self)
+    cdef int64_t read_i64(self)
+    cdef bytes read_binary(self)
+
+    # Structs
+
+    cdef object read_struct(self)
+
+    # Containers
+
+    cdef dict read_map(self)
+    cdef set read_set(self)
+    cdef list read_list(self)
+
+    # Messages
+
+    cdef Message read_message(self)
+
+
 cdef class Protocol(object):
     cpdef ProtocolWriter writer(self, WriteBuffer buff)
+
+    cpdef ProtocolReader reader(self, ReadBuffer buff)
 
     cpdef bytes serialize_value(self, Value value)
 

@@ -25,10 +25,11 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from libc.stdint cimport int32_t
 
-from thriftrw._buffer cimport WriteBuffer
+from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 from thriftrw.protocol.core cimport (
     Protocol,
     ProtocolWriter,
+    ProtocolReader,
     MessageHeader,
 )
 from thriftrw.wire cimport mtype
@@ -133,8 +134,9 @@ cdef class Deserializer(object):
         return self.loads(obj_cls, s)
 
     cpdef object loads(self, obj_cls, bytes s):
-        cdef Value value = self.protocol.deserialize_value(ttype.STRUCT, s)
-        return obj_cls.type_spec.from_wire(value)
+        cdef ReadBuffer buff = ReadBuffer()
+        cdef ProtocolReader reader = self.protocol.reader(buff)
+        return obj_cls.type_spec.read_from(reader)
 
     cpdef Message message(self, service, bytes s):
         """Deserializes a message from the given blob.
