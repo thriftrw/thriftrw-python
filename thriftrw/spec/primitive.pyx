@@ -25,6 +25,7 @@ import decimal
 import fractions
 
 from thriftrw.wire cimport ttype
+from thriftrw.protocol.core cimport ProtocolWriter
 from thriftrw.wire.value cimport (
     Value,
     BoolValue,
@@ -52,43 +53,24 @@ __all__ = [
 
 
 cdef class PrimitiveTypeSpec(TypeSpec):
-    """TypeSpec for primitive types."""
+    """TypeSpec for primitive types.
 
-    def __init__(
-        self,
-        name,
-        code,
-        value_cls,
-        surface,
-        cast=None,
-        validate_extra=None
-    ):
-        """
-        :param name:
-            Name of the primitive type
-        :param code:
-            TType code used by this primitive
-        :param value_cls:
-            Constructor for wire value types
-        :param surface:
-            Values passed through this spec must be instances of this class or
-            an exception will be raised
-        :param cast:
-            If provided, this is used to cast values into a standard shape
-            before passing them to ``value_cls``
-        :param validate_extra:
-            If provided, this is used to validate values beyond checking that
-            they have the correct type.
-        """
-        self.name = str(name)
-        self.code = code
-        self.value_cls = value_cls
-        self.surface = surface
-        self.validate_extra = validate_extra
-
-        if cast is None:
-            cast = (lambda x: x)
-        self.cast = cast
+    :param name:
+        Name of the primitive type
+    :param code:
+        TType code used by this primitive
+    :param value_cls:
+        Constructor for wire value types
+    :param surface:
+        Values passed through this spec must be instances of this class or
+        an exception will be raised
+    :param cast:
+        If provided, this is used to cast values into a standard shape
+        before passing them to ``value_cls``
+    :param validate_extra:
+        If provided, this is used to validate values beyond checking that
+        they have the correct type.
+    """
 
     @property
     def ttype_code(self):
@@ -139,6 +121,10 @@ cdef class _TextualTypeSpec(TypeSpec):
         if isinstance(value, unicode):
             value = value.encode('utf-8')
         return BinaryValue(value)
+
+    cpdef void write_to(_TextualTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_binary(bytes(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
         if not isinstance(instance, (bytes, unicode)):
@@ -219,6 +205,10 @@ cdef class _BoolTypeSpec(TypeSpec):
     cpdef object from_primitive(_BoolTypeSpec self, object prim_value):
         return bool(prim_value)
 
+    cpdef void write_to(_BoolTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_bool(value)
+
     cpdef TypeSpec link(self, scope):
         return self
 
@@ -252,29 +242,84 @@ _FLOATING = (int, long, float, decimal.Decimal, fractions.Fraction,
 
 BoolTypeSpec = _BoolTypeSpec()
 
-ByteTypeSpec = PrimitiveTypeSpec(
-    'byte', ttype.BYTE, ByteValue, _INTEGRAL, int,
-    validate_extra=validate_signed_int(8)
-)
+cdef class _ByteTypeSpec(PrimitiveTypeSpec):
 
-DoubleTypeSpec = PrimitiveTypeSpec(
-    'double', ttype.DOUBLE, DoubleValue, _FLOATING, float
-)
+    def __init__(self):
+        self.name = str('byte')
+        self.code = ttype.BYTE
+        self.value_cls = ByteValue
+        self.surface = _INTEGRAL
+        self.cast = int
+        self.validate_extra = validate_signed_int(8)
 
-I16TypeSpec = PrimitiveTypeSpec(
-    'i16', ttype.I16, I16Value, _INTEGRAL, int,
-    validate_extra=validate_signed_int(16)
-)
+    cpdef void write_to(_ByteTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_byte(value)
 
-I32TypeSpec = PrimitiveTypeSpec(
-    'i32', ttype.I32, I32Value, _INTEGRAL, int,
-    validate_extra=validate_signed_int(32)
-)
+ByteTypeSpec = _ByteTypeSpec()
 
-I64TypeSpec = PrimitiveTypeSpec(
-    'i64', ttype.I64, I64Value, _INTEGRAL, long,
-    validate_extra=validate_signed_int(64)
-)
+cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
+
+    def __init__(self):
+        self.name = str('double')
+        self.code = ttype.DOUBLE
+        self.value_cls = DoubleValue
+        self.surface = _FLOATING
+        self.cast = float
+
+    cpdef void write_to(_DoubleTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_double(value)
+
+DoubleTypeSpec = _DoubleTypeSpec()
+
+cdef class _I16TypeSpec(PrimitiveTypeSpec):
+
+    def __init__(self):
+        self.name = str('i16')
+        self.code = ttype.I16
+        self.value_cls = I16Value
+        self.surface = _INTEGRAL
+        self.cast = int
+        self.validate_extra = validate_signed_int(16)
+
+    cpdef void write_to(_I16TypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_i16(value)
+
+I16TypeSpec = _I16TypeSpec()
+
+cdef class _I32TypeSpec(PrimitiveTypeSpec):
+
+    def __init__(self):
+        self.name = str('i32')
+        self.code = ttype.I32
+        self.value_cls = I32Value
+        self.surface = _INTEGRAL
+        self.cast = int
+        self.validate_extra = validate_signed_int(32)
+
+    cpdef void write_to(_I32TypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_i32(value)
+
+I32TypeSpec = _I32TypeSpec()
+
+cdef class _I64TypeSpec(PrimitiveTypeSpec):
+
+    def __init__(self):
+        self.name = str("i64")
+        self.code = ttype.I64
+        self.value_cls = I64Value
+        self.surface = _INTEGRAL
+        self.cast = long
+        self.validate_extra = validate_signed_int(64)
+
+    cpdef void write_to(_I64TypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        writer.write_i64(value)
+
+I64TypeSpec = _I64TypeSpec()
 
 BinaryTypeSpec = _BinaryTypeSpec()
 
