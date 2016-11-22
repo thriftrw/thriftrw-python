@@ -112,17 +112,26 @@ cdef class ProtocolReader:
 
     # Structs
 
-    cdef object read_struct(self)
+    cdef void read_struct_begin(self)
+    cdef FieldHeader read_field_begin(self)
+    cdef void read_field_end(self)
+    cdef void read_struct_end(self)
 
     # Containers
 
-    cdef dict read_map(self)
-    cdef set read_set(self)
-    cdef list read_list(self)
+    cdef MapHeader read_map_begin(self)
+    cdef void read_map_end(self)
+
+    cdef SetHeader read_set_begin(self)
+    cdef void read_set_end(self)
+
+    cdef ListHeader read_list_begin(self)
+    cdef void read_list_end(self)
 
     # Messages
 
-    cdef Message read_message(self)
+    cdef MessageHeader read_message_begin(self)
+    cdef void read_message_end(self)
 
 
 cdef class Protocol(object):

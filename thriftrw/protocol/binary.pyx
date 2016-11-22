@@ -53,6 +53,7 @@ from thriftrw.wire.value cimport (
 from .core cimport (
     Protocol,
     ProtocolWriter,
+    ProtocolReader,
     FieldHeader,
     MapHeader,
     SetHeader,
@@ -85,7 +86,7 @@ cdef int32_t VERSION_MASK = 0x7fff0000
 cdef int32_t TYPE_MASK = 0x000000ff
 
 
-cdef class BinaryProtocolReader(object):
+cdef class BinaryProtocolReader(ProtocolReader):
     """Parser for the binary protocol."""
 
     def __cinit__(self, ReadBuffer reader):
@@ -97,58 +98,6 @@ cdef class BinaryProtocolReader(object):
             ``num`` is negative.
         """
         self.reader = reader
-
-    cdef object _reader(self, int8_t typ):
-        if typ == ttype.BOOL:
-            return self.read_bool
-        elif typ == ttype.BYTE:
-            return self.read_byte
-        elif typ == ttype.DOUBLE:
-            return self.read_double
-        elif typ == ttype.I16:
-            return self.read_i16
-        elif typ == ttype.I32:
-            return self.read_i32
-        elif typ == ttype.I64:
-            return self.read_i64
-        elif typ == ttype.BINARY:
-            return self.read_binary
-        elif typ == ttype.STRUCT:
-            return self.read_struct
-        elif typ == ttype.MAP:
-            return self.read_map
-        elif typ == ttype.SET:
-            return self.read_set
-        elif typ == ttype.LIST:
-            return self.read_list
-        else:
-            raise ThriftProtocolError('Unknown TType "%r"' % typ)
-
-    cpdef object read(self, int8_t typ):
-        if typ == ttype.BOOL:
-            return self.read_bool()
-        elif typ == ttype.BYTE:
-            return self.read_byte()
-        elif typ == ttype.DOUBLE:
-            return self.read_double()
-        elif typ == ttype.I16:
-            return self.read_i16()
-        elif typ == ttype.I32:
-            return self.read_i32()
-        elif typ == ttype.I64:
-            return self.read_i64()
-        elif typ == ttype.BINARY:
-            return self.read_binary()
-        elif typ == ttype.STRUCT:
-            return self.read_struct()
-        elif typ == ttype.MAP:
-            return self.read_map()
-        elif typ == ttype.SET:
-            return self.read_set()
-        elif typ == ttype.LIST:
-            return self.read_list()
-        else:
-            raise ThriftProtocolError('Unknown TType "%r"' % typ)
 
     cdef void _read(self, char* data, int count) except *:
         self.reader.read(data, count)
@@ -177,10 +126,66 @@ cdef class BinaryProtocolReader(object):
         cdef int64_t value = self._i64()
         return (<double*>(&value))[0]
 
-    cdef Message read_message(self):
+    cdef bint read_bool(self):
+        """Reads a boolean."""
+        return self._byte() == 1
+
+    cdef int8_t read_byte(self):
+        """Reads a byte."""
+        return self._byte()
+
+    cdef double read_double(self):
+        """Reads a double."""
+        return self._double()
+
+    cdef int16_t read_i16(self):
+        """Reads a 16-bit integer."""
+        return self._i16()
+
+    cdef int32_t read_i32(self):
+        """Reads a 32-bit integer."""
+        return self._i32()
+
+    cdef int64_t read_i64(self):
+        """Reads a 64-bit integer."""
+        return self._i64()
+
+    cdef bytes read_binary(self):
+        """Reads a binary blob."""
+        cdef int32_t length = self._i32()
+        return self.reader.take(length)
+
+    cdef FieldHeader read_field_begin(self):
+        cdef int8_t field_type = self._byte()
+        if field_type == STRUCT_END:
+            return None
+
+        return FieldHeader(field_type, field_id)
+
+    cdef MapHeader read_map_begin(self):
+        cdef int8_t key_ttype = self._byte()
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
+
+        return MapHeader(key_ttype, value_ttype, length)
+
+    cdef SetHeader read_set_begin(self):
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
+
+        return SetHeader(value_ttype, length)
+
+    cdef ListHeader read_list_begin(self):
+        cdef int8_t value_ttype = self._byte()
+        cdef int32_t length = self._i32()
+
+        return ListHeader(value_ttype, length)
+
+    cdef void read_message_begin(self) except *:
         cdef int8_t typ
         cdef int16_t version
         cdef int32_t size
+        cdef int32_t seqid
         cdef bytes name
 
         size = self._i32()
@@ -206,114 +211,7 @@ cdef class BinaryProtocolReader(object):
             typ = self._byte()
 
         seqid = self._i32()
-        body = self.read(ttype.STRUCT)
-
-        return Message(name=name, seqid=seqid, body=body, message_type=typ)
-
-    cdef BoolValue read_bool(self):
-        """Reads a boolean."""
-        return BoolValue(self._byte() == 1)
-
-    cdef ByteValue read_byte(self):
-        """Reads a byte."""
-        return ByteValue(self._byte())
-
-    cdef DoubleValue read_double(self):
-        """Reads a double."""
-        return DoubleValue(self._double())
-
-    cdef I16Value read_i16(self):
-        """Reads a 16-bit integer."""
-        return I16Value(self._i16())
-
-    cdef I32Value read_i32(self):
-        """Reads a 32-bit integer."""
-        return I32Value(self._i32())
-
-    cdef I64Value read_i64(self):
-        """Reads a 64-bit integer."""
-        return I64Value(self._i64())
-
-    cdef BinaryValue read_binary(self):
-        """Reads a binary blob."""
-        cdef int32_t length = self._i32()
-        return BinaryValue(self.reader.take(length))
-
-    cdef StructValue read_struct(self):
-        """Reads an arbitrary Thrift struct."""
-        fields = []
-
-        cdef int8_t field_type = self._byte()
-        cdef int16_t field_id
-
-        while field_type != STRUCT_END:
-            field_id = self._i16()
-            field_value = self.read(field_type)
-            fields.append(
-                FieldValue(
-                    id=field_id,
-                    ttype=field_type,
-                    value=field_value,
-                )
-            )
-
-            field_type = self._byte()
-        return StructValue(fields)
-
-    cdef MapValue read_map(self):
-        """Reads a map."""
-        cdef int8_t key_ttype = self._byte()
-        cdef int8_t value_ttype = self._byte()
-        cdef int32_t length = self._i32()
-
-        kreader = self._reader(key_ttype)
-        vreader = self._reader(value_ttype)
-
-        pairs = []
-        for i in range(length):
-            k = kreader(self)
-            v = vreader(self)
-            pairs.append(MapItem(k, v))
-
-        return MapValue(
-            key_ttype=key_ttype,
-            value_ttype=value_ttype,
-            pairs=pairs,
-        )
-
-    cdef SetValue read_set(self):
-        """Reads a set."""
-        cdef int8_t value_ttype = self._byte()
-        cdef int32_t length = self._i32()
-
-        vreader = self._reader(value_ttype)
-
-        values = []
-
-        for i in range(length):
-            values.append(vreader(self))
-
-        return SetValue(
-            value_ttype=value_ttype,
-            values=values
-        )
-
-    cdef ListValue read_list(self):
-        """Reads a list."""
-        cdef int8_t value_ttype = self._byte()
-        cdef int32_t length = self._i32()
-
-        vreader = self._reader(value_ttype)
-
-        values = []
-
-        for i in range(length):
-            values.append(vreader(self))
-
-        return ListValue(
-            value_ttype=value_ttype,
-            values=values
-        )
+        return MessageHeader(name, typ, seqid)
 
 
 cdef class BinaryProtocolWriter(ProtocolWriter):
@@ -406,15 +304,10 @@ cdef class BinaryProtocolWriter(ProtocolWriter):
 cdef class BinaryProtocol(Protocol):
     """Implements the Thrift binary protocol."""
 
+    cpdef ProtocolReader reader(self, ReadBuffer buff):
+        return BinaryProtocolReader(buff)
+
     cpdef ProtocolWriter writer(self, WriteBuffer buff):
         return BinaryProtocolWriter(buff)
-
-    cpdef Message deserialize_message(self, bytes s):
-        cdef ReadBuffer buff = ReadBuffer(s)
-        return BinaryProtocolReader(buff).read_message()
-
-    cpdef Value deserialize_value(self, int typ, bytes s):
-        cdef ReadBuffer buff = ReadBuffer(s)
-        return BinaryProtocolReader(buff).read(typ)
 
 __all__ = ['BinaryProtocol']

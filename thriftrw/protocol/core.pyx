@@ -98,6 +98,42 @@ cdef class ProtocolWriter(object):
     cdef void write_message_end(self) except *: pass
 
 
+cdef class ProtocolReader:
+
+    # Primitives
+
+    cdef bool read_bool(self): pass
+    cdef int8_t read_byte(self): pass
+    cdef double read_double(self): pass
+    cdef int16_t read_i16(self): pass
+    cdef int32_t read_i32(self): pass
+    cdef int64_t read_i64(self): pass
+    cdef bytes read_binary(self): pass
+
+    # Structs: pass
+
+    cdef void read_struct_begin(self): pass
+    cdef FieldHeader read_field_begin(self): pass
+    cdef void read_field_end(self): pass
+    cdef void read_struct_end(self): pass
+
+    # Containers: pass
+
+    cdef MapHeader read_map_begin(self): pass
+    cdef void read_map_end(self): pass
+
+    cdef SetHeader read_set_begin(self): pass
+    cdef void read_set_end(self): pass
+
+    cdef ListHeader read_list_begin(self): pass
+    cdef void read_list_end(self): pass
+
+    # Messages
+
+    cdef MessageHeader read_message_begin(self): pass
+    cdef void read_message_end(self): pass
+
+
 cdef class Protocol(object):
     """Base class for all protocol implementations.
 

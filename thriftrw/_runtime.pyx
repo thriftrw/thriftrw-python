@@ -27,10 +27,10 @@ from libc.stdint cimport int32_t
 
 from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 from thriftrw.protocol.core cimport (
-    Protocol,
-    ProtocolWriter,
-    ProtocolReader,
-    MessageHeader,
+Protocol,
+ProtocolWriter,
+ProtocolReader,
+MessageHeader,
 )
 from thriftrw.wire cimport mtype
 from thriftrw.wire cimport ttype
@@ -44,9 +44,7 @@ from thriftrw.errors import (
     UnknownExceptionError,
 )
 
-
 cdef class Serializer(object):
-
     def __cinit__(self, Protocol protocol):
         self.protocol = protocol
 
@@ -112,9 +110,7 @@ cdef class Serializer(object):
 
         return buff.value
 
-
 cdef class Deserializer(object):
-
     def __cinit__(self, Protocol protocol):
         self.protocol = protocol
 
@@ -134,7 +130,7 @@ cdef class Deserializer(object):
         return self.loads(obj_cls, s)
 
     cpdef object loads(self, obj_cls, bytes s):
-        cdef ReadBuffer buff = ReadBuffer()
+        cdef ReadBuffer buff = ReadBuffer(s)
         cdef ProtocolReader reader = self.protocol.reader(buff)
         return obj_cls.type_spec.read_from(reader)
 
