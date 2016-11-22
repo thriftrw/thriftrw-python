@@ -100,6 +100,10 @@ cdef class ProtocolWriter(object):
 
 cdef class ProtocolReader:
 
+    # Helpers
+
+    cdef void skip(self, int ttype)
+
     # Primitives
 
     cdef bint read_bool(self)

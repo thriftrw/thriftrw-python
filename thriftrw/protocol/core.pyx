@@ -108,6 +108,10 @@ cdef class ProtocolWriter(object):
 
 cdef class ProtocolReader:
 
+    # Helpers
+
+    cdef void skip(self, int typ): pass
+
     # Primitives
 
     cdef bint read_bool(self): pass
@@ -118,14 +122,14 @@ cdef class ProtocolReader:
     cdef int64_t read_i64(self): pass
     cdef bytes read_binary(self): pass
 
-    # Structs: pass
+    # Structs
 
     cdef void read_struct_begin(self): pass
     cdef FieldHeader read_field_begin(self): pass
     cdef void read_field_end(self): pass
     cdef void read_struct_end(self): pass
 
-    # Containers: pass
+    # Containers
 
     cdef MapHeader read_map_begin(self): pass
     cdef void read_map_end(self): pass

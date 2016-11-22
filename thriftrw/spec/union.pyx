@@ -154,8 +154,30 @@ cdef class UnionTypeSpec(TypeSpec):
             ))
         return cls(union.name, fields)
 
-    cpdef object read_from(ListTypeSpec self, ProtocolReader reader):
+    cpdef object read_from(UnionTypeSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
 
+        cdef dict kwargs = {}
+        cdef object val
+        cdef FieldSpec spec
+        cdef FieldHeader header = reader.read_field_begin()
+
+        while header is not None:
+            spec = self.fields.get((header.id, header.type), None)
+
+            # Unrecognized field--possibly different version of struct definition.
+            if spec is None:
+                reader.skip(header.type)
+                continue
+
+            val = spec.spec.read_from(reader) or spec.default_value
+            kwargs[spec.name] = val
+
+            reader.read_field_end()
+            header = reader.read_field_begin()
+
+        reader.read_struct_end()
+        return self.surface(**kwargs)
 
     cpdef void write_to(UnionTypeSpec self, ProtocolWriter writer,
                         object struct) except *:

@@ -33,6 +33,8 @@ cdef class ReadBuffer(object):
 
     cpdef bytes take(self, int count)
 
+    cpdef void skip(self, int count)
+
 
 cdef class WriteBuffer(object):
     cdef char* data

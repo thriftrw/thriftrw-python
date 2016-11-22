@@ -99,6 +99,58 @@ cdef class BinaryProtocolReader(ProtocolReader):
         """
         self.reader = reader
 
+    cdef void skip(self, int typ):
+        if typ == ttype.BOOL:
+            self.reader.skip(1)
+        elif typ == ttype.BYTE:
+            self.reader.skip(1)
+        elif typ == ttype.DOUBLE:
+            self.reader.skip(8)
+        elif typ == ttype.I16:
+            self.reader.skip(2)
+        elif typ == ttype.I32:
+            self.reader.skip(4)
+        elif typ == ttype.I64:
+            self.reader.skip(8)
+        elif typ == ttype.BINARY:
+            self.skip_binary()
+        elif typ == ttype.STRUCT:
+            self.skip_struct()
+        elif typ == ttype.MAP:
+            self.skip_map()
+        elif typ == ttype.SET:
+            self.skip_set()
+        elif typ == ttype.LIST:
+            self.skip_list()
+
+    cdef skip_struct(self):
+        cdef FieldHeader header = self.read_field_begin()
+        while header is not None:
+            self.skip(header.type)
+            header = self.read_field_begin()
+
+    cdef skip_map(self):
+        # TODO: This could be optimized to precompute the expected
+        # size for fixed width types
+        cdef MapHeader header = self.read_map_begin()
+        for _ in range(header.size):
+            self.skip(header.ktype)
+            self.skip(header.vtype)
+
+    cdef skip_list(self):
+        # TODO: This could be optimized to precompute the expected
+        # size for fixed width types
+        cdef ListHeader header = self.read_list_begin()
+        for _ in range(header.size):
+            self.skip(header.type)
+
+    cdef skip_set(self):
+        # TODO: This could be optimized to precompute the expected
+        # size for fixed width types
+        cdef SetHeader header = self.read_set_begin()
+        for _ in range(header.size):
+            self.skip(header.type)
+
     cdef void _read(self, char* data, int count) except *:
         self.reader.read(data, count)
 
@@ -154,6 +206,10 @@ cdef class BinaryProtocolReader(ProtocolReader):
         """Reads a binary blob."""
         cdef int32_t length = self._i32()
         return self.reader.take(length)
+
+    cdef void skip_binary(self):
+        cdef int32_t length = self._i32()
+        self.reader.skip(length)
 
     cdef FieldHeader read_field_begin(self):
         cdef int8_t field_type = self._byte()
