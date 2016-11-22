@@ -24,6 +24,11 @@ from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
+from thriftrw.protocol.core cimport (
+    ProtocolWriter,
+    FieldHeader,
+    ProtocolReader,
+)
 from .base cimport TypeSpec
 from .field cimport FieldSpec
 from . cimport check
@@ -148,6 +153,26 @@ cdef class UnionTypeSpec(TypeSpec):
                 require_requiredness=False,
             ))
         return cls(union.name, fields)
+
+    cpdef object read_from(ListTypeSpec self, ProtocolReader reader):
+
+
+    cpdef void write_to(UnionTypeSpec self, ProtocolWriter writer,
+                        object struct) except *:
+        writer.write_struct_begin()
+
+        for field in self.fields:
+            value = getattr(struct, field.name)
+            if value is None:
+                continue
+
+            header = FieldHeader(field.spec.ttype_code, field.id)
+            writer.write_field_begin(header)
+            field.spec.write_to(writer, value)
+            writer.write_field_end()
+            break
+
+        writer.write_struct_end()
 
     cpdef Value to_wire(UnionTypeSpec self, object union):
         fields = []

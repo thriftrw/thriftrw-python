@@ -25,7 +25,7 @@ from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport SetValue
 from thriftrw.wire.value cimport Value
-from thriftrw.protocol.core cimport SetHeader, ProtocolWriter
+from thriftrw.protocol.core cimport SetHeader, ProtocolWriter, ProtocolReader
 from . cimport check
 
 __all__ = ['SetTypeSpec']
@@ -52,6 +52,15 @@ cdef class SetTypeSpec(TypeSpec):
     @property
     def name(self):
         return 'set<%s>' % self.vspec.name
+
+    cpdef object read_from(SetTypeSpec self, ProtocolReader reader):
+        cdef SetHeader header = reader.read_set_begin()
+        cdef set output = {
+            self.vspec.read_from for i in range(header.size)
+        }
+        reader.read_set_end()
+
+        return output
 
     cpdef Value to_wire(self, object value):
         items = []

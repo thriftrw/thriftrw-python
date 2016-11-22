@@ -61,6 +61,7 @@ cdef class TypeSpec(object):
 
     cpdef void write_to(TypeSpec self, ProtocolWriter writer,
                         object value) except *:
+        """Writes a value directly to :py:class:`thriftrw.protocol.ProtocolWriter`."""
         writer.write_value(self.to_wire(value))
 
     cpdef Value to_wire(TypeSpec self, object value):

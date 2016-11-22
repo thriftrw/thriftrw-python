@@ -102,7 +102,7 @@ cdef class ProtocolReader:
 
     # Primitives
 
-    cdef bool read_bool(self)
+    cdef bint read_bool(self)
     cdef int8_t read_byte(self)
     cdef double read_double(self)
     cdef int16_t read_i16(self)

@@ -27,10 +27,10 @@ from libc.stdint cimport int32_t
 
 from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 from thriftrw.protocol.core cimport (
-Protocol,
-ProtocolWriter,
-ProtocolReader,
-MessageHeader,
+    Protocol,
+    ProtocolWriter,
+    ProtocolReader,
+    MessageHeader,
 )
 from thriftrw.wire cimport mtype
 from thriftrw.wire cimport ttype
@@ -152,42 +152,48 @@ cdef class Deserializer(object):
             If the method name is not recognized or if any other parsing error
             occurs.
         """
-        service_spec = service.service_spec
+        cdef ProtocolReader reader = self.protocol.reader(ReadBuffer(s))
+        cdef Message message
+        cdef object body
 
-        cdef Message message = self.protocol.deserialize_message(s)
+        cdef MessageHeader header = reader.read_message_begin()
 
-        if message.message_type == mtype.EXCEPTION:
+        # Use message header to find a spec for deserializing body.
+
+        if header.type == mtype.EXCEPTION:
             # For EXCEPTION messages, just raise UnknownExceptionError with
             # the struct representation in the message.
             raise UnknownExceptionError('Received an exception message.', message.body)
 
-        function_spec = service_spec.lookup(message.name)
+        function_spec = service.service_spec.lookup(header.name)
         if function_spec is None:
             raise ThriftProtocolError(
-                'Unknown method "%s" referenced my message %r'
-                % (message.name, message)
+                'Unknown method "%s" referenced by message %r'
+                % (header.name, header)
             )
 
         if (
-            message.message_type == mtype.CALL or
-            message.message_type == mtype.ONEWAY
+            header.type == mtype.CALL or
+            header.type == mtype.ONEWAY
         ):
-            message.body = function_spec.args_spec.from_wire(message.body)
-        elif message.message_type == mtype.REPLY:
+            body = function_spec.args_spec.read_from(reader)
+        elif header.type == mtype.REPLY:
             if function_spec.oneway:
                 raise ThriftProtocolError(
                     'Function "%s" is a oneway method. '
                     'It cannot receive a REPLY.' % function_spec.name
                 )
 
-            message.body = function_spec.result_spec.from_wire(message.body)
+            body = function_spec.result_spec.read_from(reader)
         else:
             # Unrecognized message type. If this happens, we have a bug
             # because deserialize_message already raises an exception for
             # invalid message IDs.
             raise ValueError(
                 'Unknown message type %d in message %r'
-                % (message.message_type, message)
+                % (header.type, header)
             )
 
-        return message
+        reader.read_message_end()
+
+        return Message(header.name, header.seqid, header.type, body)

@@ -29,6 +29,7 @@ from thriftrw.wire.value cimport StructValue
 from thriftrw.protocol.core cimport (
     ProtocolWriter,
     FieldHeader,
+    ProtocolReader,
 )
 from .base cimport TypeSpec
 from .field cimport FieldSpec
@@ -162,6 +163,22 @@ cdef class StructTypeSpec(TypeSpec):
                 require_requiredness=require_requiredness,
             ))
         return cls(struct.name, fields)
+
+    cpdef object read_from(StructTypeSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
+        fields = []
+
+        cdef FieldHeader header
+        for field in self.fields:
+            header = reader.read_field_begin()
+            if field.id != header.id:
+                reader.skip(header.type)
+                continue
+
+            val = reader.read(header.type) or field.default_value
+            reader.read_field_end()
+
+        reader.read_struct_end()
 
     cpdef Value to_wire(self, object struct):
         fields = []

@@ -71,6 +71,14 @@ cdef class MessageHeader(object):
         self.type = type
         self.seqid = seqid
 
+    def __str__(self):
+        return 'MessageHeader(%r, %r, %r)' % (
+            self.name, self.seqid, mtype.name_of(self.type)
+        )
+
+    def __repr__(self):
+        return str(self)
+
 
 cdef class ProtocolWriter(object):
 
@@ -102,7 +110,7 @@ cdef class ProtocolReader:
 
     # Primitives
 
-    cdef bool read_bool(self): pass
+    cdef bint read_bool(self): pass
     cdef int8_t read_byte(self): pass
     cdef double read_double(self): pass
     cdef int16_t read_i16(self): pass
