@@ -165,118 +165,118 @@ def test_link_unknown_parent(loads):
     assert 'Unknown service "B" referenced at line' in str(exc_info)
 
 
-# def test_load(loads):
-#     keyvalue = loads('''
-#         service KeyValue extends BaseService {
-#             void putItem(
-#                 1: string key,
-#                 2: Item item,
-#             ) throws (1: ItemAlreadyExists alreadyExists);
-#
-#             Item getItem(
-#                 1: string key,
-#             ) throws (1: KeyDoesNotExist doesNotExist);
-#
-#             oneway void clear();
-#         }
-#
-#         struct Item {
-#             1: required map<string, Value> attributes
-#         }
-#
-#         union Value {
-#             1: string stringValue
-#             2: i32 intValue
-#             3: list<Value> listValue
-#         }
-#
-#         exception ItemAlreadyExists { 1: required string message }
-#         exception KeyDoesNotExist   { 1: required string message }
-#
-#         service BaseService {
-#             bool healthy()
-#
-#             /* doesn't accept or return anything */
-#             void noop();
-#         }
-#     ''')
-#     assert (
-#         (keyvalue.KeyValue, keyvalue.BaseService) == keyvalue.__services__ or
-#         (keyvalue.BaseService, keyvalue.KeyValue) == keyvalue.__services__
-#     )
-#
-#     KeyValue = keyvalue.KeyValue
-#
-#     assert KeyValue.clear.spec.oneway
-#     assert KeyValue.clear.request is not None
-#     assert KeyValue.clear.response is None
-#     assert KeyValue.clear.request.result_type is None
-#
-#     assert not KeyValue.putItem.spec.oneway
-#     assert KeyValue.putItem.response.type_spec.return_spec is None
-#     assert (
-#         KeyValue.getItem.response.type_spec.return_spec is
-#         keyvalue.Item.type_spec
-#     )
-#     assert KeyValue.putItem.request.result_type is KeyValue.putItem.response
-#
-#     assert_round_trip(
-#         KeyValue.putItem.request(
-#             'hello',
-#             keyvalue.Item({'a': keyvalue.Value(stringValue=u'world')}),
-#         ),
-#         vstruct(
-#             (1, ttype.BINARY, vbinary(b'hello')),
-#             (2, ttype.STRUCT, vstruct(
-#                 (1, ttype.MAP, vmap(
-#                     ttype.BINARY, ttype.STRUCT,
-#                     (
-#                         vbinary(b'a'),
-#                         vstruct((1, ttype.BINARY, vbinary(b'world'))),
-#                     )
-#                 )),
-#             )),
-#         ),
-#     )
-#
-#     assert_round_trip(KeyValue.putItem.response(), vstruct())
-#
-#     assert_round_trip(
-#         KeyValue.putItem.response(
-#             alreadyExists=keyvalue.ItemAlreadyExists('hello')
-#         ),
-#         vstruct(
-#             (1, ttype.STRUCT, vstruct(
-#                 (1, ttype.BINARY, vbinary(b'hello'))
-#             )),
-#         )
-#     )
-#
-#     assert_round_trip(
-#         KeyValue.getItem.request('somekey'),
-#         vstruct((1, ttype.BINARY, vbinary(b'somekey')))
-#     )
-#
-#     assert_round_trip(KeyValue.noop.request(), vstruct())
-#     assert_round_trip(KeyValue.noop.response(), vstruct())
-#
-#     assert_round_trip(
-#         KeyValue.healthy.request(),
-#         vstruct(),
-#     )
-#
-#     assert_round_trip(
-#         KeyValue.healthy.response(success=True),
-#         vstruct((0, ttype.BOOL, vbool(True))),
-#     )
-#
-#     assert keyvalue.dumps(
-#         KeyValue.healthy.response(success=False)
-#     ) == b'\x02\x00\x00\x00\x00'
-#
-#     assert keyvalue.loads(
-#         KeyValue.healthy.request, b'\x00'
-#     ) == KeyValue.healthy.request()
+def test_load(loads):
+    keyvalue = loads('''
+        service KeyValue extends BaseService {
+            void putItem(
+                1: string key,
+                2: Item item,
+            ) throws (1: ItemAlreadyExists alreadyExists);
+
+            Item getItem(
+                1: string key,
+            ) throws (1: KeyDoesNotExist doesNotExist);
+
+            oneway void clear();
+        }
+
+        struct Item {
+            1: required map<string, Value> attributes
+        }
+
+        union Value {
+            1: string stringValue
+            2: i32 intValue
+            3: list<Value> listValue
+        }
+
+        exception ItemAlreadyExists { 1: required string message }
+        exception KeyDoesNotExist   { 1: required string message }
+
+        service BaseService {
+            bool healthy()
+
+            /* doesn't accept or return anything */
+            void noop();
+        }
+    ''')
+    assert (
+        (keyvalue.KeyValue, keyvalue.BaseService) == keyvalue.__services__ or
+        (keyvalue.BaseService, keyvalue.KeyValue) == keyvalue.__services__
+    )
+
+    KeyValue = keyvalue.KeyValue
+
+    assert KeyValue.clear.spec.oneway
+    assert KeyValue.clear.request is not None
+    assert KeyValue.clear.response is None
+    assert KeyValue.clear.request.result_type is None
+
+    assert not KeyValue.putItem.spec.oneway
+    assert KeyValue.putItem.response.type_spec.return_spec is None
+    assert (
+        KeyValue.getItem.response.type_spec.return_spec is
+        keyvalue.Item.type_spec
+    )
+    assert KeyValue.putItem.request.result_type is KeyValue.putItem.response
+
+    assert_round_trip(
+        KeyValue.putItem.request(
+            'hello',
+            keyvalue.Item({'a': keyvalue.Value(stringValue=u'world')}),
+        ),
+        vstruct(
+            (1, ttype.BINARY, vbinary(b'hello')),
+            (2, ttype.STRUCT, vstruct(
+                (1, ttype.MAP, vmap(
+                    ttype.BINARY, ttype.STRUCT,
+                    (
+                        vbinary(b'a'),
+                        vstruct((1, ttype.BINARY, vbinary(b'world'))),
+                    )
+                )),
+            )),
+        ),
+    )
+
+    assert_round_trip(KeyValue.putItem.response(), vstruct())
+
+    assert_round_trip(
+        KeyValue.putItem.response(
+            alreadyExists=keyvalue.ItemAlreadyExists('hello')
+        ),
+        vstruct(
+            (1, ttype.STRUCT, vstruct(
+                (1, ttype.BINARY, vbinary(b'hello'))
+            )),
+        )
+    )
+
+    assert_round_trip(
+        KeyValue.getItem.request('somekey'),
+        vstruct((1, ttype.BINARY, vbinary(b'somekey')))
+    )
+
+    assert_round_trip(KeyValue.noop.request(), vstruct())
+    assert_round_trip(KeyValue.noop.response(), vstruct())
+
+    assert_round_trip(
+        KeyValue.healthy.request(),
+        vstruct(),
+    )
+
+    assert_round_trip(
+        KeyValue.healthy.response(success=True),
+        vstruct((0, ttype.BOOL, vbool(True))),
+    )
+
+    assert keyvalue.dumps(
+        KeyValue.healthy.response(success=False)
+    ) == b'\x02\x00\x00\x00\x00'
+
+    assert keyvalue.loads(
+        KeyValue.healthy.request, b'\x00'
+    ) == KeyValue.healthy.request()
 
 
 def test_fails_on_absent_return_value(loads):
