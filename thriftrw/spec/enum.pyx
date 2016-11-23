@@ -25,7 +25,7 @@ from collections import defaultdict
 from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport I32Value, Value
-from thriftrw.protocol.core cimport ProtocolWriter
+from thriftrw.protocol.core cimport ProtocolWriter, ProtocolReader
 from .base cimport TypeSpec
 from . cimport check
 
@@ -135,6 +135,9 @@ cdef class EnumTypeSpec(TypeSpec):
             self.linked = True
             self.surface = enum_cls(self, scope)
         return self
+
+    cpdef object read_from(EnumTypeSpec self, ProtocolReader reader):
+        return reader.read_i32()
 
     cpdef Value to_wire(self, object value):
         return I32Value(value)

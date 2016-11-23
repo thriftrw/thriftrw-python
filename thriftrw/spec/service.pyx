@@ -23,6 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from collections import namedtuple
 
 from thriftrw.wire.value cimport Value
+from thriftrw.protocol.core cimport ProtocolReader, FieldHeader
 from .field cimport FieldSpec
 from .union cimport UnionTypeSpec
 from .struct cimport StructTypeSpec
@@ -173,6 +174,48 @@ cdef class FunctionResultSpec(UnionTypeSpec):
         super(FunctionResultSpec, self).__init__(
             name, result_specs, allow_empty=(return_spec is None)
         )
+
+    cpdef object read_from(FunctionResultSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
+
+        cdef dict kwargs = {}
+        cdef object val
+        cdef FieldSpec spec
+        cdef FieldHeader header
+        cdef bint validated = False
+
+        header = reader.read_field_begin()
+
+        # We use a 0 attribute to signify struct end due to cython constraints.
+        while header.type != -1:
+            spec = self._index.get((header.id, header.type), None)
+
+            # Unrecognized field--possibly different version of struct definition.
+            if spec is None:
+                reader.skip(header.type)
+            else:
+                val = spec.spec.read_from(reader) or spec.default_value
+                kwargs[spec.name] = val
+
+                # Do inline validation for results to provide better error message
+                if header.id == 0 or header.id in self.exception_ids:
+                    validated = True
+
+            reader.read_field_end()
+            header = reader.read_field_begin()
+
+        reader.read_struct_end()
+        if not validated:
+            raise UnknownExceptionError(
+                (
+                    '"%s" received an unrecognized exception. '
+                    'Make sure your Thrift IDL is up-to-date with '
+                    'what the remote host is using.'
+                ) % self.name,
+                kwargs,
+            )
+
+        return self.surface(**kwargs)
 
     cpdef object from_wire(self, Value wire_value):
         check.type_code_matches(self, wire_value)

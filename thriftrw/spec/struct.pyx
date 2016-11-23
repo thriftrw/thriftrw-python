@@ -29,6 +29,7 @@ from thriftrw.wire.value cimport StructValue
 from thriftrw.protocol.core cimport (
     ProtocolWriter,
     FieldHeader,
+    ProtocolReader,
 )
 from .base cimport TypeSpec
 from .field cimport FieldSpec
@@ -127,12 +128,16 @@ cdef class StructTypeSpec(TypeSpec):
         self.linked = False
         self.surface = None
         self.base_cls = base_cls or object
+        self._index = {}
 
     cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = struct_cls(self, scope)
+            for field in self.fields:
+                self._index[(field.id, field.ttype_code)] = field
+
         return self
 
     @classmethod
@@ -162,6 +167,30 @@ cdef class StructTypeSpec(TypeSpec):
                 require_requiredness=require_requiredness,
             ))
         return cls(struct.name, fields)
+
+    cpdef object read_from(StructTypeSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
+
+        cdef dict kwargs = {}
+        cdef object val
+        cdef FieldSpec spec
+        cdef FieldHeader header = reader.read_field_begin()
+
+        while header.type != -1:
+            spec = self._index.get((header.id, header.type), None)
+
+            # Unrecognized field--possibly different version of struct definition.
+            if spec is None:
+                reader.skip(header.type)
+            else:
+                val = spec.spec.read_from(reader) or spec.default_value
+                kwargs[spec.name] = val
+
+            reader.read_field_end()
+            header = reader.read_field_begin()
+
+        reader.read_struct_end()
+        return self.surface(**kwargs)
 
     cpdef Value to_wire(self, object struct):
         fields = []

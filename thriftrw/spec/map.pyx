@@ -25,7 +25,7 @@ from .base cimport TypeSpec
 from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport MapItem, MapValue, Value
-from thriftrw.protocol.core cimport MapHeader, ProtocolWriter
+from thriftrw.protocol.core cimport MapHeader, ProtocolWriter, ProtocolReader
 
 __all__ = ['MapTypeSpec']
 
@@ -82,6 +82,15 @@ cdef class MapTypeSpec(TypeSpec):
             self.kspec.to_primitive(k): self.vspec.to_primitive(v)
             for k, v in value.items()
         }
+
+    cpdef object read_from(MapTypeSpec self, ProtocolReader reader):
+        cdef MapHeader header = reader.read_map_begin()
+        cdef dict output = {
+            self.kspec.read_from(reader): self.vspec.read_from(reader)
+            for i in range(header.size)
+        }
+        reader.read_map_end()
+        return output
 
     cpdef void write_to(MapTypeSpec self, ProtocolWriter writer,
                         object value) except *:

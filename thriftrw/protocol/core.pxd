@@ -30,7 +30,7 @@ from libc.stdint cimport (
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value, ValueVisitor
 from thriftrw.wire.message cimport Message
-from thriftrw._buffer cimport WriteBuffer
+from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 
 
 cdef class FieldHeader(object):
@@ -98,8 +98,55 @@ cdef class ProtocolWriter(object):
     cdef void write_message_end(self) except *
 
 
+cdef class ProtocolReader:
+
+    # Skip
+
+    cdef void skip(self, int typ) except *
+    cdef void skip_binary(self) except *
+    cdef void skip_map(self) except *
+    cdef void skip_list(self) except *
+    cdef void skip_set(self) except *
+    cdef void skip_struct(self) except *
+
+    # Primitives
+
+    cdef bint read_bool(self) except *
+    cdef int8_t read_byte(self) except *
+    cdef double read_double(self) except *
+    cdef int16_t read_i16(self) except *
+    cdef int32_t read_i32(self) except *
+    cdef int64_t read_i64(self) except *
+    cdef bytes read_binary(self)
+
+    # Structs
+
+    cdef void read_struct_begin(self) except *
+    cdef FieldHeader read_field_begin(self)
+    cdef void read_field_end(self) except *
+    cdef void read_struct_end(self) except *
+
+    # Containers
+
+    cdef MapHeader read_map_begin(self)
+    cdef void read_map_end(self) except *
+
+    cdef SetHeader read_set_begin(self)
+    cdef void read_set_end(self) except *
+
+    cdef ListHeader read_list_begin(self)
+    cdef void read_list_end(self) except *
+
+    # Messages
+
+    cdef MessageHeader read_message_begin(self)
+    cdef void read_message_end(self) except *
+
+
 cdef class Protocol(object):
     cpdef ProtocolWriter writer(self, WriteBuffer buff)
+
+    cpdef ProtocolReader reader(self, ReadBuffer buff)
 
     cpdef bytes serialize_value(self, Value value)
 
