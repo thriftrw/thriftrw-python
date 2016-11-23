@@ -65,7 +65,7 @@ class EndOfInputError(ThriftProtocolError):
 class UnknownExceptionError(ThriftError):
     """We parsed an unknown exception in a function response."""
 
-    def __init__(self, message, thrift_response):
+    def __init__(self, message, thrift_response=None):
         super(UnknownExceptionError, self).__init__(message)
         self.thrift_response = thrift_response
 

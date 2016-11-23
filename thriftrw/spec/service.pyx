@@ -182,38 +182,29 @@ cdef class FunctionResultSpec(UnionTypeSpec):
         cdef object val
         cdef FieldSpec spec
         cdef FieldHeader header
-        cdef bint validated = False
 
         header = reader.read_field_begin()
 
-        # We use a 0 attribute to signify struct end due to cython constraints.
+        # We use -1 to signify struct end due to cython constraints.
         while header.type != -1:
             spec = self._index.get((header.id, header.type), None)
 
-            # Unrecognized field--possibly different version of struct definition.
             if spec is None:
-                reader.skip(header.type)
-            else:
-                val = spec.spec.read_from(reader) or spec.default_value
-                kwargs[spec.name] = val
+                raise UnknownExceptionError(
+                    (
+                        '"%s" received an unrecognized exception. '
+                        'Make sure your Thrift IDL is up-to-date with '
+                        'what the remote host is using.'
+                    ) % self.name,
+                )
 
-                # Do inline validation for results to provide better error message
-                if header.id == 0 or header.id in self.exception_ids:
-                    validated = True
+            val = spec.spec.read_from(reader) or spec.default_value
+            kwargs[spec.name] = val
 
             reader.read_field_end()
             header = reader.read_field_begin()
 
         reader.read_struct_end()
-        if not validated:
-            raise UnknownExceptionError(
-                (
-                    '"%s" received an unrecognized exception. '
-                    'Make sure your Thrift IDL is up-to-date with '
-                    'what the remote host is using.'
-                ) % self.name,
-                kwargs,
-            )
 
         return self.surface(**kwargs)
 
