@@ -129,14 +129,15 @@ cdef class StructTypeSpec(TypeSpec):
         self.surface = None
         self.base_cls = base_cls or object
         self._index = {}
-        for field in fields:
-            self._index[(field.id, field.ttype)] = field
 
     cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = struct_cls(self, scope)
+            for field in self.fields:
+                self._index[(field.id, field.ttype_code)] = field
+
         return self
 
     @classmethod
@@ -175,16 +176,15 @@ cdef class StructTypeSpec(TypeSpec):
         cdef FieldSpec spec
         cdef FieldHeader header = reader.read_field_begin()
 
-        while header is not None:
-            spec = self.fields.get((header.id, header.type), None)
+        while header.id != 0:
+            spec = self._index.get((header.id, header.type), None)
 
             # Unrecognized field--possibly different version of struct definition.
             if spec is None:
                 reader.skip(header.type)
-                continue
-
-            val = spec.spec.read_from(reader) or spec.default_value
-            kwargs[spec.name] = val
+            else:
+                val = spec.spec.read_from(reader) or spec.default_value
+                kwargs[spec.name] = val
 
             reader.read_field_end()
             header = reader.read_field_begin()

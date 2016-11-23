@@ -72,10 +72,6 @@ cdef class PrimitiveTypeSpec(TypeSpec):
         they have the correct type.
     """
 
-    @property
-    def ttype_code(self):
-        return self.code
-
     cpdef Value to_wire(self, object value):
         return self.value_cls(self.cast(value))
 
@@ -139,7 +135,7 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
     name = str('string')
     surface = unicode
 
-    cpdef unicode read_from(_TextTypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_TextTypeSpec self, ProtocolReader reader):
         # TODO: Is this right?
         return unicode(reader.read_binary())
 
@@ -169,7 +165,7 @@ cdef class _BinaryTypeSpec(_TextualTypeSpec):
     name = str('binary')
     surface = bytes
 
-    cpdef bytes read_from(_BinaryTypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_BinaryTypeSpec self, ProtocolReader reader):
         return reader.read_binary()
 
     cpdef object to_primitive(_BinaryTypeSpec self, object value):
@@ -199,7 +195,7 @@ cdef class _BoolTypeSpec(TypeSpec):
     surface = bool
     ttype_code = ttype.BOOL
 
-    cpdef bint read_from(_BoolTypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_BoolTypeSpec self, ProtocolReader reader):
         return reader.read_bool()
 
     cpdef Value to_wire(_BoolTypeSpec self, object value):
@@ -256,7 +252,7 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('byte')
-        self.code = ttype.BYTE
+        self.ttype_code = ttype.BYTE
         self.value_cls = ByteValue
         self.surface = _INTEGRAL
         self.cast = int
@@ -266,7 +262,7 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_byte(value)
 
-    cpdef int read_from(_ByteTypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_ByteTypeSpec self, ProtocolReader reader):
         return reader.read_byte()
 
 ByteTypeSpec = _ByteTypeSpec()
@@ -275,7 +271,7 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('double')
-        self.code = ttype.DOUBLE
+        self.ttype_code = ttype.DOUBLE
         self.value_cls = DoubleValue
         self.surface = _FLOATING
         self.cast = float
@@ -284,7 +280,7 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_double(value)
 
-    cpdef double read_from(_DoubleTypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_DoubleTypeSpec self, ProtocolReader reader):
         return reader.read_double()
 
 DoubleTypeSpec = _DoubleTypeSpec()
@@ -293,7 +289,7 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i16')
-        self.code = ttype.I16
+        self.ttype_code = ttype.I16
         self.value_cls = I16Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -303,7 +299,7 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_i16(value)
 
-    cpdef int read_from(_I16TypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_I16TypeSpec self, ProtocolReader reader):
         return reader.read_i16()
 
 I16TypeSpec = _I16TypeSpec()
@@ -312,7 +308,7 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i32')
-        self.code = ttype.I32
+        self.ttype_code = ttype.I32
         self.value_cls = I32Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -322,7 +318,7 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_i32(value)
 
-    cpdef int read_from(_I32TypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_I32TypeSpec self, ProtocolReader reader):
         return reader.read_i32()
 
 I32TypeSpec = _I32TypeSpec()
@@ -331,7 +327,7 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str("i64")
-        self.code = ttype.I64
+        self.ttype_code = ttype.I64
         self.value_cls = I64Value
         self.surface = _INTEGRAL
         self.cast = long
@@ -341,7 +337,7 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_i64(value)
 
-    cpdef int read_from(_I64TypeSpec self, ProtocolReader reader) except *:
+    cpdef object read_from(_I64TypeSpec self, ProtocolReader reader):
         return reader.read_i64()
 
 I64TypeSpec = _I64TypeSpec()

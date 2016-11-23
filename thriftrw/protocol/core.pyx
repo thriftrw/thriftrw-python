@@ -73,7 +73,7 @@ cdef class MessageHeader(object):
 
     def __str__(self):
         return 'MessageHeader(%r, %r, %r)' % (
-            self.name, self.seqid, mtype.name_of(self.type)
+            self.name, self.seqid, ttype.name_of(self.type)
         )
 
     def __repr__(self):
@@ -108,42 +108,47 @@ cdef class ProtocolWriter(object):
 
 cdef class ProtocolReader:
 
-    # Helpers
+    # Skip
 
-    cdef void skip(self, int typ): pass
+    cdef void skip(self, int typ) except *: pass
+    cdef void skip_binary(self) except *: pass
+    cdef void skip_map(self) except *: pass
+    cdef void skip_list(self) except *: pass
+    cdef void skip_set(self) except *: pass
+    cdef void skip_struct(self) except *: pass
 
     # Primitives
 
-    cdef bint read_bool(self): pass
-    cdef int8_t read_byte(self): pass
-    cdef double read_double(self): pass
-    cdef int16_t read_i16(self): pass
-    cdef int32_t read_i32(self): pass
-    cdef int64_t read_i64(self): pass
+    cdef bint read_bool(self) except *: pass
+    cdef int8_t read_byte(self) except *: pass
+    cdef double read_double(self) except *: pass
+    cdef int16_t read_i16(self) except *: pass
+    cdef int32_t read_i32(self) except *: pass
+    cdef int64_t read_i64(self) except *: pass
     cdef bytes read_binary(self): pass
 
     # Structs
 
-    cdef void read_struct_begin(self): pass
+    cdef void read_struct_begin(self) except *: pass
     cdef FieldHeader read_field_begin(self): pass
-    cdef void read_field_end(self): pass
-    cdef void read_struct_end(self): pass
+    cdef void read_field_end(self) except *: pass
+    cdef void read_struct_end(self) except *: pass
 
     # Containers
 
     cdef MapHeader read_map_begin(self): pass
-    cdef void read_map_end(self): pass
+    cdef void read_map_end(self) except *: pass
 
     cdef SetHeader read_set_begin(self): pass
-    cdef void read_set_end(self): pass
+    cdef void read_set_end(self) except *: pass
 
     cdef ListHeader read_list_begin(self): pass
-    cdef void read_list_end(self): pass
+    cdef void read_list_end(self) except *: pass
 
     # Messages
 
     cdef MessageHeader read_message_begin(self): pass
-    cdef void read_message_end(self): pass
+    cdef void read_message_end(self) except *: pass
 
 
 cdef class Protocol(object):
@@ -154,6 +159,9 @@ cdef class Protocol(object):
         Removed ``dumps`` and ``loads`` methods and added
         ``serialize_message`` and ``deserialize_message``.
     """
+
+    cpdef ProtocolReader reader(self, ReadBuffer buff):
+        raise NotImplementedError
 
     cpdef ProtocolWriter writer(self, WriteBuffer buff):
         raise NotImplementedError

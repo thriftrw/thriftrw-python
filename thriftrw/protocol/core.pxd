@@ -100,42 +100,47 @@ cdef class ProtocolWriter(object):
 
 cdef class ProtocolReader:
 
-    # Helpers
+    # Skip
 
-    cdef void skip(self, int ttype)
+    cdef void skip(self, int typ) except *
+    cdef void skip_binary(self) except *
+    cdef void skip_map(self) except *
+    cdef void skip_list(self) except *
+    cdef void skip_set(self) except *
+    cdef void skip_struct(self) except *
 
     # Primitives
 
-    cdef bint read_bool(self)
-    cdef int8_t read_byte(self)
-    cdef double read_double(self)
-    cdef int16_t read_i16(self)
-    cdef int32_t read_i32(self)
-    cdef int64_t read_i64(self)
+    cdef bint read_bool(self) except *
+    cdef int8_t read_byte(self) except *
+    cdef double read_double(self) except *
+    cdef int16_t read_i16(self) except *
+    cdef int32_t read_i32(self) except *
+    cdef int64_t read_i64(self) except *
     cdef bytes read_binary(self)
 
     # Structs
 
-    cdef void read_struct_begin(self)
+    cdef void read_struct_begin(self) except *
     cdef FieldHeader read_field_begin(self)
-    cdef void read_field_end(self)
-    cdef void read_struct_end(self)
+    cdef void read_field_end(self) except *
+    cdef void read_struct_end(self) except *
 
     # Containers
 
     cdef MapHeader read_map_begin(self)
-    cdef void read_map_end(self)
+    cdef void read_map_end(self) except *
 
     cdef SetHeader read_set_begin(self)
-    cdef void read_set_end(self)
+    cdef void read_set_end(self) except *
 
     cdef ListHeader read_list_begin(self)
-    cdef void read_list_end(self)
+    cdef void read_list_end(self) except *
 
     # Messages
 
     cdef MessageHeader read_message_begin(self)
-    cdef void read_message_end(self)
+    cdef void read_message_end(self) except *
 
 
 cdef class Protocol(object):

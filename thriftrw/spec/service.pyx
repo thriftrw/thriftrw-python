@@ -23,6 +23,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 from collections import namedtuple
 
 from thriftrw.wire.value cimport Value
+from thriftrw.protocol.core cimport ProtocolReader
 from .field cimport FieldSpec
 from .union cimport UnionTypeSpec
 from .struct cimport StructTypeSpec
@@ -172,6 +173,24 @@ cdef class FunctionResultSpec(UnionTypeSpec):
 
         super(FunctionResultSpec, self).__init__(
             name, result_specs, allow_empty=(return_spec is None)
+        )
+
+    cpdef object read_from(FunctionResultSpec self, ProtocolReader reader):
+        kwargs = self._read_from(reader)
+        if "success" in kwargs:
+            return self.surface(**kwargs)
+
+        for exception in self.exception_specs:
+            if exception.name in kwargs:
+                return self.surface(**kwargs)
+
+        raise UnknownExceptionError(
+            (
+                '"%s" received an unrecognized exception. '
+                'Make sure your Thrift IDL is up-to-date with '
+                'what the remote host is using.'
+            ) % self.name,
+            kwargs,
         )
 
     cpdef object from_wire(self, Value wire_value):

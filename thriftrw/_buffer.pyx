@@ -167,7 +167,7 @@ cdef class ReadBuffer(object):
 
         return result
 
-    cpdef void skip(self, int count):
+    cpdef void skip(self, int count) except *:
         """Seek ``count`` bytes without performing any memory copying.
 
         :param int count:

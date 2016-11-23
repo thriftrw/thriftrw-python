@@ -163,7 +163,7 @@ cdef class Deserializer(object):
         if header.type == mtype.EXCEPTION:
             # For EXCEPTION messages, just raise UnknownExceptionError with
             # the struct representation in the message.
-            raise UnknownExceptionError('Received an exception message.', message.body)
+            raise UnknownExceptionError('Received an exception message.', header)
 
         function_spec = service.service_spec.lookup(header.name)
         if function_spec is None:

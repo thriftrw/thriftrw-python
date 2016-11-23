@@ -21,12 +21,12 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire.value cimport Value
-from thriftrw.protocol.core cimport ProtocolWriter
+from thriftrw.protocol.core cimport ProtocolWriter, ProtocolReader
 
 __all__ = ['TypeSpec']
 
 
-cdef class TypeSpec(object):
+cdef class TypeSpec:
     """Base class for classes representing TypeSpecs.
 
     A TypeSpec knows how to convert values of the corresponding type to and
@@ -58,6 +58,10 @@ cdef class TypeSpec(object):
 
         def __get__(self):
             raise NotImplementedError
+
+    cpdef object read_from(TypeSpec self, ProtocolReader reader):
+        """Read a primitive value of this type from :py:class:`thriftrw.protocol.ProtocolReader`."""
+        raise NotImplementedError
 
     cpdef void write_to(TypeSpec self, ProtocolWriter writer,
                         object value) except *:

@@ -56,7 +56,7 @@ cdef class SetTypeSpec(TypeSpec):
     cpdef object read_from(SetTypeSpec self, ProtocolReader reader):
         cdef SetHeader header = reader.read_set_begin()
         cdef set output = {
-            self.vspec.read_from for i in range(header.size)
+            self.vspec.read_from(reader) for i in range(header.size)
         }
         reader.read_set_end()
 

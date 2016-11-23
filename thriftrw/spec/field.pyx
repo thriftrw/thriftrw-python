@@ -85,7 +85,7 @@ cdef class FieldSpec(object):
         return self
 
     @property
-    def ttype_code(self):
+    def ttype_code(FieldSpec self):
         return self.spec.ttype_code
 
     @classmethod

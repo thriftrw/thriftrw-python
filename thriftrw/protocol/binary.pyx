@@ -99,7 +99,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
         """
         self.reader = reader
 
-    cdef void skip(self, int typ):
+    cdef void skip(self, int typ) except *:
         if typ == ttype.BOOL:
             self.reader.skip(1)
         elif typ == ttype.BYTE:
@@ -123,13 +123,13 @@ cdef class BinaryProtocolReader(ProtocolReader):
         elif typ == ttype.LIST:
             self.skip_list()
 
-    cdef skip_struct(self):
-        cdef FieldHeader header = self.read_field_begin()
-        while header is not None:
+    cdef void skip_struct(self) except *:
+        header = self.read_field_begin()
+        while header.id != 0:
             self.skip(header.type)
             header = self.read_field_begin()
 
-    cdef skip_map(self):
+    cdef void skip_map(self) except *:
         # TODO: This could be optimized to precompute the expected
         # size for fixed width types
         cdef MapHeader header = self.read_map_begin()
@@ -137,14 +137,14 @@ cdef class BinaryProtocolReader(ProtocolReader):
             self.skip(header.ktype)
             self.skip(header.vtype)
 
-    cdef skip_list(self):
+    cdef void skip_list(self) except *:
         # TODO: This could be optimized to precompute the expected
         # size for fixed width types
         cdef ListHeader header = self.read_list_begin()
         for _ in range(header.size):
             self.skip(header.type)
 
-    cdef skip_set(self):
+    cdef void skip_set(self) except *:
         # TODO: This could be optimized to precompute the expected
         # size for fixed width types
         cdef SetHeader header = self.read_set_begin()
@@ -178,27 +178,27 @@ cdef class BinaryProtocolReader(ProtocolReader):
         cdef int64_t value = self._i64()
         return (<double*>(&value))[0]
 
-    cdef bint read_bool(self):
+    cdef bint read_bool(self) except *:
         """Reads a boolean."""
         return self._byte() == 1
 
-    cdef int8_t read_byte(self):
+    cdef int8_t read_byte(self) except *:
         """Reads a byte."""
         return self._byte()
 
-    cdef double read_double(self):
+    cdef double read_double(self) except *:
         """Reads a double."""
         return self._double()
 
-    cdef int16_t read_i16(self):
+    cdef int16_t read_i16(self) except *:
         """Reads a 16-bit integer."""
         return self._i16()
 
-    cdef int32_t read_i32(self):
+    cdef int32_t read_i32(self) except *:
         """Reads a 32-bit integer."""
         return self._i32()
 
-    cdef int64_t read_i64(self):
+    cdef int64_t read_i64(self) except *:
         """Reads a 64-bit integer."""
         return self._i64()
 
@@ -207,14 +207,16 @@ cdef class BinaryProtocolReader(ProtocolReader):
         cdef int32_t length = self._i32()
         return self.reader.take(length)
 
-    cdef void skip_binary(self):
+    cdef void skip_binary(self) except *:
         cdef int32_t length = self._i32()
         self.reader.skip(length)
 
     cdef FieldHeader read_field_begin(self):
         cdef int8_t field_type = self._byte()
         if field_type == STRUCT_END:
-            return None
+            return FieldHeader(0, 0)
+
+        cdef int16_t field_id = self._i16()
 
         return FieldHeader(field_type, field_id)
 
@@ -237,7 +239,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
 
         return ListHeader(value_ttype, length)
 
-    cdef void read_message_begin(self) except *:
+    cdef MessageHeader read_message_begin(self):
         cdef int8_t typ
         cdef int16_t version
         cdef int32_t size

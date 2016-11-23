@@ -102,12 +102,16 @@ cdef class UnionTypeSpec(TypeSpec):
         self.linked = False
         self.surface = None
         self.allow_empty = allow_empty
+        self._index = {}
 
     cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = union_cls(self, scope)
+            for field in self.fields:
+                self._index[(field.id, field.ttype_code)] = field
+
         return self
 
     @classmethod
@@ -154,30 +158,34 @@ cdef class UnionTypeSpec(TypeSpec):
             ))
         return cls(union.name, fields)
 
-    cpdef object read_from(UnionTypeSpec self, ProtocolReader reader):
+    cpdef read_from(UnionTypeSpec self, ProtocolReader reader):
+        return self.surface(**self._read_from(reader))
+
+    cdef dict _read_from(UnionTypeSpec self, ProtocolReader reader):
         reader.read_struct_begin()
 
         cdef dict kwargs = {}
         cdef object val
         cdef FieldSpec spec
-        cdef FieldHeader header = reader.read_field_begin()
+        cdef FieldHeader header
+        header = reader.read_field_begin()
 
-        while header is not None:
-            spec = self.fields.get((header.id, header.type), None)
+        # We use a 0 attribute to signify struct end due to cython constraints.
+        while header.id != 0:
+            spec = self._index.get((header.id, header.type), None)
 
             # Unrecognized field--possibly different version of struct definition.
             if spec is None:
                 reader.skip(header.type)
-                continue
-
-            val = spec.spec.read_from(reader) or spec.default_value
-            kwargs[spec.name] = val
+            else:
+                val = spec.spec.read_from(reader) or spec.default_value
+                kwargs[spec.name] = val
 
             reader.read_field_end()
             header = reader.read_field_begin()
 
         reader.read_struct_end()
-        return self.surface(**kwargs)
+        return kwargs
 
     cpdef void write_to(UnionTypeSpec self, ProtocolWriter writer,
                         object struct) except *:
