@@ -125,7 +125,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
 
     cdef void skip_struct(self) except *:
         header = self.read_field_begin()
-        while header.id != 0:
+        while header.type != -1:
             self.skip(header.type)
             header = self.read_field_begin()
 
@@ -214,7 +214,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
     cdef FieldHeader read_field_begin(self):
         cdef int8_t field_type = self._byte()
         if field_type == STRUCT_END:
-            return FieldHeader(0, 0)
+            return FieldHeader(-1, -1)
 
         cdef int16_t field_id = self._i16()
 

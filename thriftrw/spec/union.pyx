@@ -159,9 +159,6 @@ cdef class UnionTypeSpec(TypeSpec):
         return cls(union.name, fields)
 
     cpdef read_from(UnionTypeSpec self, ProtocolReader reader):
-        return self.surface(**self._read_from(reader))
-
-    cdef dict _read_from(UnionTypeSpec self, ProtocolReader reader):
         reader.read_struct_begin()
 
         cdef dict kwargs = {}
@@ -171,7 +168,7 @@ cdef class UnionTypeSpec(TypeSpec):
         header = reader.read_field_begin()
 
         # We use a 0 attribute to signify struct end due to cython constraints.
-        while header.id != 0:
+        while header.type != -1:
             spec = self._index.get((header.id, header.type), None)
 
             # Unrecognized field--possibly different version of struct definition.
@@ -185,7 +182,7 @@ cdef class UnionTypeSpec(TypeSpec):
             header = reader.read_field_begin()
 
         reader.read_struct_end()
-        return kwargs
+        return self.surface(**kwargs)
 
     cpdef void write_to(UnionTypeSpec self, ProtocolWriter writer,
                         object struct) except *:

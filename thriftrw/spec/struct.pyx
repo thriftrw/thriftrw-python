@@ -176,7 +176,7 @@ cdef class StructTypeSpec(TypeSpec):
         cdef FieldSpec spec
         cdef FieldHeader header = reader.read_field_begin()
 
-        while header.id != 0:
+        while header.type != -1:
             spec = self._index.get((header.id, header.type), None)
 
             # Unrecognized field--possibly different version of struct definition.

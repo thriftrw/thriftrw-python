@@ -33,4 +33,3 @@ cdef class UnionTypeSpec(TypeSpec):
     cdef public object surface
 
     cdef dict _index
-    cdef dict _read_from(UnionTypeSpec self, ProtocolReader reader)
