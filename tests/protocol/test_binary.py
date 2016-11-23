@@ -30,6 +30,16 @@ from thriftrw.wire import ttype
 from thriftrw.wire import value
 from thriftrw.wire import Message
 from thriftrw.wire.mtype import CALL, REPLY, EXCEPTION, ONEWAY
+from thriftrw.spec.primitive import (
+    BinaryTypeSpec as sbin,
+    BoolTypeSpec as sbool,
+    ByteTypeSpec as sbyte,
+    DoubleTypeSpec as sdouble,
+    I16TypeSpec as si16,
+    I32TypeSpec as si32,
+    I64TypeSpec as si64,
+)
+
 
 from ..util.value import (
     vbool, vbyte, vi16, vi32, vi64, vdouble, vbinary, vlist, vmap, vset,
@@ -37,8 +47,7 @@ from ..util.value import (
 )
 
 from ..util.spec import (
-    sbin, sbool, sbyte, sdouble, si16, si32, si64, smap, stext, slist,
-    sstruct, sunion, sf, sset
+    smap, slist, sstruct, sset
 )
 
 
@@ -179,7 +188,9 @@ def reader_writer_ids(x):
         0x00, 0x01,  # id:2 = 1
         0x01,        # value = true
         0x00,        # stop
-    ], sstruct("1: optional bool param"), vstruct((1, ttype.BOOL, vbool(True)))),
+     ],
+     sstruct("1: optional bool param"),
+     vstruct((1, ttype.BOOL, vbool(True)))),
     (ttype.STRUCT, [
         0x06,           # type:1 = i16
         0x00, 0x01,     # id:2 = 1
@@ -253,7 +264,12 @@ def reader_writer_ids(x):
     ], sset(sbool), vset(ttype.BOOL, vbool(True))),
 
     # list = vtype:1 count:4 (value){count}
-    (ttype.LIST, [0x0C, 0x00, 0x00, 0x00, 0x00], slist(sstruct('')), vlist(ttype.STRUCT)),
+    (
+            ttype.LIST,
+            [0x0C, 0x00, 0x00, 0x00, 0x00],
+            slist(sstruct('')),
+            vlist(ttype.STRUCT)
+    ),
     (ttype.LIST, [
         0x0C,                       # vtype:1 = struct
         0x00, 0x00, 0x00, 0x02,     # count:4 = 2
@@ -321,7 +337,11 @@ def test_reader_and_writer(typ, bs, spec, value):
 
     (ttype.STRUCT, sstruct("1: optional bool p1"), []),
     (ttype.STRUCT, sstruct("1: optional bool p1"), [0x02, 0x01]),
-    (ttype.STRUCT, sstruct("1: optional i16 p1"), [0x06, 0x00, 0x01, 0x00, 0x01]),
+    (
+        ttype.STRUCT,
+        sstruct("1: optional i16 p1"),
+        [0x06, 0x00, 0x01, 0x00, 0x01]
+    ),
 
     (ttype.MAP, smap(si32, sbyte), []),
     (ttype.MAP, smap(si32, sbyte), [0x02, 0x03]),

@@ -1,16 +1,5 @@
 import re
 
-from thriftrw.spec.primitive import (
-    BinaryTypeSpec as sbin,
-    BoolTypeSpec as sbool,
-    ByteTypeSpec as sbyte,
-    DoubleTypeSpec as sdouble,
-    I16TypeSpec as si16,
-    I32TypeSpec as si32,
-    I64TypeSpec as si64,
-    TextTypeSpec as stext,
-)
-
 from thriftrw.spec.list import ListTypeSpec
 from thriftrw.spec.map import MapTypeSpec
 from thriftrw.spec.struct import StructTypeSpec
