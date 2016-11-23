@@ -31,6 +31,7 @@ from thriftrw.protocol.core cimport (
     FieldHeader,
     ProtocolReader,
 )
+from thriftrw.spec.union cimport UnionTypeSpec
 from .base cimport TypeSpec
 from .field cimport FieldSpec
 from . cimport check
@@ -265,6 +266,15 @@ cdef class StructTypeSpec(TypeSpec):
                     )
                 else:
                     continue
+
+            # Since we validate at construction time, child structs are
+            # almost certain valid unless consumers are directly mutating
+            # thrift structs. As an optimization, avoid recursively revalidating
+            # these.
+            if isinstance(field.spec, (UnionTypeSpec, StructTypeSpec)):
+                check.instanceof_surface(field.spec, field_value)
+                continue
+
             try:
                 field.spec.validate(field_value)
             except (ValueError, TypeError) as e:
