@@ -76,3 +76,47 @@ cdef class BinaryProtocolWriter(ProtocolWriter):
     cdef WriteBuffer writer
 
     cdef void _write(BinaryProtocolWriter self, char* data, int length)
+
+
+cdef class _OldBinaryProtocolReader(object):
+    cdef ReadBuffer reader
+
+    cdef object _reader(self, int8_t typ)
+
+    cpdef object read(self, int8_t typ)
+
+    cdef void _read(self, char* data, int count) except *
+
+    cdef int8_t _byte(self) except *
+
+    cdef int16_t _i16(self) except *
+
+    cdef int32_t _i32(self) except *
+
+    cdef int64_t _i64(self) except *
+
+    cdef double _double(self) except *
+
+    cdef Message read_message(self)
+
+    cdef BoolValue read_bool(self)
+
+    cdef ByteValue read_byte(self)
+
+    cdef DoubleValue read_double(self)
+
+    cdef I16Value read_i16(self)
+
+    cdef I32Value read_i32(self)
+
+    cdef I64Value read_i64(self)
+
+    cdef BinaryValue read_binary(self)
+
+    cdef StructValue read_struct(self)
+
+    cdef MapValue read_map(self)
+
+    cdef SetValue read_set(self)
+
+    cdef ListValue read_list(self)

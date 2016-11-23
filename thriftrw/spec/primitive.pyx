@@ -72,6 +72,10 @@ cdef class PrimitiveTypeSpec(TypeSpec):
         they have the correct type.
     """
 
+    @property
+    def ttype_code(self):
+        return self.code
+
     cpdef Value to_wire(self, object value):
         return self.value_cls(self.cast(value))
 
@@ -254,7 +258,7 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('byte')
-        self.ttype_code = ttype.BYTE
+        self.code = ttype.BYTE
         self.value_cls = ByteValue
         self.surface = _INTEGRAL
         self.cast = int
@@ -273,7 +277,7 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('double')
-        self.ttype_code = ttype.DOUBLE
+        self.code = ttype.DOUBLE
         self.value_cls = DoubleValue
         self.surface = _FLOATING
         self.cast = float
@@ -291,7 +295,7 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i16')
-        self.ttype_code = ttype.I16
+        self.code = ttype.I16
         self.value_cls = I16Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -310,7 +314,7 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i32')
-        self.ttype_code = ttype.I32
+        self.code = ttype.I32
         self.value_cls = I32Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -329,7 +333,7 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str("i64")
-        self.ttype_code = ttype.I64
+        self.code = ttype.I64
         self.value_cls = I64Value
         self.surface = _INTEGRAL
         self.cast = long
