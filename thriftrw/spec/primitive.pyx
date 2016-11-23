@@ -120,6 +120,8 @@ cdef class _TextualTypeSpec(TypeSpec):
 
     cpdef void write_to(_TextualTypeSpec self, ProtocolWriter writer,
                         object value) except *:
+        if isinstance(value, unicode):
+            value = value.encode('utf-8')
         writer.write_binary(bytes(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
