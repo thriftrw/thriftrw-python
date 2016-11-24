@@ -219,50 +219,6 @@ def reader_writer_ids(x):
             ttype.BINARY, vbinary(b'foo'), vbinary(b'bar'))),
     )),
 
-    # map = ktype:1 vtype:1 count:4 (key value){count}
-    (ttype.MAP, [0x0A, 0X0B, 0x00, 0x00, 0x00, 0x00], smap(si64, sbin),
-     vmap(ttype.I64, ttype.BINARY)),
-    (ttype.MAP, [
-        0x0B,   # ktype = binary
-        0x0F,   # vtype = list
-        0x00, 0x00, 0x00, 0x02,   # count:4 = 2
-
-        # <item>
-        # <key>
-        0x00, 0x00, 0x00, 0x01,  # len:4 = 1
-        0x61,                    # 'a'
-        # </key>
-        # <value>
-        0x03,                    # type:1 = byte
-        0x00, 0x00, 0x00, 0x01,  # count:4 = 1
-        0x01,                    # 1
-        # </value>
-        # </item>
-
-        # <item>
-        # <key>
-        0x00, 0x00, 0x00, 0x01,  # len:4 = 1
-        0x62,                    # 'b'
-        # </key>
-        # <value>
-        0x03,                    # type:1 = 6
-        0x00, 0x00, 0x00, 0x02,  # count:4 = 2
-        0x02,              # 2
-        0x03,              # 3
-        # </value>
-        # </item>
-    ], smap(sbin, slist(sbyte)), vmap(
-        ttype.BINARY, ttype.LIST,
-        (vbinary(b'a'), vlist(ttype.BYTE, vbyte(1))),
-        (vbinary(b'b'), vlist(ttype.BYTE, vbyte(2), vbyte(3))),
-    )),
-
-    # set = vtype:1 count:4 (value){count)
-    (ttype.SET, [0x02, 0x00, 0x00, 0x00, 0x00], sset(sbool), vset(ttype.BOOL)),
-    (ttype.SET, [
-        0x02, 0x00, 0x00, 0x00, 0x01, 0x01
-    ], sset(sbool), vset(ttype.BOOL, vbool(True))),
-
     # list = vtype:1 count:4 (value){count}
     (
             ttype.LIST,
@@ -321,6 +277,30 @@ def test_reader_and_writer(typ, bs, spec, value):
     spec.write_to(protocol.writer(buffer), deserialized)
 
     assert bs == buffer.value
+
+
+@pytest.mark.parametrize('spec, value', [
+    # map = ktype:1 vtype:1 count:4 (key value){count}
+    (smap(si64, sbin), {}),
+    (smap(sbin, slist(sbyte)), {
+        "a": [1],
+        "b": [2, 3]
+    }),
+
+    # set = vtype:1 count:4 (value){count)
+    (sset(sbool), set()),
+    (sset(sbool), {True})
+], ids=["map1", "map2", "set1", "set2"])
+def test_reader_and_writer_noorder(spec, value):
+    """Test serialization and deserialization for types
+    that have no guaranteed order."""
+    protocol = BinaryProtocol()
+
+    buffer = WriteBuffer()
+    spec.write_to(protocol.writer(buffer), value)
+    result = spec.read_from(protocol.reader(ReadBuffer(buffer.value)))
+
+    assert result == value
 
 
 @pytest.mark.parametrize('typ, spec, bs', [
