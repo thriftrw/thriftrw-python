@@ -42,7 +42,7 @@ from thriftrw.spec.primitive import (
 
 
 from ..util.value import (
-    vbool, vbyte, vi16, vi32, vi64, vdouble, vbinary, vlist, vmap, vset,
+    vbool, vbyte, vi16, vi32, vi64, vdouble, vbinary, vlist,
     vstruct,
 )
 
