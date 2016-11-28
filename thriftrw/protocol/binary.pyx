@@ -72,6 +72,8 @@ from ._endian cimport (
 )
 
 
+cdef STRUCT_END_HEADER = FieldHeader(-1, -1)
+
 cdef int8_t STRUCT_END = 0
 
 cdef int32_t VERSION = 1
@@ -214,7 +216,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
     cdef FieldHeader read_field_begin(self):
         cdef int8_t field_type = self._byte()
         if field_type == STRUCT_END:
-            return FieldHeader(-1, -1)
+            return STRUCT_END_HEADER
 
         cdef int16_t field_id = self._i16()
 

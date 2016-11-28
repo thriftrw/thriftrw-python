@@ -283,8 +283,8 @@ def test_reader_and_writer(typ, bs, spec, value):
     # map = ktype:1 vtype:1 count:4 (key value){count}
     (smap(si64, sbin), {}),
     (smap(sbin, slist(sbyte)), {
-        "a": [1],
-        "b": [2, 3]
+        b"a": [1],
+        b"b": [2, 3]
     }),
 
     # set = vtype:1 count:4 (value){count)
@@ -350,6 +350,7 @@ def test_reader_and_writer_noorder(spec, value):
     (ttype.LIST, slist(sbool), [
         0x02,                    # typ
         0x00, 0x00, 0x00, 0x02,  # len = 2
+
         0x01,                    # True
     ]),
 ], ids=reader_writer_ids)

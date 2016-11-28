@@ -183,7 +183,7 @@ cdef class StructTypeSpec(TypeSpec):
             if spec is None:
                 reader.skip(header.type)
             else:
-                val = spec.spec.read_from(reader) or spec.default_value
+                val = spec.spec.read_from(reader)
                 kwargs[spec.name] = val
 
             reader.read_field_end()

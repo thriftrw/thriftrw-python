@@ -189,7 +189,7 @@ cdef class FunctionResultSpec(UnionTypeSpec):
         while header.type != -1:
             spec = self._index.get((header.id, header.type), None)
 
-            if spec is None:
+            if spec is None and header.id != 0:
                 raise UnknownExceptionError(
                     (
                         '"%s" received an unrecognized exception. '
@@ -198,7 +198,7 @@ cdef class FunctionResultSpec(UnionTypeSpec):
                     ) % self.name,
                 )
 
-            val = spec.spec.read_from(reader) or spec.default_value
+            val = spec.spec.read_from(reader)
             kwargs[spec.name] = val
 
             reader.read_field_end()

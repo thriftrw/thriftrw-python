@@ -143,7 +143,7 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
 
     cpdef object read_from(_TextTypeSpec self, ProtocolReader reader):
         # TODO: Is this right?
-        return unicode(reader.read_binary())
+        return reader.read_binary().decode('utf-8')
 
     cpdef object to_primitive(_TextTypeSpec self, object value):
         if isinstance(value, bytes):

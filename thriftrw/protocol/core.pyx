@@ -130,7 +130,12 @@ cdef class ProtocolReader:
     # Structs
 
     cdef void read_struct_begin(self) except *: pass
-    cdef FieldHeader read_field_begin(self): pass
+    cdef FieldHeader read_field_begin(self):
+        """Parse the next three bytes as a FieldHeader object.
+
+        :return: FieldHeader with type and id set to -1 if a struct end is found.
+        """
+        pass
     cdef void read_field_end(self) except *: pass
     cdef void read_struct_end(self) except *: pass
 
