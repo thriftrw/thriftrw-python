@@ -268,10 +268,10 @@ cdef class StructTypeSpec(TypeSpec):
                     continue
 
             # Since we validate at construction time, child structs are
-            # almost certain valid unless consumers are directly mutating
+            # almost certainly valid unless consumers are directly mutating
             # thrift structs. As an optimization, avoid recursively revalidating
             # these.
-            if isinstance(field.spec, (UnionTypeSpec, StructTypeSpec)):
+            if field.spec.ttype_code == ttype.STRUCT:
                 check.instanceof_surface(field.spec, field_value)
                 continue
 
