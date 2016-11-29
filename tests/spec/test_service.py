@@ -330,7 +330,6 @@ def test_unrecognized_exception(loads, method, raw, wire_value):
         ('"S_%s_response" received an unrecognized exception' % method)
         in str(exc_info)
     )
-    assert exc_info.value.thrift_response == wire_value
 
 
 def test_args_and_results_know_function_spec(loads):

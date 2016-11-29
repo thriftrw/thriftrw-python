@@ -29,7 +29,9 @@ from thriftrw.wire.value cimport StructValue
 from thriftrw.protocol.core cimport (
     ProtocolWriter,
     FieldHeader,
+    ProtocolReader,
 )
+from thriftrw.spec.union cimport UnionTypeSpec
 from .base cimport TypeSpec
 from .field cimport FieldSpec
 from . cimport check
@@ -127,12 +129,16 @@ cdef class StructTypeSpec(TypeSpec):
         self.linked = False
         self.surface = None
         self.base_cls = base_cls or object
+        self._index = {}
 
     cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = struct_cls(self, scope)
+            for field in self.fields:
+                self._index[(field.id, field.ttype_code)] = field
+
         return self
 
     @classmethod
@@ -162,6 +168,30 @@ cdef class StructTypeSpec(TypeSpec):
                 require_requiredness=require_requiredness,
             ))
         return cls(struct.name, fields)
+
+    cpdef object read_from(StructTypeSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
+
+        cdef dict kwargs = {}
+        cdef object val
+        cdef FieldSpec spec
+        cdef FieldHeader header = reader.read_field_begin()
+
+        while header.type != -1:
+            spec = self._index.get((header.id, header.type), None)
+
+            # Unrecognized field--possibly different version of struct definition.
+            if spec is None:
+                reader.skip(header.type)
+            else:
+                val = spec.spec.read_from(reader)
+                kwargs[spec.name] = val
+
+            reader.read_field_end()
+            header = reader.read_field_begin()
+
+        reader.read_struct_end()
+        return self.surface(**kwargs)
 
     cpdef Value to_wire(self, object struct):
         fields = []
@@ -236,6 +266,15 @@ cdef class StructTypeSpec(TypeSpec):
                     )
                 else:
                     continue
+
+            # Since we validate at construction time, child structs are
+            # almost certainly valid unless consumers are directly mutating
+            # thrift structs. As an optimization, avoid recursively revalidating
+            # these.
+            if field.spec.ttype_code == ttype.STRUCT:
+                check.instanceof_surface(field.spec, field_value)
+                continue
+
             try:
                 field.spec.validate(field_value)
             except (ValueError, TypeError) as e:

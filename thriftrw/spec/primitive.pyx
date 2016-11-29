@@ -25,7 +25,7 @@ import decimal
 import fractions
 
 from thriftrw.wire cimport ttype
-from thriftrw.protocol.core cimport ProtocolWriter
+from thriftrw.protocol.core cimport ProtocolWriter, ProtocolReader
 from thriftrw.wire.value cimport (
     Value,
     BoolValue,
@@ -124,6 +124,8 @@ cdef class _TextualTypeSpec(TypeSpec):
 
     cpdef void write_to(_TextualTypeSpec self, ProtocolWriter writer,
                         object value) except *:
+        if isinstance(value, unicode):
+            value = value.encode('utf-8')
         writer.write_binary(bytes(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
@@ -138,6 +140,10 @@ cdef class _TextTypeSpec(_TextualTypeSpec):
 
     name = str('string')
     surface = unicode
+
+    cpdef object read_from(_TextTypeSpec self, ProtocolReader reader):
+        # TODO: Is this right?
+        return reader.read_binary().decode('utf-8')
 
     cpdef object to_primitive(_TextTypeSpec self, object value):
         if isinstance(value, bytes):
@@ -165,6 +171,9 @@ cdef class _BinaryTypeSpec(_TextualTypeSpec):
     name = str('binary')
     surface = bytes
 
+    cpdef object read_from(_BinaryTypeSpec self, ProtocolReader reader):
+        return reader.read_binary()
+
     cpdef object to_primitive(_BinaryTypeSpec self, object value):
         if isinstance(value, unicode):
             value = value.encode('utf-8')
@@ -191,6 +200,9 @@ cdef class _BoolTypeSpec(TypeSpec):
     name = str('bool')
     surface = bool
     ttype_code = ttype.BOOL
+
+    cpdef object read_from(_BoolTypeSpec self, ProtocolReader reader):
+        return reader.read_bool()
 
     cpdef Value to_wire(_BoolTypeSpec self, object value):
         return BoolValue(bool(value))
@@ -256,6 +268,9 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_byte(value)
 
+    cpdef object read_from(_ByteTypeSpec self, ProtocolReader reader):
+        return reader.read_byte()
+
 ByteTypeSpec = _ByteTypeSpec()
 
 cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
@@ -270,6 +285,9 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
     cpdef void write_to(_DoubleTypeSpec self, ProtocolWriter writer,
                         object value) except *:
         writer.write_double(value)
+
+    cpdef object read_from(_DoubleTypeSpec self, ProtocolReader reader):
+        return reader.read_double()
 
 DoubleTypeSpec = _DoubleTypeSpec()
 
@@ -287,6 +305,9 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_i16(value)
 
+    cpdef object read_from(_I16TypeSpec self, ProtocolReader reader):
+        return reader.read_i16()
+
 I16TypeSpec = _I16TypeSpec()
 
 cdef class _I32TypeSpec(PrimitiveTypeSpec):
@@ -303,6 +324,9 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
                         object value) except *:
         writer.write_i32(value)
 
+    cpdef object read_from(_I32TypeSpec self, ProtocolReader reader):
+        return reader.read_i32()
+
 I32TypeSpec = _I32TypeSpec()
 
 cdef class _I64TypeSpec(PrimitiveTypeSpec):
@@ -318,6 +342,9 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
     cpdef void write_to(_I64TypeSpec self, ProtocolWriter writer,
                         object value) except *:
         writer.write_i64(value)
+
+    cpdef object read_from(_I64TypeSpec self, ProtocolReader reader):
+        return reader.read_i64()
 
 I64TypeSpec = _I64TypeSpec()
 

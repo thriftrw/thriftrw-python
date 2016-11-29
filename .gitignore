@@ -13,3 +13,5 @@ node_modules
 *.so
 .benchmarks/
 .coverage
+.idea/
+coverage.xml
