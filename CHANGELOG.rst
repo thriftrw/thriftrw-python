@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.3.1 (unreleased)
+1.4.0 (2016-11-29)
 ------------------
 
 - Optimized serialization and deserialization performance by removing an
