@@ -27,7 +27,16 @@ from libc.stdint cimport (
     int64_t,
 )
 
-from thriftrw.protocol.core cimport Protocol
+from .core cimport (
+    Protocol,
+    ProtocolWriter,
+    ProtocolReader,
+    FieldHeader,
+    MapHeader,
+    SetHeader,
+    ListHeader,
+    MessageHeader,
+)
 from thriftrw.wire.message cimport Message
 from thriftrw._buffer cimport ReadBuffer, WriteBuffer
 from thriftrw.wire.value cimport (
@@ -52,7 +61,24 @@ from thriftrw.wire.value cimport (
 cdef class BinaryProtocol(Protocol):
     pass
 
-cdef class BinaryProtocolReader(object):
+cdef class BinaryProtocolReader(ProtocolReader):
+    cdef ReadBuffer reader
+
+    cdef void _read(self, char* data, int count) except *
+    cdef int8_t _byte(self) except *
+    cdef int16_t _i16(self) except *
+    cdef int32_t _i32(self) except *
+    cdef int64_t _i64(self) except *
+    cdef double _double(self) except *
+
+
+cdef class BinaryProtocolWriter(ProtocolWriter):
+    cdef WriteBuffer writer
+
+    cdef void _write(BinaryProtocolWriter self, char* data, int length)
+
+
+cdef class _OldBinaryProtocolReader(object):
     cdef ReadBuffer reader
 
     cdef object _reader(self, int8_t typ)
@@ -94,13 +120,3 @@ cdef class BinaryProtocolReader(object):
     cdef SetValue read_set(self)
 
     cdef ListValue read_list(self)
-
-
-cdef class BinaryProtocolWriter(ValueVisitor):
-    cdef WriteBuffer writer
-
-    cpdef void write(self, Value value)
-
-    cdef _write(self, char* data, int length)
-
-    cdef void write_message(self, Message message) except *

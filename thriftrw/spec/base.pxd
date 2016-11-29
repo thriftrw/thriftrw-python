@@ -21,13 +21,18 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from thriftrw.wire.value cimport Value
-
+from thriftrw.protocol.core cimport ProtocolWriter, ProtocolReader
 
 cdef class TypeSpec(object):
 
     cpdef Value to_wire(TypeSpec self, object value)
 
     cpdef object from_wire(TypeSpec self, Value wire_value)
+
+    cpdef object read_from(TypeSpec self, ProtocolReader reader)
+
+    cpdef void write_to(TypeSpec self, ProtocolWriter writer,
+                        object value) except *
 
     cpdef TypeSpec link(self, scope)
 

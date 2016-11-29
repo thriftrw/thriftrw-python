@@ -21,6 +21,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from .base cimport TypeSpec
+from thriftrw.protocol.core cimport ProtocolReader
 
 
 cdef class UnionTypeSpec(TypeSpec):
@@ -30,3 +31,5 @@ cdef class UnionTypeSpec(TypeSpec):
 
     cdef public bint linked
     cdef public object surface
+
+    cdef dict _index

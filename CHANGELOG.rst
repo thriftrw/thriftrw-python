@@ -4,7 +4,13 @@ Releases
 1.3.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Optimized serialization and deserialization performance by removing an
+  unnecessary intermediate layer.
+- Optimized validation at object construction time by skipping the parsing
+  of nested structs and unions since they would have been validated already
+  anyway.
+- Due to build incompatibility issues, pypy3 support is temporarily being
+  dropped. The library is unlikely to break, but no guarantees exist.
 
 
 1.3.0 (2016-09-13)

@@ -167,6 +167,23 @@ cdef class ReadBuffer(object):
 
         return result
 
+    cpdef void skip(self, int count) except *:
+        """Skip ``count`` bytes without performing any memory copying.
+
+        :param int count:
+            Number of bytes to read.
+        :raises EndOfInputError:
+            If the number of bytes available in the buffer is less than
+            ``count``.
+        """
+        if count > self.length - self.offset:
+            raise EndOfInputError(
+                'Expected %d bytes but got %d bytes.' %
+                (count, self.available)
+            )
+
+        self.offset += count
+
     property available:
         """Number of bytes available in the buffer."""
 

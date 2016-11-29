@@ -25,7 +25,13 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from libc.stdint cimport int32_t
 
-from thriftrw.protocol.core cimport Protocol
+from thriftrw._buffer cimport WriteBuffer, ReadBuffer
+from thriftrw.protocol.core cimport (
+    Protocol,
+    ProtocolWriter,
+    ProtocolReader,
+    MessageHeader,
+)
 from thriftrw.wire cimport mtype
 from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value, StructValue
@@ -38,9 +44,7 @@ from thriftrw.errors import (
     UnknownExceptionError,
 )
 
-
 cdef class Serializer(object):
-
     def __cinit__(self, Protocol protocol):
         self.protocol = protocol
 
@@ -56,8 +60,11 @@ cdef class Serializer(object):
         return self.dumps(obj)
 
     cpdef bytes dumps(self, obj):
-        cdef Value value = obj.__class__.type_spec.to_wire(obj)
-        return self.protocol.serialize_value(value)
+        cdef WriteBuffer buff = WriteBuffer()
+        cdef ProtocolWriter writer = self.protocol.writer(buff)
+
+        obj.__class__.type_spec.write_to(writer, obj)
+        return buff.value
 
     cpdef bytes message(self, obj, int32_t seqid=0):
         """Serializes the given request or response into a Thrift Message.
@@ -87,16 +94,23 @@ cdef class Serializer(object):
                 'in messages.'
             )
 
-        cdef StructValue body = obj_spec.to_wire(obj)
-        cdef Message message = Message(
-            function_spec.name, seqid, message_type, body
-        )
+        cdef bytes name
+        if isinstance(function_spec.name, unicode):
+            name = function_spec.name.encode('utf-8')
+        else:
+            name = function_spec.name
 
-        return self.protocol.serialize_message(message)
+        cdef WriteBuffer buff = WriteBuffer()
+        cdef ProtocolWriter writer = self.protocol.writer(buff)
+        cdef MessageHeader header = MessageHeader(name, message_type, seqid)
 
+        writer.write_message_begin(header)
+        obj_spec.write_to(writer, obj)
+        writer.write_message_end()
+
+        return buff.value
 
 cdef class Deserializer(object):
-
     def __cinit__(self, Protocol protocol):
         self.protocol = protocol
 
@@ -116,8 +130,9 @@ cdef class Deserializer(object):
         return self.loads(obj_cls, s)
 
     cpdef object loads(self, obj_cls, bytes s):
-        cdef Value value = self.protocol.deserialize_value(ttype.STRUCT, s)
-        return obj_cls.type_spec.from_wire(value)
+        cdef ReadBuffer buff = ReadBuffer(s)
+        cdef ProtocolReader reader = self.protocol.reader(buff)
+        return obj_cls.type_spec.read_from(reader)
 
     cpdef Message message(self, service, bytes s):
         """Deserializes a message from the given blob.
@@ -137,42 +152,48 @@ cdef class Deserializer(object):
             If the method name is not recognized or if any other parsing error
             occurs.
         """
-        service_spec = service.service_spec
+        cdef ProtocolReader reader = self.protocol.reader(ReadBuffer(s))
+        cdef Message message
+        cdef object body
 
-        cdef Message message = self.protocol.deserialize_message(s)
+        cdef MessageHeader header = reader.read_message_begin()
 
-        if message.message_type == mtype.EXCEPTION:
+        # Use message header to find a spec for deserializing body.
+
+        if header.type == mtype.EXCEPTION:
             # For EXCEPTION messages, just raise UnknownExceptionError with
             # the struct representation in the message.
-            raise UnknownExceptionError('Received an exception message.', message.body)
+            raise UnknownExceptionError('Received an exception message.', header)
 
-        function_spec = service_spec.lookup(message.name)
+        function_spec = service.service_spec.lookup(header.name)
         if function_spec is None:
             raise ThriftProtocolError(
-                'Unknown method "%s" referenced my message %r'
-                % (message.name, message)
+                'Unknown method "%s" referenced by message %r'
+                % (header.name, header)
             )
 
         if (
-            message.message_type == mtype.CALL or
-            message.message_type == mtype.ONEWAY
+            header.type == mtype.CALL or
+            header.type == mtype.ONEWAY
         ):
-            message.body = function_spec.args_spec.from_wire(message.body)
-        elif message.message_type == mtype.REPLY:
+            body = function_spec.args_spec.read_from(reader)
+        elif header.type == mtype.REPLY:
             if function_spec.oneway:
                 raise ThriftProtocolError(
                     'Function "%s" is a oneway method. '
                     'It cannot receive a REPLY.' % function_spec.name
                 )
 
-            message.body = function_spec.result_spec.from_wire(message.body)
+            body = function_spec.result_spec.read_from(reader)
         else:
             # Unrecognized message type. If this happens, we have a bug
             # because deserialize_message already raises an exception for
             # invalid message IDs.
             raise ValueError(
                 'Unknown message type %d in message %r'
-                % (message.message_type, message)
+                % (header.type, header)
             )
 
-        return message
+        reader.read_message_end()
+
+        return Message(header.name, header.seqid, header.type, body)

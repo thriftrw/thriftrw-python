@@ -26,6 +26,7 @@ from thriftrw.wire cimport ttype
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport ListValue
 from thriftrw.wire.value cimport Value
+from thriftrw.protocol.core cimport ListHeader, ProtocolWriter, ProtocolReader
 
 __all__ = ['ListTypeSpec']
 
@@ -60,6 +61,15 @@ cdef class ListTypeSpec(TypeSpec):
     def name(self):
         return 'list<%s>' % self.vspec.name
 
+    cpdef object read_from(ListTypeSpec self, ProtocolReader reader):
+        cdef ListHeader header = reader.read_list_begin()
+        cdef list output = []
+        for i in range(header.size):
+            output.append(self.vspec.read_from(reader))
+
+        reader.read_list_end()
+        return output
+
     cpdef Value to_wire(ListTypeSpec self, object value):
         return ListValue(
             value_ttype=self.vspec.ttype_code,
@@ -68,6 +78,14 @@ cdef class ListTypeSpec(TypeSpec):
 
     cpdef object to_primitive(ListTypeSpec self, object value):
         return [self.vspec.to_primitive(x) for x in value]
+
+    cpdef void write_to(ListTypeSpec self, ProtocolWriter writer,
+                        object value) except *:
+        cdef ListHeader header = ListHeader(self.vspec.ttype_code, len(value))
+        writer.write_list_begin(header)
+        for v in value:
+            self.vspec.write_to(writer, v)
+        writer.write_list_end()
 
     cpdef object from_wire(ListTypeSpec self, Value wire_value):
         check.type_code_matches(self, wire_value)

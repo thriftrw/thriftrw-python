@@ -24,6 +24,12 @@ from thriftrw.wire cimport ttype
 from thriftrw.wire.value cimport Value
 from thriftrw._cython cimport richcompare
 from thriftrw.wire.value cimport StructValue
+from thriftrw.protocol.core cimport (
+    ProtocolWriter,
+    FieldHeader,
+    ProtocolReader,
+)
+from .struct cimport StructTypeSpec
 from .base cimport TypeSpec
 from .field cimport FieldSpec
 from . cimport check
@@ -97,12 +103,16 @@ cdef class UnionTypeSpec(TypeSpec):
         self.linked = False
         self.surface = None
         self.allow_empty = allow_empty
+        self._index = {}
 
     cpdef TypeSpec link(self, scope):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = union_cls(self, scope)
+            for field in self.fields:
+                self._index[(field.id, field.ttype_code)] = field
+
         return self
 
     @classmethod
@@ -148,6 +158,49 @@ cdef class UnionTypeSpec(TypeSpec):
                 require_requiredness=False,
             ))
         return cls(union.name, fields)
+
+    cpdef read_from(UnionTypeSpec self, ProtocolReader reader):
+        reader.read_struct_begin()
+
+        cdef dict kwargs = {}
+        cdef object val
+        cdef FieldSpec spec
+        cdef FieldHeader header
+        header = reader.read_field_begin()
+
+        # We use a 0 attribute to signify struct end due to cython constraints.
+        while header.type != -1:
+            spec = self._index.get((header.id, header.type), None)
+
+            # Unrecognized field--possibly different version of struct definition.
+            if spec is None:
+                reader.skip(header.type)
+            else:
+                val = spec.spec.read_from(reader)
+                kwargs[spec.name] = val
+
+            reader.read_field_end()
+            header = reader.read_field_begin()
+
+        reader.read_struct_end()
+        return self.surface(**kwargs)
+
+    cpdef void write_to(UnionTypeSpec self, ProtocolWriter writer,
+                        object struct) except *:
+        writer.write_struct_begin()
+
+        for field in self.fields:
+            value = getattr(struct, field.name)
+            if value is None:
+                continue
+
+            header = FieldHeader(field.spec.ttype_code, field.id)
+            writer.write_field_begin(header)
+            field.spec.write_to(writer, value)
+            writer.write_field_end()
+            break
+
+        writer.write_struct_end()
 
     cpdef Value to_wire(UnionTypeSpec self, object union):
         fields = []
@@ -204,6 +257,15 @@ cdef class UnionTypeSpec(TypeSpec):
                 continue
 
             found += 1
+
+            # Since we validate at construction time, child structs are
+            # almost certainly valid unless consumers are directly mutating
+            # thrift structs. As an optimization, avoid recursively revalidating
+            # these.
+            if field.spec.ttype_code == ttype.STRUCT:
+                check.instanceof_surface(field.spec, field_value)
+                continue
+
             field.spec.validate(field_value)
 
         if self.fields and not found and not self.allow_empty:

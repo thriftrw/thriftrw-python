@@ -31,3 +31,4 @@ cdef class StructTypeSpec(TypeSpec):
     cdef public bint linked
     cdef public object surface
 
+    cdef dict _index
