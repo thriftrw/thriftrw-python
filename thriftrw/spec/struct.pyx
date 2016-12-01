@@ -216,6 +216,10 @@ cdef class StructTypeSpec(TypeSpec):
 
     cpdef void write_to(StructTypeSpec self, ProtocolWriter writer,
                         object struct) except *:
+        # This is the single most performance critical method in the serialization path.
+        #
+        # Carefully inspect benchmark results if you make changes here and avoid python
+        # API interaction at any cost.
         writer.write_struct_begin()
         cdef FieldHeader header
 
