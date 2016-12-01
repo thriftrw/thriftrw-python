@@ -354,9 +354,9 @@ def test_constructor_behavior(loads):
         Struct('hello', unknown='world')
     assert 'unexpected keyword argument "unknown"' in str(exc_info)
 
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(TypeError) as exc_info:
         Struct(optionalField=10)
-    assert 'require non-None values' in str(exc_info)
+    assert 'is required' in str(exc_info)
 
 
 def test_constructor_behavior_with_nested_types(loads):

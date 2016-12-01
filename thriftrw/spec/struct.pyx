@@ -136,7 +136,7 @@ cdef class StructTypeSpec(TypeSpec):
             self.fields = [field.link(scope) for field in self.fields]
             self.surface = struct_cls(self, scope)
             for field in self.fields:
-                self._index[(field.id, field.ttype_code)] = field
+                self._index[field.id] = field
 
         return self
 
@@ -173,18 +173,19 @@ cdef class StructTypeSpec(TypeSpec):
 
         cdef dict kwargs = {}
         cdef object val
-        cdef FieldSpec spec
+        cdef FieldSpec field
         cdef FieldHeader header = reader.read_field_begin()
 
         while header.type != -1:
-            spec = self._index.get((header.id, header.type), None)
+            # You'd be surprised how much faster the CallOneArg path is compared to
+            # the unoptimized version. Make sure this never reades .get(val, None).
+            field = self._index.get(header.id)
 
             # Unrecognized field--possibly different version of struct definition.
-            if spec is None:
+            if field is None or field.spec.ttype_code != header.type:
                 reader.skip(header.type)
             else:
-                val = spec.spec.read_from(reader)
-                kwargs[spec.name] = val
+                kwargs[field.name] = field.spec.read_from(reader)
 
             reader.read_field_end()
             header = reader.read_field_begin()
@@ -304,7 +305,7 @@ cdef class StructTypeSpec(TypeSpec):
         ])
 
 
-def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
+def struct_init(cls_name, field_names, field_defaults, base_cls, fields):
     """Generate the ``__init__`` method for structs.
 
     ``field_names`` is a list or tuple of field names for the constructor
@@ -322,6 +323,8 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
         List or tuple of default values for the last ``len(field_defaults)``
         fields. For optional fields with no default value, ``field_defaults``
         should have a ``None`` default.
+    :param fields:
+        Map of field name to ``FieldSpec`` objects describing this struct.
     :returns:
         Implementation of the ``__init__`` method for that struct.
     """
@@ -329,23 +332,23 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
 
     # Number of fields on the struct. We can't accept more than this many
     # arguments.
-    num_fields = len(field_names)
+    cdef int num_fields = len(field_names)
 
     # Number of fields with default values.
-    num_defaults = len(field_defaults)
+    cdef int num_defaults = len(field_defaults)
 
     assert num_defaults <= num_fields, 'Too many defaults provided.'
 
     # The last num_defaults fields have default values, so all other fields
     # must have arguments passed in.
-    num_required = num_fields - num_defaults
+    cdef int num_required = num_fields - num_defaults
 
     def __init__(self, *args, **kwargs):
         base_cls.__init__(self)
 
-        num_args = len(args)
-        num_kwargs = len(kwargs)
-        num_total = num_args + num_kwargs
+        cdef int num_args = len(args)
+        cdef int num_kwargs = len(kwargs)
+        cdef int num_total = num_args + num_kwargs
 
         # This argument binding implementation was adapted from
         # inspect.getcallargs() with adjustments for our requirements of
@@ -370,41 +373,57 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
                 )
             )
 
-        # Keeps track of fields yet to be assigned.
-        unassigned = set(field_names)
-
-        # Assign positional arguments.
-        for name, value in zip(field_names, args):
-            if value is not None:
-                setattr(self, name, value)
-                unassigned.remove(name)
-
-        # Assign named arguments.
+        cdef object value
+        cdef FieldSpec field_spec
+        cdef int i = -1
         for name in field_names:
-            # We go over all field names instead of just the remaining ones so
-            # that we can detect if any of the positional arguments had
-            # another value specified in kwargs. That's user error and we
-            # should blow up in that case.
-            if name not in kwargs:
-                continue
-            if name not in unassigned:
-                raise TypeError(
-                    '%s() got multiple values for argument "%s"'
-                    % (cls_name, name)
-                )
-            value = kwargs.pop(name)
-            if value is not None:
-                setattr(self, name, value)
-                unassigned.remove(name)
+            i += 1
+            # Check positionals
+            if i < num_args:
+                value = args[i]
 
-        # Add defaults
-        if field_defaults:
-            default_values = zip(field_names[-num_defaults:], field_defaults)
-            for name, value in default_values:
-                if name in unassigned:
-                    setattr(self, name, copy.deepcopy(value))
-                    unassigned.remove(name)
+                # If found in positionals, it can't be in kwargs
+                if name in kwargs:
+                    raise TypeError(
+                        '%s() got multiple values for argument "%s"'
+                        % (cls_name, name)
+                    )
+            else:
+                value = kwargs.pop(name, None)
 
+            # We do validation inline for structs as an optimization
+            field_spec = <FieldSpec> fields[name]
+            if value is None:
+                if field_spec.default_value is not None:
+                    value = copy.deepcopy(field_spec.default_value)
+                elif field_spec.required:
+                    raise TypeError(
+                        'Field "%s" of "%s" is required. It cannot be None.'
+                        % (name, self.__class__.__name__)
+                    )
+
+            # Since we validate at construction time, child structs are
+            # almost certainly valid unless consumers are directly mutating
+            # thrift structs. As an optimization, avoid recursively revalidating
+            # these.
+            elif field_spec.spec.ttype_code == ttype.STRUCT:
+                # TODO: Avoid instance of, just do a type() is ... check.
+                check.instanceof_surface(field_spec.spec, value)
+            else:
+                try:
+                    field_spec.spec.validate(value)
+                except (ValueError, TypeError) as e:
+                    raise e.__class__(
+                        'Field %s of %s is invalid: %s' % (
+                            field_spec.name,
+                            self.__class__.__name__,
+                            e,
+                        )
+                    )
+
+            setattr(self, name, value)
+
+        # TODO: Is len() == 0 faster?
         if kwargs:
             # Too many kwargs given.
             for name in kwargs:
@@ -412,16 +431,6 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate):
                     '%s() got an unexpected keyword argument "%s"'
                     % (cls_name, name)
                 )
-
-        # If anything was left unassigned, blow up.
-        if unassigned:
-            raise ValueError(
-                'Field(s) %r require non-None values.' % list(unassigned)
-            )
-
-        # TODO Instead of validating here, validation should be done as values
-        # are assigned.
-        validate(self)
 
     return __init__
 
@@ -485,6 +494,7 @@ def struct_cls(struct_spec, scope):
             field_defaults.append(default)
 
     field_names = required_fields + optional_fields
+    field_map = {spec.name: spec for spec in struct_spec.fields}
 
     struct_dct = {}
     struct_dct['type_spec'] = struct_spec
@@ -497,7 +507,7 @@ def struct_cls(struct_spec, scope):
         field_names,
         field_defaults,
         struct_spec.base_cls,
-        struct_spec.validate,
+        field_map,
     )
     struct_dct['__str__'] = common.fields_str(struct_spec.name, field_names)
     struct_dct['__repr__'] = struct_dct['__str__']
