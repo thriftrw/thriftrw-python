@@ -93,7 +93,7 @@ cdef class WriteBuffer(object):
         if min_bytes <= self.capacity:
             return
 
-        new_total_length = self.length * 2
+        cdef int new_total_length = self.length * 2
         if new_total_length - self.length < min_bytes:
             # If adding as much room as the current buffer size is not enough,
             # add just enough room on top.
