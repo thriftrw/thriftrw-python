@@ -72,10 +72,6 @@ cdef class PrimitiveTypeSpec(TypeSpec):
         they have the correct type.
     """
 
-    @property
-    def ttype_code(self):
-        return self.code
-
     cpdef Value to_wire(self, object value):
         return self.value_cls(self.cast(value))
 
@@ -112,21 +108,22 @@ cdef class PrimitiveTypeSpec(TypeSpec):
 
 cdef class _TextualTypeSpec(TypeSpec):
 
-    ttype_code = ttype.BINARY
+    def __init__(self):
+        self.ttype_code = ttype.BINARY
 
     cpdef TypeSpec link(self, scope):
         return self
 
     cpdef Value to_wire(_TextualTypeSpec self, object value):
-        if isinstance(value, unicode):
+        if type(value) is unicode:
             value = value.encode('utf-8')
         return BinaryValue(value)
 
     cpdef void write_to(_TextualTypeSpec self, ProtocolWriter writer,
                         object value) except *:
-        if isinstance(value, unicode):
+        if type(value) is unicode:
             value = value.encode('utf-8')
-        writer.write_binary(bytes(value))
+        writer.write_binary(value, len(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
         if not isinstance(instance, (bytes, unicode)):
@@ -199,7 +196,9 @@ cdef class _BoolTypeSpec(TypeSpec):
 
     name = str('bool')
     surface = bool
-    ttype_code = ttype.BOOL
+
+    def __init__(self):
+        self.ttype_code = ttype.BOOL
 
     cpdef object read_from(_BoolTypeSpec self, ProtocolReader reader):
         return reader.read_bool()
@@ -258,7 +257,7 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('byte')
-        self.code = ttype.BYTE
+        self.ttype_code = ttype.BYTE
         self.value_cls = ByteValue
         self.surface = _INTEGRAL
         self.cast = int
@@ -277,7 +276,7 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('double')
-        self.code = ttype.DOUBLE
+        self.ttype_code = ttype.DOUBLE
         self.value_cls = DoubleValue
         self.surface = _FLOATING
         self.cast = float
@@ -295,7 +294,7 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i16')
-        self.code = ttype.I16
+        self.ttype_code = ttype.I16
         self.value_cls = I16Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -314,7 +313,7 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str('i32')
-        self.code = ttype.I32
+        self.ttype_code = ttype.I32
         self.value_cls = I32Value
         self.surface = _INTEGRAL
         self.cast = int
@@ -333,7 +332,7 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
 
     def __init__(self):
         self.name = str("i64")
-        self.code = ttype.I64
+        self.ttype_code = ttype.I64
         self.value_cls = I64Value
         self.surface = _INTEGRAL
         self.cast = long

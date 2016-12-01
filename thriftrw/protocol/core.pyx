@@ -35,35 +35,6 @@ from thriftrw.wire.message cimport Message
 __all__ = ['Protocol']
 
 
-cdef class FieldHeader(object):
-
-    def __cinit__(FieldHeader self, int8_t type, int16_t id):
-        self.type = type
-        self.id = id
-
-
-cdef class MapHeader(object):
-
-    def __cinit__(MapHeader self, int8_t ktype, int8_t vtype, int32_t size):
-        self.ktype = ktype
-        self.vtype = vtype
-        self.size = size
-
-
-cdef class SetHeader(object):
-
-    def __cinit__(SetHeader self, int8_t type, int32_t size):
-        self.type = type
-        self.size = size
-
-
-cdef class ListHeader(object):
-
-    def __cinit__(ListHeader self, int8_t type, int32_t size):
-        self.type = type
-        self.size = size
-
-
 cdef class MessageHeader(object):
 
     def __cinit__(MessageHeader self, bytes name, int8_t type, int32_t seqid):
@@ -91,7 +62,7 @@ cdef class ProtocolWriter(object):
     cdef void write_i16(self, int16_t value) except *: pass
     cdef void write_i32(self, int32_t value) except *: pass
     cdef void write_i64(self, int64_t value) except *: pass
-    cdef void write_binary(self, bytes value) except *: pass
+    cdef void write_binary(self, char* value, int32_t length) except *: pass
     cdef void write_struct_begin(self) except *: pass
     cdef void write_field_begin(self, FieldHeader header) except *: pass
     cdef void write_field_end(self) except *: pass
@@ -255,7 +226,7 @@ cdef class _ValueWriter(ValueVisitor):
         self.writer.write_i64(value)
 
     cdef object visit_binary(self, bytes value):
-        self.writer.write_binary(value)
+        self.writer.write_binary(value, len(value))
 
     cdef object visit_struct(self, list fields):
         self.writer.write_struct_begin()

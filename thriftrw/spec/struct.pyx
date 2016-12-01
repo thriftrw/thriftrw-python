@@ -111,8 +111,6 @@ cdef class StructTypeSpec(TypeSpec):
                 # ...
     """
 
-    ttype_code = ttype.STRUCT
-
     def __init__(self, name, fields, base_cls=None):
         """Initialize a new StructTypeSpec.
 
@@ -124,6 +122,7 @@ cdef class StructTypeSpec(TypeSpec):
             Base class to use for generates classes. Defaults to ``object``.
         """
 
+        self.ttype_code = ttype.STRUCT
         self.name = str(name)
         self.fields = fields
         self.linked = False
@@ -217,16 +216,23 @@ cdef class StructTypeSpec(TypeSpec):
 
     cpdef void write_to(StructTypeSpec self, ProtocolWriter writer,
                         object struct) except *:
+        # This is the single most performance critical method in the serialization path.
+        #
+        # Carefully inspect benchmark results if you make changes here and avoid python
+        # API interaction at any cost.
         writer.write_struct_begin()
+        cdef FieldHeader header
 
         for field in self.fields:
             value = getattr(struct, field.name)
             if value is None:
                 continue
 
-            header = FieldHeader(field.spec.ttype_code, field.id)
+            header.type = (<FieldSpec> field).spec.ttype_code
+            header.id = (<FieldSpec> field).id
+
             writer.write_field_begin(header)
-            field.spec.write_to(writer, value)
+            (<FieldSpec> field).spec.write_to(writer, value)
             writer.write_field_end()
 
         writer.write_struct_end()

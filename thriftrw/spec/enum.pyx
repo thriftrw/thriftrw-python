@@ -113,12 +113,11 @@ cdef class EnumTypeSpec(TypeSpec):
         Added support for multiple enum items with the same value.
     """
 
-    ttype_code = ttype.I32
-
     def __init__(self, name, items):
         assert name
         assert items is not None
 
+        self.ttype_code = ttype.I32
         self.name = str(name)
         self.items = items
 

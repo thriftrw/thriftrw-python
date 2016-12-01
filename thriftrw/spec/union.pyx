@@ -95,10 +95,9 @@ cdef class UnionTypeSpec(TypeSpec):
                 # ...
     """
 
-    ttype_code = ttype.STRUCT
-
     def __init__(self, name, fields, allow_empty=None):
         self.name = str(name)
+        self.ttype_code = ttype.STRUCT
         self.fields = fields
         self.linked = False
         self.surface = None

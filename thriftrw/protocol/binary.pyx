@@ -319,12 +319,10 @@ cdef class BinaryProtocolWriter(ProtocolWriter):
         value = htobe64(value)
         self._write(<char*>(&value), 8)
 
-    cdef void write_binary(BinaryProtocolWriter self, bytes value) except *:
+    cdef void write_binary(BinaryProtocolWriter self, char* value, int32_t length) except *:
         # len:4 str:len
-        cdef int32_t length = <int32_t>len(value)
-        cdef char* contents = value;
         self.write_i32(length)
-        self._write(contents, length)
+        self._write(value, length)
 
     cdef void write_field_begin(BinaryProtocolWriter self,
                                 FieldHeader header) except *:
@@ -356,7 +354,7 @@ cdef class BinaryProtocolWriter(ProtocolWriter):
 
     cdef void write_message_begin(BinaryProtocolWriter self,
                                   MessageHeader message) except *:
-        self.write_binary(message.name)
+        self.write_binary(message.name, len(message.name))
         self.write_byte(message.type)
         self.write_i32(message.seqid)
 

@@ -23,7 +23,12 @@ from __future__ import absolute_import, unicode_literals, print_function
 from thriftrw.wire.value cimport Value
 from thriftrw.protocol.core cimport ProtocolWriter, ProtocolReader
 
+from libc.stdint cimport int8_t
+
+
 cdef class TypeSpec(object):
+
+    cdef public int8_t ttype_code
 
     cpdef Value to_wire(TypeSpec self, object value)
 
