@@ -356,7 +356,7 @@ def test_constructor_behavior(loads):
 
     with pytest.raises(ValueError) as exc_info:
         Struct(optionalField=10)
-    assert 'require non-None values' in str(exc_info)
+    assert 'requires a non-None value' in str(exc_info)
 
 
 def test_constructor_behavior_with_nested_types(loads):
