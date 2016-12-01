@@ -40,7 +40,6 @@ cdef class ListTypeSpec(TypeSpec):
         contain.
     """
 
-    ttype_code = ttype.LIST
     surface = list
 
     def __init__(self, vspec):
@@ -48,6 +47,7 @@ cdef class ListTypeSpec(TypeSpec):
         :param TypeSpec vspec:
             TypeSpec of values stored in the list.
         """
+        self.ttype_code = ttype.LIST
         self.vspec = vspec
         self.linked = False
 

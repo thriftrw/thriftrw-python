@@ -33,9 +33,9 @@ from thriftrw.wire.message cimport Message
 from thriftrw._buffer cimport WriteBuffer, ReadBuffer
 
 
-cdef class FieldHeader(object):
-    cdef readonly int8_t type
-    cdef readonly int16_t id
+cdef struct FieldHeader:
+    int8_t type
+    int16_t id
 
 
 cdef class MapHeader(object):

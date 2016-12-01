@@ -40,15 +40,6 @@ cdef class TypeSpec:
         def __get__(self):
             raise NotImplementedError
 
-    property ttype_code:
-        """Numeric TType used for the type spec.
-
-        The value must be from :py:data:`thriftrw.wire.TType`.
-        """
-
-        def __get__(self):
-            raise NotImplementedError
-
     property surface:
         """The surface of a type spec.
 

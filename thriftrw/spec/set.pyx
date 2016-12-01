@@ -37,9 +37,9 @@ cdef class SetTypeSpec(TypeSpec):
         TypeSpec of values stored in the set.
     """
 
-    ttype_code = ttype.SET
 
     def __init__(self, vspec):
+        self.ttype_code = ttype.SET
         self.vspec = vspec
         self.linked = False
 

@@ -42,7 +42,6 @@ cdef class MapTypeSpec(TypeSpec):
         TypeSpec for the kind of values matching maps must contain.
     """
 
-    ttype_code = ttype.MAP
     surface = dict
 
     def __init__(self, kspec, vspec):
@@ -52,6 +51,7 @@ cdef class MapTypeSpec(TypeSpec):
         :param TypeSpec vspec:
             TypeSpec of the values in the map.
         """
+        self.ttype_code = ttype.MAP
         self.kspec = kspec
         self.vspec = vspec
         self.linked = False
