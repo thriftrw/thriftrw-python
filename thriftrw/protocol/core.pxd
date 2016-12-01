@@ -38,20 +38,20 @@ cdef struct FieldHeader:
     int16_t id
 
 
-cdef class MapHeader(object):
-    cdef readonly int8_t ktype
-    cdef readonly int8_t vtype
-    cdef readonly int32_t size
+cdef struct MapHeader:
+    int8_t ktype
+    int8_t vtype
+    int32_t size
 
 
-cdef class SetHeader(object):
-    cdef readonly int8_t type
-    cdef readonly int32_t size
+cdef struct SetHeader:
+    int8_t type
+    int32_t size
 
 
-cdef class ListHeader(object):
-    cdef readonly int8_t type
-    cdef readonly int32_t size
+cdef struct ListHeader:
+    int8_t type
+    int32_t size
 
 
 cdef class MessageHeader(object):

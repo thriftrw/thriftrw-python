@@ -35,28 +35,6 @@ from thriftrw.wire.message cimport Message
 __all__ = ['Protocol']
 
 
-cdef class MapHeader(object):
-
-    def __cinit__(MapHeader self, int8_t ktype, int8_t vtype, int32_t size):
-        self.ktype = ktype
-        self.vtype = vtype
-        self.size = size
-
-
-cdef class SetHeader(object):
-
-    def __cinit__(SetHeader self, int8_t type, int32_t size):
-        self.type = type
-        self.size = size
-
-
-cdef class ListHeader(object):
-
-    def __cinit__(ListHeader self, int8_t type, int32_t size):
-        self.type = type
-        self.size = size
-
-
 cdef class MessageHeader(object):
 
     def __cinit__(MessageHeader self, bytes name, int8_t type, int32_t seqid):
