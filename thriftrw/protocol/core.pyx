@@ -84,7 +84,7 @@ cdef class ProtocolWriter(object):
     cdef void write_i16(self, int16_t value) except *: pass
     cdef void write_i32(self, int32_t value) except *: pass
     cdef void write_i64(self, int64_t value) except *: pass
-    cdef void write_binary(self, bytes value) except *: pass
+    cdef void write_binary(self, char* value, int32_t length) except *: pass
     cdef void write_struct_begin(self) except *: pass
     cdef void write_field_begin(self, FieldHeader header) except *: pass
     cdef void write_field_end(self) except *: pass
@@ -248,7 +248,7 @@ cdef class _ValueWriter(ValueVisitor):
         self.writer.write_i64(value)
 
     cdef object visit_binary(self, bytes value):
-        self.writer.write_binary(value)
+        self.writer.write_binary(value, len(value))
 
     cdef object visit_struct(self, list fields):
         self.writer.write_struct_begin()

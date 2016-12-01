@@ -72,7 +72,7 @@ cdef class ProtocolWriter(object):
     cdef void write_i16(self, int16_t value) except *
     cdef void write_i32(self, int32_t value) except *
     cdef void write_i64(self, int64_t value) except *
-    cdef void write_binary(self, bytes value) except *
+    cdef void write_binary(self, char* value, int32_t length) except *
 
     # Structs
 

@@ -115,15 +115,15 @@ cdef class _TextualTypeSpec(TypeSpec):
         return self
 
     cpdef Value to_wire(_TextualTypeSpec self, object value):
-        if isinstance(value, unicode):
+        if type(value) is unicode:
             value = value.encode('utf-8')
         return BinaryValue(value)
 
     cpdef void write_to(_TextualTypeSpec self, ProtocolWriter writer,
                         object value) except *:
-        if isinstance(value, unicode):
+        if type(value) is unicode:
             value = value.encode('utf-8')
-        writer.write_binary(bytes(value))
+        writer.write_binary(value, len(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
         if not isinstance(instance, (bytes, unicode)):
