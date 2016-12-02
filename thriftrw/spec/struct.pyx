@@ -400,7 +400,7 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
                     )
 
             # We do validation inline for structs as an optimization
-            field_spec = fields[i]
+            field_spec = <FieldSpec> fields[name]
             if value is None:
                 if field_spec.required:
                     raise TypeError(
@@ -499,6 +499,7 @@ def struct_cls(struct_spec, scope):
             field_defaults.append(default)
 
     field_names = required_fields + optional_fields
+    field_map = { spec.name: spec for spec in struct_spec.fields }
 
     struct_dct = {}
     struct_dct['type_spec'] = struct_spec
@@ -512,7 +513,7 @@ def struct_cls(struct_spec, scope):
         field_defaults,
         struct_spec.base_cls,
         struct_spec.validate,
-        struct_spec.fields,
+        field_map,
     )
     struct_dct['__str__'] = common.fields_str(struct_spec.name, field_names)
     struct_dct['__repr__'] = struct_dct['__str__']
