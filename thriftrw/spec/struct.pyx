@@ -375,7 +375,9 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
 
         cdef object value
         cdef FieldSpec field_spec
-        for i, name in enumerate(field_names):
+        cdef int i = -1
+        for name in field_names:
+            i += 1
             # Check positionals
             if i < num_args:
                 value = args[i]
@@ -387,7 +389,6 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
                         % (cls_name, name)
                     )
             else:
-                # TODO: Is .get() faster
                 value = kwargs.pop(name, None)
 
             # Didn't find anything. Either supply a default or error.
