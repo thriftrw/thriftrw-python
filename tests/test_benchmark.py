@@ -75,8 +75,6 @@ def test_binary_dumps(benchmark, module, value):
 def test_binary_loads(benchmark, module, value):
     serialized = module.dumps(value)
     benchmark(module.loads, value.__class__, serialized)
-    # while True:
-    #     module.loads(value.__class__, serialized)
 
 
 def test_to_primitive(benchmark, value):

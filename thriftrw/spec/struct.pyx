@@ -304,7 +304,7 @@ cdef class StructTypeSpec(TypeSpec):
         ])
 
 
-def struct_init(cls_name, field_names, field_defaults, base_cls, validate, fields):
+def struct_init(cls_name, field_names, field_defaults, base_cls, fields):
     """Generate the ``__init__`` method for structs.
 
     ``field_names`` is a list or tuple of field names for the constructor
@@ -322,6 +322,8 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
         List or tuple of default values for the last ``len(field_defaults)``
         fields. For optional fields with no default value, ``field_defaults``
         should have a ``None`` default.
+    :param fields:
+        Map of field name to ``FieldSpec`` objects describing this struct.
     :returns:
         Implementation of the ``__init__`` method for that struct.
     """
@@ -346,9 +348,6 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
         cdef int num_args = len(args)
         cdef int num_kwargs = len(kwargs)
         cdef int num_total = num_args + num_kwargs
-
-        # If i > begin_defaults_i then a default is available
-        cdef int begin_defaults_i = num_fields - num_defaults
 
         # This argument binding implementation was adapted from
         # inspect.getcallargs() with adjustments for our requirements of
@@ -391,23 +390,17 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
             else:
                 value = kwargs.pop(name, None)
 
-            # Didn't find anything. Either supply a default or error.
-            if value is None:
-                if i >= begin_defaults_i:
-                    value = copy.deepcopy(field_defaults[i - begin_defaults_i])
-                else:
-                    raise ValueError(
-                        'Field %r requires a non-None value.' % name
-                    )
-
             # We do validation inline for structs as an optimization
             field_spec = <FieldSpec> fields[name]
             if value is None:
-                if field_spec.required:
+                if field_spec.default_value is not None:
+                    value = copy.deepcopy(field_spec.default_value)
+                elif field_spec.required:
                     raise TypeError(
                         'Field "%s" of "%s" is required. It cannot be None.'
-                        % (name, self.name)
+                        % (name, self.__class__.__name__)
                     )
+
             # Since we validate at construction time, child structs are
             # almost certainly valid unless consumers are directly mutating
             # thrift structs. As an optimization, avoid recursively revalidating
@@ -420,8 +413,8 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, validate, field
                     field_spec.spec.validate(value)
                 except (ValueError, TypeError) as e:
                     raise e.__class__(
-                        'Field %d of %s is invalid: %s' % (
-                            field_spec.id,
+                        'Field %s of %s is invalid: %s' % (
+                            field_spec.name,
                             self.__class__.__name__,
                             e,
                         )
@@ -500,7 +493,7 @@ def struct_cls(struct_spec, scope):
             field_defaults.append(default)
 
     field_names = required_fields + optional_fields
-    field_map = { spec.name: spec for spec in struct_spec.fields }
+    field_map = {spec.name: spec for spec in struct_spec.fields}
 
     struct_dct = {}
     struct_dct['type_spec'] = struct_spec
@@ -513,7 +506,6 @@ def struct_cls(struct_spec, scope):
         field_names,
         field_defaults,
         struct_spec.base_cls,
-        struct_spec.validate,
         field_map,
     )
     struct_dct['__str__'] = common.fields_str(struct_spec.name, field_names)
