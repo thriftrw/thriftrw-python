@@ -88,11 +88,6 @@ cdef class PrimitiveTypeSpec(TypeSpec):
     cpdef TypeSpec link(self, scope):
         return self
 
-    cpdef void validate(PrimitiveTypeSpec self, object instance) except *:
-        check.instanceof_surface(self, instance)
-        if self.validate_extra is not None:
-            self.validate_extra(instance)
-
     def __str__(self):
         return 'PrimitiveTypeSpec(%r, %s)' % (self.code, self.value_cls)
 
@@ -104,6 +99,9 @@ cdef class PrimitiveTypeSpec(TypeSpec):
             return self is other
         else:
             return False
+
+    cpdef void validate(PrimitiveTypeSpec self, object instance) except *:
+        raise NotImplementedError
 
 
 cdef class _TextualTypeSpec(TypeSpec):
@@ -126,7 +124,8 @@ cdef class _TextualTypeSpec(TypeSpec):
         writer.write_binary(value, len(value))
 
     cpdef void validate(_TextualTypeSpec self, object instance) except *:
-        if not isinstance(instance, (bytes, unicode)):
+        typ = type(instance)
+        if typ is not bytes and typ is not unicode:
             raise TypeError(
                 'Cannot convert %r into a "%s".' % (instance, self.name)
             )
@@ -224,7 +223,11 @@ cdef class _BoolTypeSpec(TypeSpec):
         return self
 
     cpdef void validate(_BoolTypeSpec self, object instance) except *:
-        check.instanceof_class(self, (bool, int), instance)
+        typ = type(instance)
+        if typ is not bool and typ is not int:
+            raise TypeError(
+                'Cannot convert %r into a "%s".' % (instance, self.name)
+            )
 
     def __richcmp__(_BoolTypeSpec self, _BoolTypeSpec other, int op):
         if op == 2:
@@ -251,6 +254,18 @@ _INTEGRAL = (int, long, numbers.Integral)
 _FLOATING = (int, long, float, decimal.Decimal, fractions.Fraction,
              numbers.Number)
 
+
+cdef int _validate_integral(int min, int max, object instance, object name) except -1:
+    typ = type(instance)
+    if (
+        (typ is not int and typ is not long) or
+        not min < instance < max
+    ):
+        raise TypeError(
+            'Cannot convert %r into a "%s".' % (instance, name)
+        )
+
+
 BoolTypeSpec = _BoolTypeSpec()
 
 cdef class _ByteTypeSpec(PrimitiveTypeSpec):
@@ -270,6 +285,9 @@ cdef class _ByteTypeSpec(PrimitiveTypeSpec):
     cpdef object read_from(_ByteTypeSpec self, ProtocolReader reader):
         return reader.read_byte()
 
+    cpdef void validate(_ByteTypeSpec self, object instance) except *:
+        _validate_integral(-128, 127, instance, self.name)
+
 ByteTypeSpec = _ByteTypeSpec()
 
 cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
@@ -287,6 +305,17 @@ cdef class _DoubleTypeSpec(PrimitiveTypeSpec):
 
     cpdef object read_from(_DoubleTypeSpec self, ProtocolReader reader):
         return reader.read_double()
+
+    cpdef void validate(_DoubleTypeSpec self, object instance) except *:
+        typ = type(instance)
+        if (
+            typ is not int and
+            typ is not long and
+            typ is not float
+        ):
+            raise TypeError(
+                'Cannot convert %r into a "%s".' % (instance, self.name)
+            )
 
 DoubleTypeSpec = _DoubleTypeSpec()
 
@@ -307,6 +336,9 @@ cdef class _I16TypeSpec(PrimitiveTypeSpec):
     cpdef object read_from(_I16TypeSpec self, ProtocolReader reader):
         return reader.read_i16()
 
+    cpdef void validate(_I16TypeSpec self, object instance) except *:
+        _validate_integral(-32768, 32767, instance, self.name)
+
 I16TypeSpec = _I16TypeSpec()
 
 cdef class _I32TypeSpec(PrimitiveTypeSpec):
@@ -326,6 +358,9 @@ cdef class _I32TypeSpec(PrimitiveTypeSpec):
     cpdef object read_from(_I32TypeSpec self, ProtocolReader reader):
         return reader.read_i32()
 
+    cpdef void validate(_I32TypeSpec self, object instance) except *:
+        _validate_integral(-2147483648, 2147483647, instance, self.name)
+
 I32TypeSpec = _I32TypeSpec()
 
 cdef class _I64TypeSpec(PrimitiveTypeSpec):
@@ -344,6 +379,9 @@ cdef class _I64TypeSpec(PrimitiveTypeSpec):
 
     cpdef object read_from(_I64TypeSpec self, ProtocolReader reader):
         return reader.read_i64()
+
+    cpdef void validate(_I64TypeSpec self, object instance) except *:
+        _validate_integral(-9223372036854775808, 9223372036854775807, instance, self.name)
 
 I64TypeSpec = _I64TypeSpec()
 

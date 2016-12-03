@@ -406,8 +406,10 @@ def struct_init(cls_name, field_names, field_defaults, base_cls, fields):
             # thrift structs. As an optimization, avoid recursively revalidating
             # these.
             elif field_spec.spec.ttype_code == ttype.STRUCT:
-                # TODO: Avoid instance of, just do a type() is ... check.
-                check.instanceof_surface(field_spec.spec, value)
+                if type(value) is not field_spec.spec.surface:
+                    raise TypeError(
+                        'Cannot deserialize %r into a "%s".' % (value, field_spec.spec.name)
+                    )
             else:
                 try:
                     field_spec.spec.validate(value)
