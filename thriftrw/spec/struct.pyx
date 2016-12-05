@@ -177,14 +177,15 @@ cdef class StructTypeSpec(TypeSpec):
         cdef FieldHeader header = reader.read_field_begin()
 
         while header.type != -1:
-            field = self._index.get(header.id, None)
+            # You'd be surprised how much faster the CallOneArg path is compared to
+            # the unoptimized version. Make sure this never reades .get(val, None).
+            field = self._index.get(header.id)
 
             # Unrecognized field--possibly different version of struct definition.
             if field is None or field.spec.ttype_code != header.type:
                 reader.skip(header.type)
             else:
-                val = field.spec.read_from(reader)
-                kwargs[field.name] = val
+                kwargs[field.name] = field.spec.read_from(reader)
 
             reader.read_field_end()
             header = reader.read_field_begin()
