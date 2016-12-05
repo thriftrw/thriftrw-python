@@ -4,7 +4,10 @@ Releases
 1.4.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Further optimizations to the serialization path to reduce unnecessary
+  python interaction, improving benchmark performance another 4x.
+- Optimize deserialization path by doing validation inline at construction
+  time. This improves deserialization benchmark performance by 2x.
 
 
 1.4.0 (2016-11-29)
