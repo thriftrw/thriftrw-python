@@ -213,7 +213,7 @@ cdef class BinaryProtocolReader(ProtocolReader):
         cdef int32_t length = self._i32()
         self.reader.skip(length)
 
-    cdef FieldHeader read_field_begin(self):
+    cdef FieldHeader read_field_begin(self) except *:
         cdef int8_t field_type = self._byte()
         if field_type == STRUCT_END:
             return STRUCT_END_HEADER
@@ -222,20 +222,20 @@ cdef class BinaryProtocolReader(ProtocolReader):
 
         return FieldHeader(field_type, field_id)
 
-    cdef MapHeader read_map_begin(self):
+    cdef MapHeader read_map_begin(self) except *:
         cdef int8_t key_ttype = self._byte()
         cdef int8_t value_ttype = self._byte()
         cdef int32_t length = self._i32()
 
         return MapHeader(key_ttype, value_ttype, length)
 
-    cdef SetHeader read_set_begin(self):
+    cdef SetHeader read_set_begin(self) except *:
         cdef int8_t value_ttype = self._byte()
         cdef int32_t length = self._i32()
 
         return SetHeader(value_ttype, length)
 
-    cdef ListHeader read_list_begin(self):
+    cdef ListHeader read_list_begin(self) except *:
         cdef int8_t value_ttype = self._byte()
         cdef int32_t length = self._i32()
 

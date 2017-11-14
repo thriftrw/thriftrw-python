@@ -122,19 +122,19 @@ cdef class ProtocolReader:
     # Structs
 
     cdef void read_struct_begin(self) except *
-    cdef FieldHeader read_field_begin(self)
+    cdef FieldHeader read_field_begin(self) except *
     cdef void read_field_end(self) except *
     cdef void read_struct_end(self) except *
 
     # Containers
 
-    cdef MapHeader read_map_begin(self)
+    cdef MapHeader read_map_begin(self) except *
     cdef void read_map_end(self) except *
 
-    cdef SetHeader read_set_begin(self)
+    cdef SetHeader read_set_begin(self) except *
     cdef void read_set_end(self) except *
 
-    cdef ListHeader read_list_begin(self)
+    cdef ListHeader read_list_begin(self) except *
     cdef void read_list_end(self) except *
 
     # Messages
