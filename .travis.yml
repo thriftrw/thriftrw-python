@@ -2,23 +2,19 @@ sudo: false
 
 language: python
 
-env:
-    - TOX_ENV=py27
-    - TOX_ENV=py33
-    - TOX_ENV=py34
-    - TOX_ENV=pypy
-    - TOX_ENV=cover
-    - TOX_ENV=flake8
-    - TOX_ENV=docs
-
 matrix:
-    include:
-        # Python 3.5 needs to be explicitly requested with python: for now.
-        # See travis-ci/travis-ci#4794 and travis-ci/travis-ci#521.
-        - python: 3.5
-          env:
-              - TOX_ENV=py35
-
+  include:
+    - {python: 2.7, env: TOX_ENV=py27}
+    - {python: 3.3, env: TOX_ENV=py33}
+    - {python: 3.4, env: TOX_ENV=py34}
+    - {python: 3.5, env: TOX_ENV=py35}
+    - {python: 3.6, env: TOX_ENV=py36}
+    - {python: pypy, env: TOX_ENV=pypy}
+    - {python: pypy3, env: TOX_ENV=pypy3}
+    - {python: pypy3, env: TOX_ENV=pypy3}
+    - {env: TOX_ENV=cover}
+    - {env: TOX_ENV=flake8}
+    - {env: TOX_ENV=docs}
 
 install:
     - pip install tox
