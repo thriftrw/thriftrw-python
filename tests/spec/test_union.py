@@ -123,14 +123,14 @@ def test_load(loads):
         1: binary b
         2: optional string s
         3: optional i32 i
-        4: list<Foo> l
+        4: list<Foo> ls
     }''').Foo
     spec = Foo.type_spec
 
     bfoo = Foo(b=b'foo')
     sfoo = Foo(s='bar')
     ifoo = Foo(i=42)
-    lfoo = Foo(l=[bfoo, sfoo, ifoo])
+    lfoo = Foo(ls=[bfoo, sfoo, ifoo])
 
     cases = [
         (
@@ -158,7 +158,7 @@ def test_load(loads):
                     vstruct((3, ttype.I32, vi32(42))),
                 ))
             ),
-            {'l': [
+            {'ls': [
                 {'b': b'foo'},
                 {'s': u'bar'},
                 {'i': 42},
