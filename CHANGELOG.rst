@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.5.1 (unreleased)
+1.5.1 (2017-11-14)
 ------------------
 
 - Fixed a bug where errors while parsing certain parts of the Thrift payload
