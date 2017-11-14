@@ -6,6 +6,8 @@ Releases
 
 - Fixed a bug where errors while parsing certain parts of the Thrift payload
   would be ignored.
+- Fixed a bug that caused a segfault if a return value was received for a
+  ``void`` function.
 
 1.5.0 (2016-12-05)
 ------------------

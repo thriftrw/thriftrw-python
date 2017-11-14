@@ -395,3 +395,21 @@ def test_service_spec_lookup(loads):
     assert service_spec.lookup('foo') is m.S.foo.spec
     assert service_spec.lookup('bar') is m.S.bar.spec
     assert service_spec.lookup('baz') is None
+
+
+def test_return_value_from_the_future(loads):
+    new_m = loads('''
+        struct Res {
+            1: optional string message
+        }
+
+        service S { Res foo() }
+    ''')
+
+    res = new_m.S.foo.response(success=new_m.Res(message="foo"))
+    payload = new_m.dumps(res)
+
+    old_m = loads('''service S { void foo() }''')
+    assert (
+        old_m.loads(old_m.S.foo.response, payload) == old_m.S.foo.response()
+    )

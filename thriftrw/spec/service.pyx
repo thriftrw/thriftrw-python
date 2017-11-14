@@ -189,17 +189,20 @@ cdef class FunctionResultSpec(UnionTypeSpec):
         while header.type != -1:
             spec = self._index.get((header.id, header.type), None)
 
-            if spec is None and header.id != 0:
-                raise UnknownExceptionError(
-                    (
-                        '"%s" received an unrecognized exception. '
-                        'Make sure your Thrift IDL is up-to-date with '
-                        'what the remote host is using.'
-                    ) % self.name,
-                )
-
-            val = spec.spec.read_from(reader)
-            kwargs[spec.name] = val
+            if spec is None:
+                if header.id != 0:
+                    raise UnknownExceptionError(
+                        (
+                            '"%s" received an unrecognized exception. '
+                            'Make sure your Thrift IDL is up-to-date with '
+                            'what the remote host is using.'
+                        ) % self.name,
+                    )
+                else:
+                    reader.skip(header.type)
+            else:
+                val = spec.spec.read_from(reader)
+                kwargs[spec.name] = val
 
             reader.read_field_end()
             header = reader.read_field_begin()
