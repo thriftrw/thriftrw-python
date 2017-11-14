@@ -353,6 +353,51 @@ def test_reader_and_writer_noorder(spec, value):
 
         0x01,                    # True
     ]),
+
+    (
+        ttype.STRUCT,
+        sstruct("1: optional bool foo"),
+        [
+            0x02,  # type:1 = bool
+            # missing field ID
+        ],
+    ),
+    (
+        ttype.STRUCT,
+        sstruct("1: optional bool foo"),
+        [
+            0x02,  # type:1 = bool
+            0x00,  # field ID too short
+        ],
+    ),
+    (
+        ttype.STRUCT,
+        sstruct("1: optional bool foo"),
+        [
+            0x02,        # type:1 = bool
+            0x00, 0x01,  # id:2 = 1
+            # Missing value
+        ],
+    ),
+    (
+        ttype.STRUCT,
+        sstruct("1: optional i16 foo"),
+        [
+            0x06,        # type:1 = i16
+            0x00, 0x01,  # id:2 = 1
+            0x00, 0x00,  # missing part of the value
+        ],
+    ),
+    (
+        ttype.STRUCT,
+        sstruct("1: optional bool foo"),
+        [
+            0x02,        # type:1 = bool
+            0x00, 0x01,  # id:2 = 1
+            0x01,        # true
+            # Missing struct close
+        ],
+    ),
 ], ids=reader_writer_ids)
 def test_input_too_short(typ, spec, bs):
     """Test that EndOfInputError is raised when not enough bytes are
@@ -364,6 +409,9 @@ def test_input_too_short(typ, spec, bs):
         s = bytes(bytearray(bs))
         protocol.deserialize_value(typ, s)
 
+    assert 'bytes but got' in str(exc_info)
+
+    with pytest.raises(EndOfInputError) as exc_info:
         reader = protocol.reader(ReadBuffer(s))
         spec.read_from(reader)
 
