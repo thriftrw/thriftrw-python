@@ -484,6 +484,15 @@ def test_default_value_type_mismatches(loads, expr):
     )
 
 
+def test_has_thrift_module(loads):
+    module = loads('''
+        struct Foo {
+            1: required string a
+        }
+    ''')
+    assert module is module.Foo.__thrift_module__
+
+
 def test_has_implemented_hash(loads):
     module = loads('''
         struct Foo {
