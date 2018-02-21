@@ -48,8 +48,9 @@ def fields_hash(fields):
         return True
 
     def __hash__(self):
-        return hash(tuple([getattr(self, field) for field in fields if hashable(field)]))
+        return hash(tuple([getattr(self, field) for field in fields if hashable(getattr(self, field))]))
 
+    return __hash__
 
 def fields_str(cls_name, field_list, include_none=True):
     """Generates a ``__str__`` method.

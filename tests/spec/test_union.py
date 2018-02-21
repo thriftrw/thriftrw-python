@@ -221,3 +221,25 @@ def test_has_thrift_module(loads):
         2: string s
     }''')
     assert module is module.Foo.__thrift_module__
+
+
+def test_has_implemented_hash(loads):
+    module = loads('''
+        union Foo {
+            1: binary b
+            2: string s
+        }
+    ''')
+    assert hasattr(module.Foo, '__hash__')
+
+
+def test_hash_ignores_non_hashable_types(loads):
+    module = loads('''
+        union Foo {
+            1: binary b
+            2: string s
+            3: list<string> ls
+        }
+    ''')
+    test = module.Foo(s='bar')
+    assert hash(test)

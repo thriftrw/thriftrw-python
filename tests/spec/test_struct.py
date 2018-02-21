@@ -484,10 +484,22 @@ def test_default_value_type_mismatches(loads, expr):
     )
 
 
-def test_has_thrift_module(loads):
+def test_has_implemented_hash(loads):
     module = loads('''
         struct Foo {
             1: required string a
         }
     ''')
-    assert module is module.Foo.__thrift_module__
+    assert hasattr(module.Foo, '__hash__')
+
+
+def test_hash_ignores_non_hashable_types(loads):
+    module = loads('''
+        struct Foo {
+            1: required string a
+            2: required list<string> b = []
+            3: required map<string, string> c = {}
+        }
+    ''')
+    test = module.Foo(a='foo', b=['bar'], c={'foo': 'bar'})
+    assert hash(test)
