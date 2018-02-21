@@ -409,5 +409,6 @@ def union_cls(union_spec, scope):
     union_dct['__doc__'] = union_docstring(
         union_spec.name, field_names
     )
+    union_dct['__hash__'] = common.fields_hash(field_names)
 
     return type(str(union_spec.name), (object,), union_dct)

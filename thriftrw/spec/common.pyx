@@ -34,6 +34,23 @@ def fields_eq(fields):
     return __eq__
 
 
+def fields_hash(fields):
+    """Generates an ``__hash__`` method.
+
+    :param list fields:
+        List of fields of the object to be hashed.
+    """
+    def hashable(obj):
+        try:
+            hash(obj)
+        except TypeError:
+            return False
+        return True
+
+    def __hash__(self):
+        return hash(tuple([getattr(self, field) for field in fields if hashable(field)]))
+
+
 def fields_str(cls_name, field_list, include_none=True):
     """Generates a ``__str__`` method.
 

@@ -517,7 +517,6 @@ def struct_cls(struct_spec, scope):
         required_fields,
         list(zip(optional_fields, field_defaults)),
     )
-
-    # TODO generate a reasonable docstring for the class too.
+    struct_dct['__hash__'] = common.fields_hash(field_names)
 
     return type(str(struct_spec.name), (struct_spec.base_cls,), struct_dct)
