@@ -1,3 +1,3 @@
-cython>=0.23,<0.24
+cython
 six
 ply
