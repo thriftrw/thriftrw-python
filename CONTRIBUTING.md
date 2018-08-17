@@ -57,7 +57,7 @@ Making changes
     If you have multiple versions of Python installed, you can use `tox` to
     test against them. For example,
 
-        $ tox -e py27,py35,pypy
+        $ tox -e py27,py35
 
 -   Create a Pull Request with a meaningful title and description to get your
     changes reviewed and merged. Reference any relevant GitHub issues in
