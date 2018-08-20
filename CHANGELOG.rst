@@ -1,10 +1,12 @@
 Releases
 ========
 
-1.5.2 (unreleased)
+1.6.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added support for Python 3.7.
+- Removed support for PyPy.
+- Removed support for Python 3.3, which has been EOLed as of 2017-09-29.
 
 
 1.5.1 (2017-11-14)
