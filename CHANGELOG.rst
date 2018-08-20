@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.6.0 (unreleased)
+1.6.0 (2018-08-20)
 ------------------
 
 - Added support for Python 3.7.
