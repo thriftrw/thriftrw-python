@@ -8,12 +8,15 @@ matrix:
     - {python: 3.4, env: TOX_ENV=py34}
     - {python: 3.5, env: TOX_ENV=py35}
     - {python: 3.6, env: TOX_ENV=py36}
+    # Need sudo here to actually get xenial.
+    # See https://github.com/travis-ci/travis-ci/issues/9815
+    - {python: 3.7, env: TOX_ENV=py37, dist: xenial, sudo: true}
     - {env: TOX_ENV=cover}
     - {env: TOX_ENV=flake8}
     - {env: TOX_ENV=docs}
 
 install:
     - pip install tox
-    - pip install 'cython>=0.23,<0.24'
+    - pip install cython
 script:
     - tox -e $TOX_ENV
