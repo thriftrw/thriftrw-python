@@ -4,7 +4,7 @@ Releases
 1.6.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add support for string enums in from_primitive.
 
 
 1.6.0 (2018-08-20)

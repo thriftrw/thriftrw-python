@@ -107,6 +107,13 @@ def test_to_wire(loads):
     assert spec.to_wire(Enum.C) == vi32(-42)
 
 
+def test_enum_names(loads):
+    Enum = loads('enum RoundTripEnum { A = 2, B = 3, C = -42 }').RoundTripEnum
+    spec = Enum.type_spec
+
+    assert spec.from_primitive('A') == Enum.A
+
+
 def test_round_trip(loads):
     Enum = loads('enum RoundTripEnum { A = 2, B = 3, C = -42 }').RoundTripEnum
     spec = Enum.type_spec
@@ -126,6 +133,8 @@ def test_validate(loads):
 
     with pytest.raises(ValueError):
         Enum.type_spec.validate(4)
+
+    Enum.type_spec.validate('A')
 
 
 def test_enums_are_constants(loads):

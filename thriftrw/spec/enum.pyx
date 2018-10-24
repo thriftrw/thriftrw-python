@@ -153,13 +153,19 @@ cdef class EnumTypeSpec(TypeSpec):
         writer.write_i32(value)
 
     cpdef object from_primitive(self, object prim_value):
+        val = self.items.get(prim_value)
+        if val is not None:
+            return val
         return prim_value
 
     cpdef void validate(self, object instance) except *:
-        if instance not in self.values_to_names:
-            raise ValueError(
-                '%r is not a valid value for enum "%s"' % (instance, self.name)
-            )
+        if instance in self.values_to_names:
+            return
+        if instance in self.items:
+            return
+        raise ValueError(
+            '%r is not a valid value for enum "%s"' % (instance, self.name)
+        )
 
     @classmethod
     def compile(cls, enum):
