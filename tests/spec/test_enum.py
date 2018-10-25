@@ -134,8 +134,6 @@ def test_validate(loads):
     with pytest.raises(ValueError):
         Enum.type_spec.validate(4)
 
-    Enum.type_spec.validate('A')
-
 
 def test_enums_are_constants(loads):
     mod = loads('''

@@ -159,13 +159,10 @@ cdef class EnumTypeSpec(TypeSpec):
         return prim_value
 
     cpdef void validate(self, object instance) except *:
-        if instance in self.values_to_names:
-            return
-        if instance in self.items:
-            return
-        raise ValueError(
-            '%r is not a valid value for enum "%s"' % (instance, self.name)
-        )
+        if instance not in self.values_to_names:
+            raise ValueError(
+                '%r is not a valid value for enum "%s"' % (instance, self.name)
+            )
 
     @classmethod
     def compile(cls, enum):
