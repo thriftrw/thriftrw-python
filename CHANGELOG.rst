@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.6.1 (unreleased)
+1.7.0 (2018-10-25)
 ------------------
 
 - Add support for string enums in from_primitive.
