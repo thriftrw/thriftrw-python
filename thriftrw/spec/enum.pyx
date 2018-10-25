@@ -153,6 +153,9 @@ cdef class EnumTypeSpec(TypeSpec):
         writer.write_i32(value)
 
     cpdef object from_primitive(self, object prim_value):
+        val = self.items.get(prim_value)
+        if val is not None:
+            return val
         return prim_value
 
     cpdef void validate(self, object instance) except *:
