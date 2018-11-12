@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import numbers
 from collections import defaultdict
 
 from thriftrw.wire cimport ttype
@@ -33,6 +34,12 @@ from ..errors import ThriftCompilerError
 
 __all__ = ['EnumTypeSpec']
 
+
+# Enums are 32-bit integers over the wire.
+_MAX_MAGNITUDE = 1 << (32 - 1)
+_MIN_VALUE = -1 * _MAX_MAGNITUDE
+_MAX_VALUE = _MAX_MAGNITUDE - 1
+_TYPES = (int, long, numbers.Integral)
 
 cdef class EnumTypeSpec(TypeSpec):
     """TypeSpec for enum types.
@@ -158,10 +165,11 @@ cdef class EnumTypeSpec(TypeSpec):
             return val
         return prim_value
 
-    cpdef void validate(self, object instance) except *:
-        if instance not in self.values_to_names:
+    cpdef void validate(self, object value) except *:
+        check.instanceof_class(self, _TYPES, value)
+        if value < _MIN_VALUE or value > _MAX_VALUE:
             raise ValueError(
-                '%r is not a valid value for enum "%s"' % (instance, self.name)
+                'Value %d does not fit in a enum "%s"' % (value, self.name),
             )
 
     @classmethod

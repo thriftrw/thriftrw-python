@@ -159,17 +159,16 @@ def test_duplicate_constant(loads):
     assert 'name is already taken' in str(exc_info)
 
 
-def test_invalid_enum(loads):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads('''
-            enum Foo {
-                A, B, C
-            }
+def test_enum_from_future_is_allowed(loads):
+    m = loads('''
+        enum Foo {
+            A, B, C
+        }
 
-            const Foo foo = 3
-        ''')
+        const Foo foo = 3
+    ''')
 
-    assert 'Value for constant "foo" is not valid' in str(exc_info)
+    assert 3 == m.foo
 
 
 def test_set_is_transformed(loads):
