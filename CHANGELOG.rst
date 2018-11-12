@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.7.1 (unreleased)
+1.7.1 (2018-11-12)
 ------------------
 
 - Fixed bug which caused unrecognized enums to throw exceptions.
