@@ -4,7 +4,7 @@ Releases
 1.7.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed bug which caused unrecognized enums to throw exceptions.
 
 
 1.7.0 (2018-10-25)

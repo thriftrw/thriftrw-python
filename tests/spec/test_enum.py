@@ -127,12 +127,24 @@ def test_round_trip(loads):
     assert spec.from_primitive(spec.to_primitive(Enum.C)) == Enum.C
 
 
-def test_validate(loads):
+@pytest.mark.parametrize('value', [
+    2,
+    4,  # enum from the future is allowed
+    -42,
+])
+def test_validate(loads, value):
     Enum = loads('enum ToWireEnum { A = 2, B = 3, C = -42 }').ToWireEnum
-    Enum.type_spec.validate(2)
+    Enum.type_spec.validate(value)
 
+
+@pytest.mark.parametrize('value', [
+    2147483650,
+    -2147483650,
+])
+def test_enum_out_of_bounds(loads, value):
+    Enum = loads('enum ToWireEnum { A = 2, B = 3, C = -42 }').ToWireEnum
     with pytest.raises(ValueError):
-        Enum.type_spec.validate(4)
+        Enum.type_spec.validate(value)
 
 
 def test_enums_are_constants(loads):
@@ -162,11 +174,8 @@ def test_enums_are_constants(loads):
         struct Y { 1: required X x = 3 }
     ''',
 ])
-def test_enum_constant_invalid_default(loads, s):
-    with pytest.raises(ThriftCompilerError) as exc_info:
-        loads(s)
-
-    assert 'is not a valid value for enum "X"' in str(exc_info)
+def test_enum_constant_default_from_future_is_allowed(loads, s):
+    loads(s)
 
 
 def test_has_thrift_module(loads):
