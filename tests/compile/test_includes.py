@@ -154,6 +154,19 @@ def test_include_relative(tmpdir, loader):
     assert 'Cannot serialize' in str(exc_info)
 
 
+def test_include_implicit_relative(tmpdir, loader):
+    tmpdir.join('bar.thrift').write('const i32 some_num = 42')
+
+    tmpdir.join('foo.thrift').write('''
+        include "bar.thrift"
+
+        const list<i32> nums = [1, bar.some_num, 2];
+    ''')
+
+    foo = loader.load(str(tmpdir.join('foo.thrift')))
+    assert foo.nums == [1, 42, 2] == [1, foo.bar.some_num, 2]
+
+
 def test_cyclic_includes(tmpdir, loader):
     tmpdir.join('node.thrift').write('''
         include "./value.thrift"
@@ -442,10 +455,10 @@ def test_include_as_disabled(tmpdir):
         ['Unknown constant "bar.y" referenced']
     ),
     (
-        # Include path that doesn't start with '.'
+        # Include absolute path
         'foo.thrift',
         [
-            ('foo.thrift', 'include "bar.thrift"'),
+            ('foo.thrift', 'include "/bar.thrift"'),
             ('bar.thrift', 'const i32 x = 42'),
         ],
         [
