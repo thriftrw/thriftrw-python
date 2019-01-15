@@ -298,7 +298,7 @@ class HeaderProcessor(object):
                 % (include.path, include.lineno)
             )
 
-        if not any(include.path.startswith(p) for p in ('./', '../')):
+        if include.path.startswith('/'):
             raise ThriftCompilerError(
                 'Paths in include statements are relative to the directory '
                 'containing the Thrift file. They must be in the form '
