@@ -4,7 +4,8 @@ Releases
 1.7.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed a bug in setup.py that caused failures if the version of Cython being
+  used was a pre-release or a post-release.
 
 
 1.7.1 (2018-11-12)
