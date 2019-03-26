@@ -50,7 +50,7 @@ Service = service.Service
     (b'write', 42, mtype.ONEWAY, Service.write.request(b'hello'), [
         0x00, 0x00, 0x00, 0x05,         # length:4 = 5
         0x77, 0x72, 0x69, 0x74, 0x65,   # 'write'
-        0x04,                           # type:1 = ONEWAY
+        0x04,                           # mtype:1 = ONEWAY
         0x00, 0x00, 0x00, 0x2a,         # seqid:4 = 42
 
         0x0B,                           # ttype:1 = BINARY
