@@ -49,45 +49,43 @@ Extension = None
 try:
     import Cython.Distutils
 
-    # from __future__ import absolute_import needs cython >= 0.17
-    if tuple(int(v) for v in Cython.__version__.split('.')) >= (0, 17, 0):
-        cmdclass.update(build_ext=Cython.Distutils.build_ext)
+    cmdclass.update(build_ext=Cython.Distutils.build_ext)
 
-        # Check if we forgot to add something to cython_modules.
-        for root, _, files in os.walk('thriftrw'):
-            for name in files:
-                if not name.endswith('.pyx'):
-                    continue
-                path = os.path.join(root, name)
-                module = path.replace('/', '.')[:-4]
-                if module not in cython_modules:
-                    raise Exception(
-                        'Module "%s" (%s) is not present in the '
-                        '"cython_modules" list.'
-                        % (module, path)
-                    )
+    # Check if we forgot to add something to cython_modules.
+    for root, _, files in os.walk('thriftrw'):
+        for name in files:
+            if not name.endswith('.pyx'):
+                continue
+            path = os.path.join(root, name)
+            module = path.replace('/', '.')[:-4]
+            if module not in cython_modules:
+                raise Exception(
+                    'Module "%s" (%s) is not present in the '
+                    '"cython_modules" list.'
+                    % (module, path)
+                )
 
-        Extension = Cython.Distutils.Extension
-        extension_filetype = '.pyx'
+    Extension = Cython.Distutils.Extension
+    extension_filetype = '.pyx'
 
-        cython_directives = {
-            'embedsignature': True,
-        }
+    cython_directives = {
+        'embedsignature': True,
+    }
 
-        if os.getenv('THRIFTRW_PROFILE'):
-            # Add hooks for the profiler in the generated C code.
-            cython_directives['profile'] = True
+    if os.getenv('THRIFTRW_PROFILE'):
+        # Add hooks for the profiler in the generated C code.
+        cython_directives['profile'] = True
 
-        if os.getenv('THRIFTRW_COVERAGE'):
-            # Add line tracing hooks to the generated C code. The hooks aren't
-            # actually enabled unless the CYTHON_TRACE macre is also set. This
-            # affects performance negatively and should only be used during
-            # testing.
-            extension_extras['define_macros'] = [('CYTHON_TRACE', '1')]
-            cython_directives['linetrace'] = True
+    if os.getenv('THRIFTRW_COVERAGE'):
+        # Add line tracing hooks to the generated C code. The hooks aren't
+        # actually enabled unless the CYTHON_TRACE macre is also set. This
+        # affects performance negatively and should only be used during
+        # testing.
+        extension_extras['define_macros'] = [('CYTHON_TRACE', '1')]
+        cython_directives['linetrace'] = True
 
-        if cython_directives:
-            extension_extras['cython_directives'] = cython_directives
+    if cython_directives:
+        extension_extras['cython_directives'] = cython_directives
 except ImportError:
     pass
 
@@ -118,6 +116,7 @@ class sdist(_sdist):
         except ImportError:
             pass
         _sdist.run(self)
+
 
 cmdclass['sdist'] = sdist
 
