@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.7.2 (unreleased)
+1.7.2 (2019-03-26)
 ------------------
 
 - Fixed a bug in setup.py that caused failures if the version of Cython being
