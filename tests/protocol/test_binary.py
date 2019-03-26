@@ -180,11 +180,11 @@ def reader_writer_ids(x):
         0x68, 0x65, 0x6c, 0x6c, 0x6f,   # 'h', 'e', 'l', 'l', 'o'
     ], sbin, vbinary(b'hello')),
 
-    # struct = (type:1 id:2 value)* stop
+    # struct = (ttype:1 id:2 value)* stop
     # stop = 0
     (ttype.STRUCT, [0x00], sstruct(''), vstruct()),
     (ttype.STRUCT, [
-        0x02,        # type:1 = bool
+        0x02,        # ttype:1 = bool
         0x00, 0x01,  # id:2 = 1
         0x01,        # value = true
         0x00,        # stop
@@ -192,15 +192,15 @@ def reader_writer_ids(x):
      sstruct("1: optional bool param"),
      vstruct((1, ttype.BOOL, vbool(True)))),
     (ttype.STRUCT, [
-        0x06,           # type:1 = i16
+        0x06,           # ttype:1 = i16
         0x00, 0x01,     # id:2 = 1
         0x00, 0x2a,     # value = 42
 
-        0x0F,           # type:1 = list
+        0x0F,           # ttype:1 = list
         0x00, 0x02,     # id:2 = 2
 
         # <list>
-        0x0B,                       # type:1 = binary
+        0x0B,                       # ttype:1 = binary
         0x00, 0x00, 0x00, 0x02,     # size:4 = 2
         # <binary>
         0x00, 0x00, 0x00, 0x03,     # len:4 = 3
@@ -231,11 +231,11 @@ def reader_writer_ids(x):
         0x00, 0x00, 0x00, 0x02,     # count:4 = 2
 
         # <struct>
-        0x06,        # type:1 = i16
+        0x06,        # ttype:1 = i16
         0x00, 0x01,  # id:2 = 1
         0x00, 0x01,  # value = 1
 
-        0x08,                    # type:1 = i32
+        0x08,                    # ttype:1 = i32
         0x00, 0x02,              # id:2 = 2
         0x00, 0x00, 0x00, 0x02,  # value = 2
 
@@ -243,11 +243,11 @@ def reader_writer_ids(x):
         # </struct>
 
         # <struct>
-        0x06,        # type:1 = i16
+        0x06,        # ttype:1 = i16
         0x00, 0x01,  # id:2 = 1
         0x00, 0x03,  # value = 3
 
-        0x08,                    # type:1 = i32
+        0x08,                    # ttype:1 = i32
         0x00, 0x02,              # id:2 = 2
         0x00, 0x00, 0x00, 0x04,  # value = 4
 
@@ -358,7 +358,7 @@ def test_reader_and_writer_noorder(spec, value):
         ttype.STRUCT,
         sstruct("1: optional bool foo"),
         [
-            0x02,  # type:1 = bool
+            0x02,  # ttype:1 = bool
             # missing field ID
         ],
     ),
@@ -366,7 +366,7 @@ def test_reader_and_writer_noorder(spec, value):
         ttype.STRUCT,
         sstruct("1: optional bool foo"),
         [
-            0x02,  # type:1 = bool
+            0x02,  # ttype:1 = bool
             0x00,  # field ID too short
         ],
     ),
@@ -374,7 +374,7 @@ def test_reader_and_writer_noorder(spec, value):
         ttype.STRUCT,
         sstruct("1: optional bool foo"),
         [
-            0x02,        # type:1 = bool
+            0x02,        # ttype:1 = bool
             0x00, 0x01,  # id:2 = 1
             # Missing value
         ],
@@ -383,7 +383,7 @@ def test_reader_and_writer_noorder(spec, value):
         ttype.STRUCT,
         sstruct("1: optional i16 foo"),
         [
-            0x06,        # type:1 = i16
+            0x06,        # ttype:1 = i16
             0x00, 0x01,  # id:2 = 1
             0x00, 0x00,  # missing part of the value
         ],
@@ -392,7 +392,7 @@ def test_reader_and_writer_noorder(spec, value):
         ttype.STRUCT,
         sstruct("1: optional bool foo"),
         [
-            0x02,        # type:1 = bool
+            0x02,        # ttype:1 = bool
             0x00, 0x01,  # id:2 = 1
             0x01,        # true
             # Missing struct close
@@ -451,7 +451,7 @@ def test_unknown_type_id(typ, bs):
         0x00, 0x00, 0x00, 0x06,                 # length = 6
         0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
 
-        0x01,                       # type = CALL
+        0x01,                       # ttype = CALL
         0x00, 0x00, 0x00, 0x2a,     # seqId = 42
 
         0x00,
@@ -465,7 +465,7 @@ def test_unknown_type_id(typ, bs):
         0x00, 0x00, 0x00, 0x06,                 # length = 6
         0x73, 0x65, 0x74, 0x42, 0x61, 0x72,     # 'setBar'
 
-        0x02,                       # type = REPLY
+        0x02,                       # ttype = REPLY
         0x00, 0x00, 0x00, 0x01,     # seqId = 1
 
         0x02, 0x00, 0x01, 0x01,     # {1: True}
@@ -491,7 +491,7 @@ def test_message_round_trip(bs, message):
 @pytest.mark.parametrize('bs, message', [
     ([
         0x80, 0x01,  # version = 1
-        0x00, 0x03,  # type = EXCEPTION
+        0x00, 0x03,  # ttype = EXCEPTION
 
         0x00, 0x00, 0x00, 0x06,                 # length = 6
         0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
@@ -508,7 +508,7 @@ def test_message_round_trip(bs, message):
     )),
     ([
         0x80, 0x01,  # version = 1
-        0x00, 0x04,  # type = ONEWAY
+        0x00, 0x04,  # ttype = ONEWAY
 
         0x00, 0x00, 0x00, 0x06,                 # length = 6
         0x73, 0x65, 0x74, 0x42, 0x61, 0x72,     # 'setBar'
@@ -534,7 +534,7 @@ def test_message_parse_strict(bs, message):
 @pytest.mark.parametrize('bs', [
     [
         0x80, 0x2a,  # version = 42
-        0x00, 0x01,  # type = CALL
+        0x00, 0x01,  # ttype = CALL
         0x00, 0x00, 0x00, 0x06,                 # length = 6
         0x67, 0x65, 0x74, 0x46, 0x6f, 0x6f,     # 'getFoo'
         0x00, 0x00, 0x00, 0x01,     # seqId = 1
