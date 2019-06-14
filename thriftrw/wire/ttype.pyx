@@ -64,27 +64,27 @@ cpdef str name_of(int value):
 
     Returns None if no such TType exists.
     """
-    if value == BOOL:
+    if value == TType.BOOL:
         return str('BOOL')
-    elif value == BYTE:
+    elif value == TType.BYTE:
         return str('BYTE')
-    elif value == DOUBLE:
+    elif value == TType.DOUBLE:
         return str('DOUBLE')
-    elif value == I16:
+    elif value == TType.I16:
         return str('I16')
-    elif value == I32:
+    elif value == TType.I32:
         return str('I32')
-    elif value == I64:
+    elif value == TType.I64:
         return str('I64')
-    elif value == BINARY:
+    elif value == TType.BINARY:
         return str('BINARY')
-    elif value == STRUCT:
+    elif value == TType.STRUCT:
         return str('STRUCT')
-    elif value == MAP:
+    elif value == TType.MAP:
         return str('MAP')
-    elif value == SET:
+    elif value == TType.SET:
         return str('SET')
-    elif value == LIST:
+    elif value == TType.LIST:
         return str('LIST')
     else:
         return None

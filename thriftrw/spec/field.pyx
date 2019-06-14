@@ -58,6 +58,7 @@ cdef class FieldSpec(object):
         self.name = str(name)
         self.spec = spec
         self.required = required
+        self.hashable = False
         self.default_value = default_value
         self.linked = False
 
@@ -65,6 +66,7 @@ cdef class FieldSpec(object):
         if not self.linked:
             self.linked = True
             self.spec = self.spec.link(scope)
+            self.hashable = self.spec.hashable
             if self.default_value is not None:
                 try:
                     self.default_value = self.default_value.link(

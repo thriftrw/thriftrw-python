@@ -126,6 +126,7 @@ cdef class StructTypeSpec(TypeSpec):
         self.name = str(name)
         self.fields = fields
         self.linked = False
+        self.hashable = False
         self.surface = None
         self.base_cls = base_cls or object
         self._index = {}
@@ -134,6 +135,7 @@ cdef class StructTypeSpec(TypeSpec):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
+            self.hashable = all([f.hashable for f in self.fields])
             self.surface = struct_cls(self, scope)
             for field in self.fields:
                 self._index[field.id] = field
@@ -517,6 +519,9 @@ def struct_cls(struct_spec, scope):
         required_fields,
         list(zip(optional_fields, field_defaults)),
     )
+    if struct_spec.hashable:
+        struct_dct['__hash__'] = \
+            lambda self: hash(tuple([getattr(self, field.name) for field in struct_spec.fields]))
 
     # TODO generate a reasonable docstring for the class too.
 
