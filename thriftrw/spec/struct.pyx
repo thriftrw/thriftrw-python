@@ -520,8 +520,7 @@ def struct_cls(struct_spec, scope):
         list(zip(optional_fields, field_defaults)),
     )
     if struct_spec.hashable:
-        struct_dct['__hash__'] = \
-            lambda self: hash(tuple([getattr(self, field.name) for field in struct_spec.fields]))
+        struct_dct['__hash__'] = common.struct_hasher(struct_spec)
 
     # TODO generate a reasonable docstring for the class too.
 

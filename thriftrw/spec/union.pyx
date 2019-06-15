@@ -412,7 +412,6 @@ def union_cls(union_spec, scope):
         union_spec.name, field_names
     )
     if union_spec.hashable:
-        union_dct['__hash__'] = \
-            lambda self: hash(tuple([getattr(self, field.name) for field in union_spec.fields]))
+        union_dct['__hash__'] = common.struct_hasher(union_spec)
 
     return type(str(union_spec.name), (object,), union_dct)
