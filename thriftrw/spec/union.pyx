@@ -100,6 +100,7 @@ cdef class UnionTypeSpec(TypeSpec):
         self.ttype_code = ttype.STRUCT
         self.fields = fields
         self.linked = False
+        self.hashable = False
         self.surface = None
         self.allow_empty = allow_empty
         self._index = {}
@@ -108,6 +109,7 @@ cdef class UnionTypeSpec(TypeSpec):
         if not self.linked:
             self.linked = True
             self.fields = [field.link(scope) for field in self.fields]
+            self.hashable = all([f.hashable for f in self.fields])
             self.surface = union_cls(self, scope)
             for field in self.fields:
                 self._index[(field.id, field.ttype_code)] = field
@@ -409,5 +411,7 @@ def union_cls(union_spec, scope):
     union_dct['__doc__'] = union_docstring(
         union_spec.name, field_names
     )
+    if union_spec.hashable:
+        union_dct['__hash__'] = common.struct_hasher(union_spec)
 
     return type(str(union_spec.name), (object,), union_dct)

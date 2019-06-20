@@ -74,3 +74,18 @@ def from_primitive_classmethod():
         return cls.type_spec.from_primitive(prim_value)
 
     return from_primitive
+
+
+def struct_hasher(spec):
+    """Generates a ``__hash__`` method.
+
+    :param list fields:
+        List of fields of the object to be hashed.
+    """
+    def __hash__(self):
+        return hash(
+            tuple(
+                getattr(self, field.name) for field in spec.fields
+            )
+        )
+    return __hash__

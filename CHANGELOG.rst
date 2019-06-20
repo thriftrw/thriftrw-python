@@ -1,10 +1,11 @@
 Releases
 ========
 
-1.7.3 (unreleased)
+1.8.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added support for hashed fields, structs, and unions for improved
+  compatibility with Python 3.
 
 
 1.7.2 (2019-03-26)

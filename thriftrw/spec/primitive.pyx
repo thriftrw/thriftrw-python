@@ -110,6 +110,7 @@ cdef class _TextualTypeSpec(TypeSpec):
 
     def __init__(self):
         self.ttype_code = ttype.BINARY
+        self.hashable = True
 
     cpdef TypeSpec link(self, scope):
         return self

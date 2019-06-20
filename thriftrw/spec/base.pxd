@@ -30,6 +30,8 @@ cdef class TypeSpec(object):
 
     cdef public int8_t ttype_code
 
+    cdef public bint hashable
+
     cpdef Value to_wire(TypeSpec self, object value)
 
     cpdef object from_wire(TypeSpec self, Value wire_value)

@@ -29,11 +29,12 @@ from ..errors import ThriftCompilerError
 
 class ConstValuePrimitive(object):
 
-    __slots__ = ('surface', 'linked')
+    __slots__ = ('surface', 'linked', 'hashable')
 
     def __init__(self, value):
         self.surface = value
         self.linked = False
+        self.hashable = True
 
     def link(self, scope, type_spec):
         if not self.linked:
@@ -44,15 +45,19 @@ class ConstValuePrimitive(object):
             )
         return self
 
+    def __hash__(self):
+        return hash(self.surface)
+
 
 class ContsValueMap(object):
 
-    __slots__ = ('items', 'linked', 'surface')
+    __slots__ = ('items', 'linked', 'surface', 'hashable')
 
     def __init__(self, items):
         self.items = items
         self.linked = False
         self.surface = None
+        self.hashable = False
 
     def link(self, scope, type_spec):
         if type_spec.ttype_code not in (ttype.MAP, ttype.STRUCT):
@@ -101,12 +106,13 @@ class ContsValueMap(object):
 
 class ConstValueList(object):
 
-    __slots__ = ('values', 'linked', 'surface')
+    __slots__ = ('values', 'linked', 'surface', 'hashable')
 
     def __init__(self, values):
         self.values = values
         self.linked = False
         self.surface = None
+        self.hashable = False
 
     def link(self, scope, type_spec):
         if type_spec.ttype_code not in (ttype.LIST, ttype.SET):

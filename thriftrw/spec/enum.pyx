@@ -134,6 +134,7 @@ cdef class EnumTypeSpec(TypeSpec):
 
         self.values_to_names = values_to_names
         self.linked = False
+        self.hashable = True
         self.surface = None
 
     cpdef TypeSpec link(self, scope):
@@ -231,6 +232,7 @@ def enum_cls(enum_spec, scope):
     enum_dct['__doc__'] = enum_docstring(
         enum_spec.name, enum_spec.items.items()
     )
+    enum_dct['__hash__'] = lambda self: hash(values)
 
     return type(str(enum_spec.name), (object,), enum_dct)
 

@@ -29,6 +29,7 @@ cdef class FieldSpec(object):
     cdef readonly int16_t id
     cdef readonly str name
     cdef readonly bint required
+    cdef readonly bint hashable
 
     cdef public TypeSpec spec
     cdef public object default_value
