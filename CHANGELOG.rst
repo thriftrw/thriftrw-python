@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.8.0 (unreleased)
+1.8.0 (2019-06-25)
 ------------------
 
 - Added support for hashed fields, structs, and unions for improved
