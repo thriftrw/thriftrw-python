@@ -302,7 +302,8 @@ class HeaderProcessor(object):
             raise ThriftCompilerError(
                 'Paths in include statements are relative to the directory '
                 'containing the Thrift file. They must be in the form '
-                '"./foo.thrift" or "../bar.thrift".'
+                '"./foo.thrift" or "../bar.thrift".  Instead, found "%s"'
+                % (include.path)
             )
 
         # Includes are relative to directory of the Thrift file being
