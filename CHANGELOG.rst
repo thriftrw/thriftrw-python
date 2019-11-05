@@ -4,7 +4,7 @@ Releases
 1.8.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Report a better error message for bad includes.
 
 
 1.8.0 (2019-06-25)
