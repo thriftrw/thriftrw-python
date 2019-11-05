@@ -1,7 +1,7 @@
 Releases
 ========
 
-1.8.1 (unreleased)
+1.8.1 (2019-11-05)
 ------------------
 
 - Report a better error message for bad includes.
