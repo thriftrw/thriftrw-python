@@ -11,6 +11,7 @@ matrix:
     # Need sudo here to actually get xenial.
     # See https://github.com/travis-ci/travis-ci/issues/9815
     - {python: 3.7, env: TOX_ENV=py37, dist: xenial, sudo: true}
+    - {python: 3.8, env: TOX_ENV=py38, dist: xenial, sudo: true}
     - {env: TOX_ENV=cover}
     - {env: TOX_ENV=flake8}
     - {env: TOX_ENV=docs}
