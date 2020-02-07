@@ -150,7 +150,7 @@ setup(
     url='https://github.com/thriftrw/thriftrw-python',
     packages=find_packages(exclude=('tests', 'tests.*')),
     license='MIT',
-    install_requires=['six', 'ply'],
+    install_requires=['ply'],
     tests_require=['pytest', 'mock'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

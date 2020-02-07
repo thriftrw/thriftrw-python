@@ -21,7 +21,6 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
-import six
 
 from thriftrw.errors import ThriftCompilerError
 from thriftrw.spec.struct import StructTypeSpec
@@ -322,7 +321,7 @@ def test_default_binary_value(loads):
         1: optional binary field = "";
     }''').Struct
 
-    assert isinstance(Struct().field, six.binary_type)
+    assert isinstance(Struct().field, bytes)
 
 
 def test_constructor_behavior(loads):
