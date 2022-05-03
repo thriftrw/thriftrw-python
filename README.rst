@@ -1,3 +1,5 @@
+This project is no longer active. See https://github.com/thriftrw/thriftrw-python/issues/164.
+
 ``thriftrw``
 ============
 
