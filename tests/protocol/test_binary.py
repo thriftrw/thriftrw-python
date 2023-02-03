@@ -30,6 +30,7 @@ from thriftrw.wire import ttype
 from thriftrw.wire import value
 from thriftrw.wire import Message
 from thriftrw.wire.mtype import CALL, REPLY, EXCEPTION, ONEWAY
+from thriftrw.spec.base import TypeSpec
 from thriftrw.spec.primitive import (
     BinaryTypeSpec as sbin,
     BoolTypeSpec as sbool,
@@ -53,6 +54,8 @@ from ..util.spec import (
 
 def reader_writer_ids(x):
     if isinstance(x, (list, value.Value)):
+        return None
+    if isinstance(x, TypeSpec):
         return None
     return ttype.name_of(x)
 

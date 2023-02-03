@@ -29,6 +29,12 @@ from thriftrw.loader import Loader
 from thriftrw.protocol import BinaryProtocol
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "unimport: unimport module for test"
+    )
+
+
 def unimport(*names):
     """Removes imported modules from ``sys.modules``.
 
@@ -68,8 +74,7 @@ def pytest_runtest_teardown(item, nextitem):
 
             # ...
     """
-    marker = item.get_marker('unimport')
-    if marker:
+    for marker in item.iter_markers('unimport'):
         unimport(*marker.args)
 
 
