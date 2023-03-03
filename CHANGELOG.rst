@@ -1,10 +1,12 @@
 Releases
 ========
 
-1.8.2 (unreleased)
+1.9.0 (2023-02-03)
 ------------------
 
-- Nothing changed yet.
+- Add support for Python 3.8 through 3.11
+- Dropped support for Python 2 and <=3.6
+- Dependency updates and various compatibility fixes
 
 
 1.8.1 (2019-11-05)
