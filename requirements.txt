@@ -1,2 +1,2 @@
-cython>=0.17.0
+cython>=0.29.29
 ply
