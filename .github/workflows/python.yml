@@ -1,0 +1,47 @@
+name: test
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Test (Python ${{ matrix.python-version }})
+    strategy:
+      matrix:
+        python-version:
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          pip install tox
+          pip install -r requirements.txt
+          cython -Xlanguage_level=2 $(find thriftrw -name '*.pyx')
+      - name: Test
+        run: |
+          tox -e ${{ matrix.python-version }}
+  utilities:
+    runs-on: ubuntu-latest
+    name: Build utility functions
+    steps:
+      - name: Install
+        run: |
+          pip install tox
+      - name: Run utility functions
+        run: |
+          tox -e cover
+          tox -e flake8
+          tox -e docs

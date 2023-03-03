@@ -3,15 +3,15 @@ This project is no longer active. See https://github.com/thriftrw/thriftrw-pytho
 ``thriftrw``
 ============
 
-|build| |coverage| |docs|
+|test| |coverage| |docs|
 
 ``thriftrw`` is a Python library to serialize and deserialize Thrift types.
 
 `Documentation <http://thriftrw.readthedocs.org/en/latest/>`_ is available on
 Read The Docs.
 
-.. |build| image:: https://travis-ci.com/thriftrw/thriftrw-python.svg?branch=master
-    :target: https://travis-ci.com/thriftrw/thriftrw-python
+.. |test| image:: https://github.com/thriftrw/thriftrw-python/actions/workflows/python.yml/badge.svg
+   :target: https://github.com/thriftrw/thriftrw-python/actions/workflows/python.yml
 
 .. |coverage| image:: https://coveralls.io/repos/thriftrw/thriftrw-python/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/thriftrw/thriftrw-python?branch=master
