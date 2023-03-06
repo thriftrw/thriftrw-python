@@ -20,6 +20,7 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 import pytest
+import six
 
 
 @pytest.mark.parametrize('name, src, kwargs', [
@@ -98,6 +99,7 @@ def test_hash_inequality(loads, name, src, kwargs1, kwargs2):
     assert hash(obj1) != hash(obj2)
 
 
+@pytest.mark.skipif(six.PY2, reason="All Python 2 classes are hashable")
 @pytest.mark.parametrize('name, src, kwargs', [
     (
         'Foo', '''
