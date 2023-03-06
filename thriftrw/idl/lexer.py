@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, unicode_literals, print_function
 
+import six
 from ply import lex
 
 from ..errors import ThriftParserError
@@ -73,7 +74,7 @@ class LexerSpec(object):
         'DUBCONSTANT',
         'LITERAL',
         'IDENTIFIER',
-    ) + tuple(map(str.upper, THRIFT_KEYWORDS))
+    ) + tuple(map(six.text_type.upper, THRIFT_KEYWORDS))
 
     t_ignore = ' \t\r'  # whitespace
 
